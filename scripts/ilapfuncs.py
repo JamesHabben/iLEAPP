@@ -51,21 +51,6 @@ class OutputParameters:
         os.makedirs(self.temp_folder)
 
 
-def open_sqlite_file_readonly(file_path):
-    conn = sqlite3.connect(file_path, uri=True)
-    conn.row_factory = sqlite3.Row
-    return conn.cursor()
-
-
-def convert_sqlite_epoch(epoch_date, timezone_offset=0):
-    try:
-        epoch_start = datetime(2001, 1, 1, tzinfo=timezone.utc)
-        date_obj = epoch_start + timedelta(seconds=epoch_date)
-        if timezone_offset:
-            date_obj = date_obj + timedelta(hours=timezone_offset)
-        return date_obj
-    except ValueError:
-        return "Invalid Epoch Date"
 
 def get_report_date_div(date_obj):
     return f'<div data-timestamp="{date_obj}"></div>'
@@ -194,6 +179,23 @@ def get_next_unused_name(path):
             new_name += f"{ext}"
         num += 1
     return os.path.join(folder, new_name)
+
+def open_sqlite_file_readonly(file_path):
+    conn = open_sqlite_db_readonly(file_path)
+    conn.row_factory = sqlite3.Row
+    return conn.cursor()
+
+
+def convert_sqlite_epoch(epoch_date, timezone_offset=0):
+    try:
+        epoch_start = datetime(2001, 1, 1, tzinfo=timezone.utc)
+        date_obj = epoch_start + timedelta(seconds=epoch_date)
+        if timezone_offset:
+            date_obj = date_obj + timedelta(hours=timezone_offset)
+        return date_obj
+    except ValueError:
+        logfunc(f"Date conversion error")
+        return False
 
 def open_sqlite_db_readonly(path):
     '''Opens an sqlite db in read-only mode, so original db (and -wal/journal are intact)'''

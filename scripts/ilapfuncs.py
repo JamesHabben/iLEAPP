@@ -50,6 +50,26 @@ class OutputParameters:
         os.makedirs(os.path.join(self.report_folder_base, 'Script Logs'))
         os.makedirs(self.temp_folder)
 
+
+def open_sqlite_file_readonly(file_path):
+    conn = sqlite3.connect(file_path, uri=True)
+    conn.row_factory = sqlite3.Row
+    return conn.cursor()
+
+
+def convert_sqlite_epoch(epoch_date, timezone_offset=0):
+    try:
+        epoch_start = datetime(2001, 1, 1, tzinfo=timezone.utc)
+        date_obj = epoch_start + timedelta(seconds=epoch_date)
+        if timezone_offset:
+            date_obj = date_obj + timedelta(hours=timezone_offset)
+        return date_obj
+    except ValueError:
+        return "Invalid Epoch Date"
+
+def get_report_date_div(date_obj):
+    return f'<div data-timestamp="{date_obj}"></div>'
+
 def convert_time_obj_to_utc(ts):
     timestamp = ts.replace(tzinfo=timezone.utc)
     return timestamp

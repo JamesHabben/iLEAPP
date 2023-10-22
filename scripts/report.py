@@ -967,6 +967,7 @@ def generate_report(reportfolderbase, time_in_secs, time_HMS, extraction_type, i
             # Now write out entire html page for artifact
             f = open(os.path.join(reportfolderbase, filename), 'w', encoding='utf8')
             artifact_data = insert_sidebar_code(artifact_data, active_nav_list_data, path)
+            artifact_data += timezone_scripts
             f.write(artifact_data)
             f.close()
 
@@ -1038,6 +1039,12 @@ def create_index_html(reportfolderbase, time_in_secs, time_HMS, extraction_type,
             All dates and times are in UTC unless noted otherwise!
             </p>
         """
+
+    # Date Display Configuration Settings
+    tab1_content += card_timezone_settings
+    tab1_content += modal_timezone
+    tab1_content += modal_datetime_format
+    tab1_content += timezone_scripts
 
     # Get script run log (this will be tab2)
     devinfo_files_path = os.path.join(reportfolderbase, 'Script Logs', 'DeviceInfo.html')

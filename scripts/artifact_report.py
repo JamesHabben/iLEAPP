@@ -1,5 +1,6 @@
 import html
 import os
+import datetime
 from scripts.html_parts import *
 from scripts.ilapfuncs import is_platform_windows
 from scripts.version_info import aleapp_version
@@ -76,8 +77,19 @@ class ArtifactHtmlReport:
 
             html_no_escape  : if html_escape=True, list of columns not to escape
         '''
+
         if (not self.report_file):
             raise ValueError('Output report file is closed/unavailable!')
+
+        def format_value(value):
+            if isinstance(value, datetime.datetime):
+                # Format datetime objects as HTML divs with data-timestamp attributes
+                return f'<td data-sort="{value.isoformat()}"><div data-timestamp="{value.isoformat()}"></div></td>'
+            elif value in [None, 'N/A']:
+                return '<td></td>'
+            else:
+                return '<td>' + html.escape(str(value)) + '</td>'
+
 
         num_entries = len(data_list)
         if write_total:
@@ -98,22 +110,27 @@ class ArtifactHtmlReport:
                      '<thead>'.format(table_id, (f'style="{table_style}"') if table_style else '')
         self.report_file.write(table_head)
         self.report_file.write(
-            '<tr>' + ''.join(('<th class="th-sm">{}</th>'.format(html.escape(str(x))) for x in data_headers)) + '</tr>')
+            '<tr>' + ''.join(
+                (f'<th>{html.escape(str(header))}</th>' for header in data_headers)
+            ) + '</tr>'
+        )
         self.report_file.write('</thead><tbody>')
 
         if html_escape:
             for row in data_list:
                 if html_no_escape:
-                    self.report_file.write('<tr>' + ''.join(('<td>{}</td>'.format(html.escape(
-                        str(x) if x not in [None, 'N/A'] else '')) if h not in html_no_escape else '<td>{}</td>'.format(
-                        str(x) if x not in [None, 'N/A'] else '') for x, h in zip(row, data_headers))) + '</tr>')
+                    self.report_file.write('<tr>' + ''.join(
+                    f'{format_value(x) if h not in html_no_escape else x}' for x, h in zip(row, data_headers)
+                ) + '</tr>')
                 else:
                     self.report_file.write('<tr>' + ''.join(
-                        ('<td>{}</td>'.format(html.escape(str(x) if x not in [None, 'N/A'] else '')) for x in
-                         row)) + '</tr>')
+                        f'{format_value(x)}' for x in row
+                    ) + '</tr>'),
         else:
             for row in data_list:
-                self.report_file.write('<tr>' + ''.join( ('<td>{}</td>'.format(str(x) if x not in [None, 'N/A'] else '') for x in row) ) + '</tr>')
+                self.report_file.write('<tr>' + ''.join(
+                    f'{format_value(x)}' for x in row
+                ) + '</tr>')
         
         self.report_file.write('</tbody>')
         if cols_repeated_at_bottom:

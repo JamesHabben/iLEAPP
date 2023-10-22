@@ -17,7 +17,9 @@ __artifacts_v2__ = {
 import sqlite3
 from datetime import datetime, timezone
 from scripts.artifact_report import ArtifactHtmlReport
-from scripts.ilapfuncs import logfunc, tsv, timeline, is_platform_windows, open_sqlite_db_readonly, convert_ts_human_to_utc, convert_utc_human_to_timezone
+from scripts.ilapfuncs import (logfunc, tsv, timeline, is_platform_windows, open_sqlite_db_readonly,
+                               convert_ts_human_to_utc, convert_utc_human_to_timezone,
+                               convert_sqlite_epoch, get_report_date_div, open_sqlite_file_readonly)
 
 
 def get_addressBook(files_found, report_folder, seeker, wrap_text, timezone_offset):
@@ -27,8 +29,8 @@ def get_addressBook(files_found, report_folder, seeker, wrap_text, timezone_offs
         if file_found.endswith('.sqlitedb'):
             break
     
-    db = open_sqlite_db_readonly(file_found)
-    cursor = db.cursor()
+    cursor = open_sqlite_file_readonly(file_found)
+    # cursor = db.cursor()
     cursor.execute('''
     SELECT 
     ABPerson.ROWID,
@@ -38,7 +40,9 @@ def get_addressBook(files_found, report_folder, seeker, wrap_text, timezone_offs
     LAST,
     c17Email,
     DATETIME(CREATIONDATE+978307200,'UNIXEPOCH'),
+    CREATIONDATE,
     DATETIME(MODIFICATIONDATE+978307200,'UNIXEPOCH'),
+    MODIFICATIONDATE,
     NAME
     FROM ABPerson
     LEFT OUTER JOIN ABStore ON ABPerson.STOREID = ABStore.ROWID
@@ -50,31 +54,41 @@ def get_addressBook(files_found, report_folder, seeker, wrap_text, timezone_offs
     if usageentries > 0:
         data_list = []
         for row in all_rows:
-            if row[1] is not None:
+            if row['c16Phone'] is not None:
                 try:
-                    numbers = row[1].split(" +")
+                    numbers = row['c16Phone'].split(" +")
                     number = numbers[1].split(" ")
                     phone_number = "+{}".format(number[0])
                 except:
-                    phone_number = row[1]
+                    phone_number = row['c16Phone']
             else:
                 phone_number = ''
             
-            creationdate = row[6]
-            if creationdate is None:
-                pass
-            else:
-                creationdate = convert_ts_human_to_utc(creationdate)
-                creationdate = convert_utc_human_to_timezone(creationdate,timezone_offset)
+            # creationdate = row[6]
+            # if creationdate is None:
+            #     pass
+            # else:
+            #     creationdate = convert_ts_human_to_utc(creationdate)
+            #     creationdate = convert_utc_human_to_timezone(creationdate,timezone_offset)
             
-            modifieddate = row[7]
-            if modifieddate is None:
-                pass
-            else:
-                modifieddate = convert_ts_human_to_utc(modifieddate)
-                modifieddate = convert_utc_human_to_timezone(modifieddate,timezone_offset)
+            # modifieddate = row[7]
+            # if modifieddate is None:
+            #     pass
+            # else:
+            #     modifieddate = convert_ts_human_to_utc(modifieddate)
+            #     modifieddate = convert_utc_human_to_timezone(modifieddate,timezone_offset)
             
-            data_list.append((creationdate,row[0], phone_number, row[2], row[3], row[4], row[5], modifieddate, row[8]))
+            data_list.append((
+                convert_sqlite_epoch(row['CREATIONDATE']),
+                row['ROWID'],
+                phone_number,
+                row['FIRST'],
+                row['MIDDLE'],
+                row['LAST'],
+                row['c17Email'],
+                convert_sqlite_epoch(row['CREATIONDATE']),
+                row['NAME']
+            ))
 
         report = ArtifactHtmlReport('Address Book Contacts')
         report.start_artifact_report(report_folder, 'Address Book Contacts')
@@ -91,7 +105,7 @@ def get_addressBook(files_found, report_folder, seeker, wrap_text, timezone_offs
     else:
         logfunc('No Address Book data available')
 
-    db.close()
+    cursor.close()
     return
 
 # __artifacts__ = {

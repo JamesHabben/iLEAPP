@@ -22,6 +22,11 @@ page_header = \
         <link rel="stylesheet" href="_elements/dashboard.css">
         <link rel="stylesheet" href="_elements/chats.css">
         
+        <!-- Datetime libs for dynamic display - Moment.js, Moment Timezone -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.34/moment-timezone-with-data.min.js"></script>
+        
         <!-- MDBootstrap Datatables  -->
         <link rel="stylesheet" href="_elements/MDB-Free_4.13.0/css/addons/datatables.min.css" rel="stylesheet">
 
@@ -175,16 +180,20 @@ tabs_code = \
 """
     <ul class="nav nav-tabs" id="myTab" role="tablist">
         <li class="nav-item">
-            <a class="nav-link active" id="case-tab" data-toggle="tab" href="#case" role="tab" aria-controls="case" aria-selected="true">Details</a>
+            <a class="nav-link active" id="case-tab" data-toggle="tab" href="#case" role="tab" aria-controls="case" 
+                aria-selected="true">Details</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" id="device-list-tab" data-toggle="tab" href="#device" role="tab" aria-controls="device" aria-selected="false">Device details</a>
+            <a class="nav-link" id="device-list-tab" data-toggle="tab" href="#device" role="tab" aria-controls="device" 
+                aria-selected="false">Device details</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" id="run-log-tab" data-toggle="tab" href="#run" role="tab" aria-controls="run" aria-selected="false">Script run log</a>
+            <a class="nav-link" id="run-log-tab" data-toggle="tab" href="#run" role="tab" aria-controls="run" 
+                aria-selected="false">Script run log</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" id="files-list-tab" data-toggle="tab" href="#files" role="tab" aria-controls="files" aria-selected="false">Processed files list</a>
+            <a class="nav-link" id="files-list-tab" data-toggle="tab" href="#files" role="tab" aria-controls="files" 
+                aria-selected="false">Processed files list</a>
         </li>
     </ul>
     <div class="tab-content" id="myTabContent">
@@ -193,6 +202,103 @@ tabs_code = \
         <div class="tab-pane fade text-monospace" id="run" role="tabpanel" aria-labelledby="script-run-tab"><br />{}</div>
         <div class="tab-pane fade" id="files" role="tabpanel" aria-labelledby="profile-tab"><br />{}</div>
     </div>
+"""
+
+# card for timezone display settings
+card_timezone_settings = \
+"""
+<div class="card bg-white" style="padding: 20px;">
+    <h3 class="card-title">Date and Time Display Settings</h3>
+    <div class="card-body">
+        <div id="currentSettings">
+            <p>Currently Selected Timezone: <span id="currentTimezone">UTC</span></p>
+            <p>Currently Selected Format: <span id="currentFormat">MMMM Do YYYY, h:mm:ss a</span></p>
+            <p>Current Time in ISO Format: <span id="currentTimeISO"></span></p>
+            <p>Current Time with applied format: <span id="currentTimeFormatted"></span></p>
+        </div>
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#timezoneModal">
+            Change Timezone
+        </button>
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#formatModal">
+            Change Format
+        </button>
+    </div>
+</div>
+"""
+
+# modal window for timezone selection
+modal_timezone = \
+"""
+            <!-- TimeZone Modal -->
+<div class="modal fade" id="timezoneModal" tabindex="-1" role="dialog" aria-labelledby="timezoneModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="timezoneModalLabel">Select Timezone</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="timezoneSearch" placeholder="Search for a timezone" class="form-control">
+        <div id="timezoneList">
+          <!-- List of timezones will be populated here -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="saveTimezone">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+"""
+
+# modal window for datetime format
+modal_datetime_format = \
+"""
+<!-- DateTime Format Modal -->
+<div class="modal fade" id="formatModal" tabindex="-1" role="dialog" aria-labelledby="formatModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="formatModalLabel">Select Date and Time Format</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <select id="formatOptions" class="form-control">
+          <option value="MMMM Do YYYY, h:mm:ss a ZZ">January 1st 2023, 12:00:00 am +0000</option>
+          <option value="YYYY-MM-DD HH:mm:ss ZZ">2023-01-15 00:00:00 +0000</option>
+          <option value="YYYY-MM-DD h:mm:ss a ZZ">2023-01-15 12:00:00 am +0000</option>
+          <option value="MM/DD/YYYY h:mm:ss a ZZ">01/15/2023 12:00:00 am +0000</option>
+          <option value="MM/DD/YYYY HH:mm:ss ZZ">01/15/2023 00:00:00 +0000</option>
+          <option value="DD/MM/YYYY h:mm:ss a ZZ">15/01/2023 12:00:00 am +0000</option>
+          <option value="DD/MM/YYYY HH:mm:ss ZZ">15/01/2023 00:00:00 +0000</option>
+          <!-- ... other common format options -->
+        </select>
+        <input type="text" id="customFormat" placeholder="Or enter your custom format" class="form-control">
+        <p id="formatExplanation" style="margin-top: 10px;">
+            Custom Format Instructions: <br>
+            - YYYY: 4-digit year (e.g., 2023) <br>
+            - MM: 2-digit month (e.g., 01 for January) <br>
+            - DD: 2-digit day of the month (e.g., 01 for the first day of the month) <br>
+            - HH: 2-digit hour in 24-hour format (e.g., 00 for midnight) <br>
+            - hh: 2-digit hour in 12-hour format (e.g., 12 for noon) <br>
+            - mm: 2-digit minute (e.g., 00 for the first minute of the hour) <br>
+            - ss: 2-digit second (e.g., 00 for the first second of the minute) <br>
+            - a: am/pm <br>
+            - ZZ: timezone offset (e.g., +0000 for UTC) <br>
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="saveFormat">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
 """
 # thank you note , at bottom of index.html
 thank_you_note = \
@@ -311,15 +417,126 @@ default_responsive_table_script = \
     <script>
         $(document).ready(function() {
             $('.table').DataTable({
-                //"scrollY": "60vh",
-                //"scrollX": "10%",
-                //"scrollCollapse": true,
                 "aLengthMenu": [[ 15, 50, 100, -1 ], [ 15, 50, 100, "All" ]],
             });
             $('.dataTables_length').addClass('bs-select');
             $('#mySpinner').remove();
             //$('#infiniteLoading').remove();
         });
+    </script>
+"""
+
+
+timezone_scripts = \
+"""
+<script>
+    // timezone and date format javascript
+    $(document).ready(function() {
+        var timezones = moment.tz.names();
+        populateTimezoneList(timezones);
+        updateCurrentTimeInfo();
+
+        // Event handler for the timezone modal search input
+        $('#timezoneSearch').on('input', function() {
+            var searchTerm = $('#timezoneSearch').val().toLowerCase();
+            console.log("search term ", searchTerm)
+            $('.timezone-item').each(function() {
+                var timezone = $(this).data('timezone').toLowerCase();
+                if (timezone.includes(searchTerm)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        });
+
+        // Event handler to select a timezone when clicked
+        $('#timezoneList').on('click', '.timezone-item', function () {
+            var selectedTimezone = $(this).data('timezone');
+            $('#timezoneSearch').val(selectedTimezone);
+            $('#timezoneModal').modal('hide');
+            $('#currentTimezone').text(selectedTimezone);
+            localStorage.setItem('timezone', selectedTimezone);
+            updateCurrentTimeInfo();
+            updateDates();
+        });
+
+        $('#saveFormat').on('click', function () {
+            var selectedFormat = $('#formatOptions').val();
+
+            // If the user has entered a custom format, use that instead
+            var customFormat = $('#customFormat').val();
+            if (customFormat) {
+                selectedFormat = customFormat;
+            }
+
+            $('#currentFormat').text(selectedFormat);
+            localStorage.setItem('format', selectedFormat);
+
+            updateCurrentTimeInfo();
+            updateDates();
+
+            $('#formatModal').modal('hide');
+
+        });
+
+        var savedTimezone = localStorage.getItem('timezone');
+        var savedFormat = localStorage.getItem('format');
+
+        if (savedTimezone) {
+            $('#currentTimezone').text(savedTimezone);
+        }
+
+        if (savedFormat) {
+            $('#currentFormat').text(savedFormat);
+        }
+
+        updateCurrentTimeInfo();
+        updateDates();
+    });
+
+    function populateTimezoneList(timezones) {
+        var timezoneList = $('#timezoneList');
+        timezones.forEach(function(timezone) {
+            timezoneList.append('<div class="timezone-item" data-timezone="' + timezone + '">' + timezone + '</div>');
+        });
+    }
+
+    function updateCurrentTimeInfo() {
+        var currentTimezone = $('#currentTimezone').text();
+        var currentFormat = $('#currentFormat').text();
+
+        // Get the current time in the selected timezone
+        var currentTime = moment.tz(currentTimezone);
+
+        // Update the HTML elements with the current time information
+        $('#currentTimeISO').text(currentTime.format());
+        $('#currentTimeFormatted').text(currentTime.format(currentFormat));
+    }
+
+    function updateDates() {
+        // Get the currently selected timezone and format
+        var savedTimezone = localStorage.getItem('timezone') || 'UTC';
+        var savedFormat = localStorage.getItem('format') || 'MMMM Do YYYY, h:mm:ss a';
+    
+        // Select all divs with a data-timestamp attribute
+        const dateDivs = document.querySelectorAll('div[data-timestamp]');
+    
+        dateDivs.forEach(div => {
+            // Get the timestamp from the data attribute
+            const timestamp = div.getAttribute('data-timestamp');
+    
+            // Convert and format the timestamp using Moment.js
+            const formattedDate = moment.tz(timestamp, savedTimezone).format(savedFormat);
+    
+            // Update the content of the div to display the formatted date
+            div.textContent = formattedDate;
+        });
+    }
+
+
+        // Call the function to update the dates when the page loads
+        window.addEventListener('load', updateDates);
     </script>
 """
 

@@ -27,6 +27,9 @@ page_header = \
         <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.34/moment-timezone-with-data.min.js"></script>
         
+        <!-- lib for regional formatting of phone numbers -->
+        <script src="https://unpkg.com/libphonenumber-js@1.9.42/bundle/libphonenumber-js.min.js"></script>
+        
         <!-- MDBootstrap Datatables  -->
         <link rel="stylesheet" href="_elements/MDB-Free_4.13.0/css/addons/datatables.min.css" rel="stylesheet">
 
@@ -211,8 +214,9 @@ card_timezone_settings = \
     <h3 class="card-title">Date and Time Display Settings</h3>
     <div class="card-body">
         <div id="currentSettings">
-            <p>Currently Selected Timezone: <span id="currentTimezone">UTC</span></p>
-            <p>Currently Selected Format: <span id="currentFormat">MMMM Do YYYY, h:mm:ss a</span></p>
+            <p>Selected Timezone: <span id="currentTimezone"></span></p>
+            <p>Selected Date Format: <span id="currentDateFormat"></span></p>
+            <p>Selected Time Format: <span id="currentTimeFormat"></span></p>
             <p>Current Time in ISO Format: <span id="currentTimeISO"></span></p>
             <p>Current Time with applied format: <span id="currentTimeFormatted"></span></p>
         </div>
@@ -222,6 +226,26 @@ card_timezone_settings = \
         <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#formatModal">
             Change Format
         </button>
+    </div>
+</div>
+<div class="card bg-white" style="padding: 20px;">
+    <h3 class="card-title">Phone Number Display Settings</h3>
+    <div class="card-body">
+        <div id="phoneNumberSettings">
+            <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="regionalFormattingSwitch" checked>
+                <label class="custom-control-label" for="regionalFormattingSwitch">Enable Regional Formatting</label>
+            </div>
+        </div>
+        <div id="phoneNumberExamples">
+            <h5>Formatting Examples:</h5>
+            <ul>
+                <li>+1 2345678900 → <div data-phonenumber="+12345678900" style="display: inline-block;"></div></li>
+                <li>+44 7711123456 → <div data-phonenumber="+447711123456" style="display: inline-block;"></div></li>
+                <li>+91 9876543210 → <div data-phonenumber="+919876543210" style="display: inline-block;"></div></li>
+                <li>+61 412345678 → <div data-phonenumber="+61412345678" style="display: inline-block;"></div></li>
+            </ul>
+        </div>
     </div>
 </div>
 """
@@ -268,32 +292,34 @@ modal_datetime_format = \
         </button>
       </div>
       <div class="modal-body">
-        <select id="formatOptions" class="form-control">
-          <option value="MMMM Do YYYY, h:mm:ss a ZZ">January 1st 2023, 12:00:00 am +0000</option>
-          <option value="YYYY-MM-DD HH:mm:ss ZZ">2023-01-15 00:00:00 +0000</option>
-          <option value="YYYY-MM-DD h:mm:ss a ZZ">2023-01-15 12:00:00 am +0000</option>
-          <option value="MM/DD/YYYY h:mm:ss a ZZ">01/15/2023 12:00:00 am +0000</option>
-          <option value="MM/DD/YYYY HH:mm:ss ZZ">01/15/2023 00:00:00 +0000</option>
-          <option value="DD/MM/YYYY h:mm:ss a ZZ">15/01/2023 12:00:00 am +0000</option>
-          <option value="DD/MM/YYYY HH:mm:ss ZZ">15/01/2023 00:00:00 +0000</option>
-          <!-- ... other common format options -->
+        <label for="dateFormatOptions">Date Format:</label>
+        <select id="dateFormatOptions" class="form-control mb-3">
+          <option value="YYYY-MM-DD">YYYY-MM-DD --> 2023-01-15</option>
+          <option value="MMMM Do YYYY">MMMM Do YYYY --> January 15th 2023</option>
+          <option value="MM/DD/YYYY">MM/DD/YYYY --> 01/15/2023</option>
+          <option value="DD/MM/YYYY">DD/MM/YYYY --> 15/01/2023</option>
+          <option value="ddd, MMM D, YYYY">ddd, MMM D, YYYY --> Sun, Jan 15 2023</option>
+          <!-- ... other common date format options -->
         </select>
-        <input type="text" id="customFormat" placeholder="Or enter your custom format" class="form-control">
-        <p id="formatExplanation" style="margin-top: 10px;">
-            Custom Format Instructions: <br>
-            - YYYY: 4-digit year (e.g., 2023) <br>
-            - MM: 2-digit month (e.g., 01 for January) <br>
-            - DD: 2-digit day of the month (e.g., 01 for the first day of the month) <br>
-            - HH: 2-digit hour in 24-hour format (e.g., 00 for midnight) <br>
-            - hh: 2-digit hour in 12-hour format (e.g., 12 for noon) <br>
-            - mm: 2-digit minute (e.g., 00 for the first minute of the hour) <br>
-            - ss: 2-digit second (e.g., 00 for the first second of the minute) <br>
-            - a: am/pm <br>
-            - ZZ: timezone offset (e.g., +0000 for UTC) <br>
-        </p>
+
+        <label for="customDateFormat">Custom Date Format:</label>
+        <input type="text" id="customDateFormat" placeholder="Enter your custom date format" class="form-control mb-3">
+
+        <small class="form-text text-muted">
+          For custom date formats, use the following tokens: YYYY for four-digit year, MM for two-digit month, DD for two-digit day, etc.
+
+        </small>
+
+        <label for="timeFormatOptions" class="mt-3">Time Format:</label>
+        <select id="timeFormatOptions" class="form-control">
+          <option value="HH:mm:ss (ZZ)">HH:mm:ss (ZZ) --> 13:23:56 (+0000)</option>
+          <option value="h:mm:ss a (ZZ)">h:mm:ss a (ZZ) --> 1:23:56 pm (+0000)</option>
+          <!-- ... other common time format options -->
+        </select>
+
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
         <button type="button" class="btn btn-primary" id="saveFormat">Save changes</button>
       </div>
     </div>
@@ -462,34 +488,46 @@ timezone_scripts = \
         });
 
         $('#saveFormat').on('click', function () {
-            var selectedFormat = $('#formatOptions').val();
-
-            // If the user has entered a custom format, use that instead
-            var customFormat = $('#customFormat').val();
-            if (customFormat) {
-                selectedFormat = customFormat;
+            // Get selected date and time formats from the dropdowns
+            var selectedDateFormat = $('#dateFormatOptions').val();
+            var selectedTimeFormat = $('#timeFormatOptions').val();
+        
+            // If the user has entered a custom date format, use that instead
+            var customDateFormat = $('#customDateFormat').val();
+            if (customDateFormat) {
+                selectedDateFormat = customDateFormat;
             }
-
-            $('#currentFormat').text(selectedFormat);
-            localStorage.setItem('format', selectedFormat);
-
+        
+            // Update displayed formats and save to localStorage
+            $('#currentDateFormat').text(selectedDateFormat);
+            $('#currentTimeFormat').text(selectedTimeFormat);
+            localStorage.setItem('savedDateFormat', selectedDateFormat);
+            localStorage.setItem('savedTimeFormat', selectedTimeFormat);
+        
+            // Update the current time information and the dates across the document
             updateCurrentTimeInfo();
             updateDates();
-
+        
+            // Hide the format modal
             $('#formatModal').modal('hide');
-
         });
+        
+        $('#formatModal').on('shown.bs.modal', function () {
+            var savedDateFormat = localStorage.getItem('savedDateFormat');
+            var savedTimeFormat = localStorage.getItem('savedTimeFormat');
 
-        var savedTimezone = localStorage.getItem('timezone');
-        var savedFormat = localStorage.getItem('format');
+            if (savedDateFormat) {
+                $('#dateFormatOptions').val(savedDateFormat);
+            }
+            if (savedTimeFormat) {
+                $('#timeFormatOptions').val(savedTimeFormat);
+            }
 
-        if (savedTimezone) {
-            $('#currentTimezone').text(savedTimezone);
-        }
-
-        if (savedFormat) {
-            $('#currentFormat').text(savedFormat);
-        }
+            var customDateFormat = localStorage.getItem('customDateFormat');
+            if (customDateFormat) {
+                $('#customDateFormat').val(customDateFormat);
+            }
+        });
 
         updateCurrentTimeInfo();
         updateDates();
@@ -503,40 +541,106 @@ timezone_scripts = \
     }
 
     function updateCurrentTimeInfo() {
-        var currentTimezone = $('#currentTimezone').text();
-        var currentFormat = $('#currentFormat').text();
+        // Retrieve the saved formats from localStorage
+        var savedTimezone = localStorage.getItem('timezone') || 'UTC';
+        var savedDateFormat = localStorage.getItem('savedDateFormat') || 'YYYY-MM-DD';
+        var savedTimeFormat = localStorage.getItem('savedTimeFormat') || 'HH:mm:ss (ZZ)';
+
+        // Combine date and time formats for displaying the complete datetime
+        var combinedFormat = `${savedDateFormat} ${savedTimeFormat}`;
 
         // Get the current time in the selected timezone
-        var currentTime = moment.tz(currentTimezone);
+        var currentTime = moment.tz(savedTimezone);
 
         // Update the HTML elements with the current time information
+        $('#currentTimezone').text(savedTimezone);
+        $('#currentDateFormat').text(savedDateFormat);
+        $('#currentTimeFormat').text(savedTimeFormat);
         $('#currentTimeISO').text(currentTime.format());
-        $('#currentTimeFormatted').text(currentTime.format(currentFormat));
+        $('#currentTimeFormatted').text(currentTime.format(combinedFormat));
     }
+
 
     function updateDates() {
         // Get the currently selected timezone and format
         var savedTimezone = localStorage.getItem('timezone') || 'UTC';
-        var savedFormat = localStorage.getItem('format') || 'MMMM Do YYYY, h:mm:ss a';
-    
+        var savedDateFormat = localStorage.getItem('savedDateFormat') || 'YYYY-MM-DD';
+        var savedTimeFormat = localStorage.getItem('savedTimeFormat') || 'HH:mm:ss (ZZ)';
+
         // Select all divs with a data-timestamp attribute
-        const dateDivs = document.querySelectorAll('div[data-timestamp]');
-    
-        dateDivs.forEach(div => {
-            // Get the timestamp from the data attribute
+        const datetimeDivs = document.querySelectorAll('div[data-timestamp]');
+        datetimeDivs.forEach(div => {
             const timestamp = div.getAttribute('data-timestamp');
-    
-            // Convert and format the timestamp using Moment.js
-            const formattedDate = moment.tz(timestamp, savedTimezone).format(savedFormat);
-    
-            // Update the content of the div to display the formatted date
+            const formattedDateTime = moment.tz(timestamp, savedTimezone).format(savedDateFormat + ' ' + savedTimeFormat);
+            div.textContent = formattedDateTime;
+        });
+
+        // Select all divs with a data-date attribute
+        const dateDivs = document.querySelectorAll('div[data-date]');
+        dateDivs.forEach(div => {
+            const datestamp = div.getAttribute('data-date');
+            const formattedDate = moment(datestamp).format(savedDateFormat);
             div.textContent = formattedDate;
+        });
+
+        // Select all divs with a data-time attribute
+        const timeDivs = document.querySelectorAll('div[data-time]');
+        timeDivs.forEach(div => {
+            const timestamp = div.getAttribute('data-time');
+            const formattedTime = moment.tz(timestamp, savedTimezone).format(savedTimeFormat);
+            div.textContent = formattedTime;
         });
     }
 
 
-        // Call the function to update the dates when the page loads
-        window.addEventListener('load', updateDates);
+    // Set the initial state of the switch based on saved settings
+    const savedRegionalFormatting = localStorage.getItem('regionalFormatting') === 'true';
+    $('#regionalFormattingSwitch').prop('checked', savedRegionalFormatting);
+
+    // Update saved settings and reformat phone numbers when the switch is toggled
+    $('#regionalFormattingSwitch').on('change', function() {
+        const regionalFormattingEnabled = $(this).is(':checked');
+        localStorage.setItem('regionalFormatting', regionalFormattingEnabled);
+        updatePhoneNumbers();
+    });
+
+    function updatePhoneNumbers() {
+        // Check the state of the regional formatting switch
+        const savedRegionalFormatting = localStorage.getItem('regionalFormatting') === 'true';
+
+        // Select all divs with a data-phonenumber attribute
+        const phoneNumberDivs = document.querySelectorAll('div[data-phonenumber]');
+
+        phoneNumberDivs.forEach(div => {
+            // Get the phone number from the data attribute
+            const phoneNumber = div.getAttribute('data-phonenumber');
+
+            if (savedRegionalFormatting) {
+                // If regional formatting is enabled, format the phone number
+                try {
+                    const formattedNumber = libphonenumber.parsePhoneNumber(phoneNumber).formatInternational();
+                    div.textContent = formattedNumber;
+                } catch (error) {
+                    div.textContent = phoneNumber;
+                }
+            } else {
+                // If regional formatting is disabled, display the original phone number
+                div.textContent = phoneNumber;
+            }
+        });
+    }
+
+    // Call the function to update the phone numbers when the page loads
+    window.addEventListener('load', updatePhoneNumbers);
+    // set a listener for page changes
+    $('#dtBasicExample').on('draw.dt', function () { updatePhoneNumbers() } );
+
+    // Update the phone numbers whenever the regional formatting switch is toggled
+    $('#regionalFormattingSwitch').on('change', updatePhoneNumbers);
+
+
+    // Call the function to update the dates when the page loads
+    window.addEventListener('load', updateDates);
     </script>
 """
 

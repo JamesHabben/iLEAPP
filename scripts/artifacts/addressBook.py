@@ -79,14 +79,14 @@ def get_addressBook(files_found, report_folder, seeker, wrap_text, timezone_offs
             #     modifieddate = convert_utc_human_to_timezone(modifieddate,timezone_offset)
             
             data_list.append((
-                convert_sqlite_epoch(row['CREATIONDATE']),
+                (convert_sqlite_epoch(row['CREATIONDATE']), 'datetime'),
                 row['ROWID'],
-                phone_number,
+                (phone_number, 'phonenumber'),
                 row['FIRST'],
                 row['MIDDLE'],
                 row['LAST'],
                 row['c17Email'],
-                convert_sqlite_epoch(row['CREATIONDATE']),
+                (convert_sqlite_epoch(row['CREATIONDATE']), 'datetime'),
                 row['NAME']
             ))
 

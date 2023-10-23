@@ -1,6 +1,8 @@
 import html
 import os
 import datetime
+from datetime import timezone, timedelta
+from dateutil import parser
 from scripts.html_parts import *
 from scripts.ilapfuncs import is_platform_windows
 from scripts.version_info import aleapp_version
@@ -81,14 +83,46 @@ class ArtifactHtmlReport:
         if (not self.report_file):
             raise ValueError('Output report file is closed/unavailable!')
 
-        def format_value(value):
-            if isinstance(value, datetime.datetime):
-                # Format datetime objects as HTML divs with data-timestamp attributes
-                return f'<td data-sort="{value.isoformat()}"><div data-timestamp="{value.isoformat()}"></div></td>'
-            elif value in [None, 'N/A']:
+        def format_value(input_value):
+            if isinstance(input_value, tuple) and len(input_value) == 2:
+                value, data_type = input_value
+
+                if data_type == 'datetime' and isinstance(value, datetime.datetime):
+                    # Format as full date and time value
+                    if isinstance(value, str):
+                        date_obj = datetime.datetime.strptime(value, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+                    else:
+                        date_obj = value
+                    return f'<td data-sort="{value.isoformat()}"><div data-timestamp="{value.isoformat()}"></div></td>'
+
+                elif data_type == 'date':
+                    # Format as only the date component
+                    if isinstance(value, str):
+                        date_obj = datetime.datetime.strptime(value, '%Y-%m-%d').date()
+                    else:
+                        date_obj = value
+                    return f'<td data-sort="{date_obj.isoformat()}"><div data-date="{date_obj.isoformat()}"></div></td>'
+
+                elif data_type == 'time':
+                    # Format as no date only time, using 24-hour format for sorting
+                    try:
+                        # Try parsing using dateutil parser
+                        time_obj = parser.parse(value).time()
+                    except ValueError:
+                        return f'<td>{value}</td>'
+                    time_value = time_obj.strftime('%H:%M:%S')
+                    return f'<td data-sort="{time_value}"><div data-time="{time_value}"></div></td>'
+
+                elif data_type == 'phonenumber':
+                    # Format as a string of phone number
+                    return f'<td><div data-phonenumber="{value}"></div></td>'
+                else:
+                    return f'<td>{value}</td>'
+
+            elif input_value in [None, 'N/A']:
                 return '<td></td>'
             else:
-                return '<td>' + html.escape(str(value)) + '</td>'
+                return '<td>' + html.escape(str(input_value)) + '</td>'
 
 
         num_entries = len(data_list)

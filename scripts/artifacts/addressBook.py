@@ -64,20 +64,6 @@ def get_addressBook(files_found, report_folder, seeker, wrap_text, timezone_offs
             else:
                 phone_number = ''
             
-            # creationdate = row[6]
-            # if creationdate is None:
-            #     pass
-            # else:
-            #     creationdate = convert_ts_human_to_utc(creationdate)
-            #     creationdate = convert_utc_human_to_timezone(creationdate,timezone_offset)
-            
-            # modifieddate = row[7]
-            # if modifieddate is None:
-            #     pass
-            # else:
-            #     modifieddate = convert_ts_human_to_utc(modifieddate)
-            #     modifieddate = convert_utc_human_to_timezone(modifieddate,timezone_offset)
-            
             data_list.append((
                 (convert_sqlite_epoch(row['CREATIONDATE']), 'datetime'),
                 row['ROWID'],

@@ -288,8 +288,19 @@ def tsv(report_folder, data_headers, data_list, tsvname):
     with codecs.open(os.path.join(tsv_report_folder, tsvname +'.tsv'), 'a', 'utf-8-sig') as tsvfile:
         tsv_writer = csv.writer(tsvfile, delimiter='\t')
         tsv_writer.writerow(data_headers)
-        for i in data_list:
-            tsv_writer.writerow(i)
+        for row in data_list:
+            processed_row = []
+            for item in row:
+                if isinstance(item, tuple):
+                    value, data_type = item
+                    if data_type == "datetime":
+                        processed_value = value.isoformat() if isinstance(value, datetime) else value
+                    else:
+                        processed_value = str(value)
+                else:
+                    processed_value = str(item)
+                processed_row.append(processed_value)
+            tsv_writer.writerow(processed_row)
             
 def timeline(report_folder, tlactivity, data_list, data_headers):
     report_folder = report_folder.rstrip('/')
@@ -316,13 +327,23 @@ def timeline(report_folder, tlactivity, data_list, data_headers):
             """
         )
         db.commit()
-    
-    a = 0
-    length = (len(data_list))
-    while a < length: 
-        modifiedList = list(map(lambda x, y: x.upper() + ': ' +  str(y), data_headers, data_list[a]))
-        cursor.executemany("INSERT INTO data VALUES(?,?,?)", [(str(data_list[a][0]), tlactivity.upper(), str(modifiedList))])
-        a += 1
+
+    def process_value(header, value):
+        if isinstance(value, tuple):
+            val, data_type = value
+            if data_type == "datetime" and isinstance(val, datetime):
+                formatted_value = val.isoformat()
+            else:
+                formatted_value = str(val)
+        else:
+            formatted_value = str(value)
+
+        return f"{header.upper()}: {formatted_value}"
+
+    for data_row in data_list:
+        modifiedList = list(map(process_value, data_headers, data_row))
+        formatted_data = (str(data_row[0]), tlactivity.upper(), str(modifiedList))
+        cursor.execute("INSERT INTO data VALUES(?,?,?)", formatted_data)
     db.commit()
     db.close()
 
@@ -351,21 +372,27 @@ def kmlgen(report_folder, kmlactivity, data_list, data_headers):
         db.commit()
     
     kml = simplekml.Kml(open=1)
-    
-    a = 0
-    length = (len(data_list))
-    while a < length:
-        modifiedDict = dict(zip(data_headers, data_list[a]))
-        times = modifiedDict.get('Timestamp','N/A')
-        lon = modifiedDict['Longitude']
-        lat = modifiedDict['Latitude']
-        if lat:
+
+    def process_value(value):
+        if isinstance(value, tuple):
+            val, data_type = value
+            if data_type == "datetime" and isinstance(val, datetime):
+                return val.isoformat()
+        return str(value)
+
+    for data_row in data_list:
+        data_dict = dict(zip(data_headers, data_row))
+        times = process_value(data_dict.get('Timestamp', 'N/A'))
+        lon = float(data_dict['Longitude'])
+        lat = float(data_dict['Latitude'])
+
+        if lat and lon:
             pnt = kml.newpoint()
             pnt.name = times
             pnt.description = f"Timestamp: {times} - {kmlactivity}"
             pnt.coords = [(lon, lat)]
             cursor.execute("INSERT INTO data VALUES(?,?,?,?)", (times, lat, lon, kmlactivity))
-        a += 1
+
     db.commit()
     db.close()
     kml.save(os.path.join(kml_report_folder, f'{kmlactivity}.kml'))

@@ -30,7 +30,6 @@ def get_addressBook(files_found, report_folder, seeker, wrap_text, timezone_offs
             break
     
     cursor = open_sqlite_file_readonly(file_found)
-    # cursor = db.cursor()
     cursor.execute('''
     SELECT 
     ABPerson.ROWID,
@@ -39,9 +38,7 @@ def get_addressBook(files_found, report_folder, seeker, wrap_text, timezone_offs
     MIDDLE,
     LAST,
     c17Email,
-    DATETIME(CREATIONDATE+978307200,'UNIXEPOCH'),
     CREATIONDATE,
-    DATETIME(MODIFICATIONDATE+978307200,'UNIXEPOCH'),
     MODIFICATIONDATE,
     NAME
     FROM ABPerson
@@ -93,10 +90,3 @@ def get_addressBook(files_found, report_folder, seeker, wrap_text, timezone_offs
 
     cursor.close()
     return
-
-# __artifacts__ = {
-#     "addressbook": (
-#         "Address Book",
-#         ('**/AddressBook.sqlitedb*'),
-#         get_addressBook)
-# }

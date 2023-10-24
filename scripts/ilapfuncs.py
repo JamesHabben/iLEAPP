@@ -187,6 +187,7 @@ def open_sqlite_file_readonly(file_path):
 
 
 def convert_sqlite_epoch(epoch_date, timezone_offset=0):
+    # use for these type of dates datetime(zdate+978307200,'unixepoch')
     try:
         epoch_start = datetime(2001, 1, 1, tzinfo=timezone.utc)
         date_obj = epoch_start + timedelta(seconds=epoch_date)

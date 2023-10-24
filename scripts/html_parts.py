@@ -591,6 +591,10 @@ timezone_scripts = \
             div.textContent = formattedTime;
         });
     }
+    
+    // Call the function to update the dates when the page loads
+    window.addEventListener('load', updateDates);
+
 
 
     // Set the initial state of the switch based on saved settings
@@ -619,7 +623,9 @@ timezone_scripts = \
                 // If regional formatting is enabled, format the phone number
                 try {
                     const formattedNumber = libphonenumber.parsePhoneNumber(phoneNumber).formatInternational();
-                    div.textContent = formattedNumber;
+                    div.innerHTML = `<span>${formattedNumber}</span> <i data-feather="info" class="icon-info" s
+                        tyle="cursor: pointer;" data-toggle="popover" data-placement="top" data-html="true"
+                        title="Phone Number Info" data-phonenumber="${phoneNumber}"></i>`;
                 } catch (error) {
                     div.textContent = phoneNumber;
                 }
@@ -628,20 +634,72 @@ timezone_scripts = \
                 div.textContent = phoneNumber;
             }
         });
+        feather.replace();
+        initializePopovers();
     }
+
+    function getPhoneNumberInfoHtml(phoneNumber) {
+        try {
+            const parsedNumber = libphonenumber.parsePhoneNumber(phoneNumber);
+            return `
+                <table class="table table-bordered">
+                    <tr><td>Raw value</td><td>${phoneNumber}</td></tr>
+                    <tr><td>Country Code</td><td>${parsedNumber.countryCallingCode}</td></tr>
+                    <tr><td>Country</td><td>${parsedNumber.country}</td></tr>
+                    <tr><td>Format International</td><td>${parsedNumber.formatInternational()}</td></tr>
+                    <tr><td>Format National</td><td>${parsedNumber.formatNational()}</td></tr>
+                    <tr><td>isPossiblePhoneNumber</td><td>${libphonenumber.isPossiblePhoneNumber(phoneNumber)}</td></tr>
+                    <tr><td>isValidPhoneNumber</td><td>${libphonenumber.isValidPhoneNumber(phoneNumber)}</td></tr>
+                </table>
+            `;
+        } catch (error) {
+            return `Error parsing phone number: ${error.message}`;
+        }
+    }
+
+    // Initialize the popovers
+    function initializePopovers() {
+        $.fn.popover.Constructor.Default.whiteList.table = [];
+        $.fn.popover.Constructor.Default.whiteList.tr = [];
+        $.fn.popover.Constructor.Default.whiteList.td = [];
+        $.fn.popover.Constructor.Default.whiteList.th = [];
+        $.fn.popover.Constructor.Default.whiteList.div = [];
+        $.fn.popover.Constructor.Default.whiteList.tbody = [];
+        $.fn.popover.Constructor.Default.whiteList.thead = [];
+
+        $('[data-toggle="popover"]').popover({
+            title: 'Phone Number Info',
+            placement: 'top',
+            html: true,
+            content: function() {
+                const phoneNumber = $(this).data('phonenumber');
+                return getPhoneNumberInfoHtml(phoneNumber);
+            }
+        });
+    }
+
+    $(document).on('click', '.icon-info', function (e) {
+        $(this).popover('toggle');
+        e.stopPropagation();  // Prevent this click event from propagating to the document
+    });
+
+    $(document).on('click', function (e) {
+        // Check if the click event target is inside a popover
+        if (!$(e.target).closest('.popover').length) {
+            $('[data-toggle="popover"]').popover('hide');
+        }
+    });
+    $(document).on('click', '.popover', function (e) {
+        e.stopPropagation();
+    });
 
     // Call the function to update the phone numbers when the page loads
     window.addEventListener('load', updatePhoneNumbers);
     // set a listener for page changes
     $('#dtBasicExample').on('draw.dt', function () { updatePhoneNumbers() } );
 
-    // Update the phone numbers whenever the regional formatting switch is toggled
-    $('#regionalFormattingSwitch').on('change', updatePhoneNumbers);
 
-
-    // Call the function to update the dates when the page loads
-    window.addEventListener('load', updateDates);
-    </script>
+</script>
 """
 
 page_footer = \

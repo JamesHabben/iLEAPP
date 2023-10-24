@@ -678,25 +678,39 @@ timezone_scripts = \
         });
     }
 
-    $(document).on('click', '.icon-info', function (e) {
-        $(this).popover('toggle');
-        e.stopPropagation();  // Prevent this click event from propagating to the document
-    });
-
-    $(document).on('click', function (e) {
-        // Check if the click event target is inside a popover
-        if (!$(e.target).closest('.popover').length) {
+    $(document).ready(function() {
+        // Initialize the popover for icons
+        $(document).on('click', '.icon-info', function (e) {
             $('[data-toggle="popover"]').popover('hide');
-        }
-    });
-    $(document).on('click', '.popover', function (e) {
-        e.stopPropagation();
-    });
+            $(this).popover('toggle');
+            e.stopPropagation();  // Prevent this click event from propagating to the document
+        });
 
-    // Call the function to update the phone numbers when the page loads
-    window.addEventListener('load', updatePhoneNumbers);
-    // set a listener for page changes
-    $('#dtBasicExample').on('draw.dt', function () { updatePhoneNumbers() } );
+        // Hide the popover when clicking outside of it
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('.popover').length) {
+                $('[data-toggle="popover"]').popover('hide');
+            }
+        });
+
+        // Stop propagation when clicking inside the popover
+        $(document).on('click', '.popover', function (e) {
+            e.stopPropagation();
+        });
+
+        // Hide popover on pagination
+        $('#dtBasicExample').on('page.dt', function () {
+            $('[data-toggle="popover"]').popover('hide');
+        });
+
+        // Update phone numbers on page draw
+        $('#dtBasicExample').on('draw.dt', function () {
+            updatePhoneNumbers();
+        });
+
+        // Call the function to update the phone numbers when the page loads
+        updatePhoneNumbers();
+    });
 
 
 </script>

@@ -2,33 +2,34 @@ import plistlib
 import datetime
 
 from scripts.artifact_report import ArtifactHtmlReport
-from scripts.ilapfuncs import logfunc, tsv, timeline, is_platform_windows, open_sqlite_db_readonly
+from scripts.ilapfuncs import logfunc, tsv, timeline, is_platform_windows, open_sqlite_file_readonly
 
 def get_bluetooth(files_found, report_folder, seeker, wrap_text, timezone_offset):
     for file_found in files_found:
         file_found = str(file_found)
-        if file_found.endswith('com.apple.MobileBluetooth.ledevices.other.db'): # regex '**/Library/Database/com.apple.MobileBluetooth.ledevices.other.db'
+        # regex '**/Library/Database/com.apple.MobileBluetooth.ledevices.other.db'
+        if file_found.endswith('com.apple.MobileBluetooth.ledevices.other.db'):
             get_bluetoothOther(file_found, report_folder, seeker, wrap_text, timezone_offset)
-        elif file_found.endswith('com.apple.MobileBluetooth.ledevices.paired.db'): # regex '**/com.apple.MobileBluetooth.ledevices.paired.db'
+        # regex '**/com.apple.MobileBluetooth.ledevices.paired.db'
+        elif file_found.endswith('com.apple.MobileBluetooth.ledevices.paired.db'):
             get_bluetoothPaired(file_found, report_folder, seeker, wrap_text, timezone_offset)
-        elif file_found.endswith('com.apple.MobileBluetooth.devices.plist'): # regex '**/com.apple.MobileBluetooth.devices.plist'
+        # regex '**/com.apple.MobileBluetooth.devices.plist'
+        elif file_found.endswith('com.apple.MobileBluetooth.devices.plist'):
             get_bluetoothPairedReg(file_found, report_folder, seeker, wrap_text, timezone_offset)
 
 def get_bluetoothOther(file_found, report_folder, seeker, wrap_text, timezone_offset):
-    db = open_sqlite_db_readonly(file_found)
-    cursor = db.cursor()
-
+    cursor = open_sqlite_file_readonly(file_found)
     cursor.execute(
-    """
-    SELECT
-    Name,
-    Address,
-    LastSeenTime,
-    Uuid
-    FROM
-    OtherDevices
-    order by Name desc
-    """)
+        """
+        SELECT
+            Name,
+            Address,
+            LastSeenTime,
+            Uuid
+        FROM
+            OtherDevices
+        order by Name desc
+        """)
 
     all_rows = cursor.fetchall()
     usageentries = len(all_rows)
@@ -50,24 +51,22 @@ def get_bluetoothOther(file_found, report_folder, seeker, wrap_text, timezone_of
     else:
         logfunc('No data available for Bluetooth Other')
     
-    db.close()
 
 def get_bluetoothPaired(file_found, report_folder, seeker, wrap_text, timezone_offset):
-    db = open_sqlite_db_readonly(file_found)
-    cursor = db.cursor()
-
-    cursor.execute("""
-    select 
-    Uuid,
-    Name,
-    NameOrigin,
-    Address,
-    ResolvedAddress,
-    LastSeenTime,
-    LastConnectionTime
-    from 
-    PairedDevices
-    """)
+    cursor = open_sqlite_file_readonly(file_found)
+    cursor.execute(
+        """
+        select 
+            Uuid,
+            Name,
+            NameOrigin,
+            Address,
+            ResolvedAddress,
+            LastSeenTime,
+            LastConnectionTime
+        from 
+            PairedDevices
+        """)
 
     all_rows = cursor.fetchall()
     usageentries = len(all_rows)
@@ -89,7 +88,6 @@ def get_bluetoothPaired(file_found, report_folder, seeker, wrap_text, timezone_o
     else:
         logfunc('No data available for Bluetooth Paired LE')
     
-    db.close()
 
 def get_bluetoothPairedReg(file_found, report_folder, seeker, wrap_text, timezone_offset):
     data_list = [] 

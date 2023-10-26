@@ -167,9 +167,10 @@ import scripts.ilapfuncs
 
 def get_cool_data1(files_found, report_folder, seeker, wrap_text):
     # let's pretend we actually got this data from somewhere:
+    
     rows = [
-     (datetime.datetime.now(), "Cool data col 1, value 1", "Cool data col 1, value 2", "Cool data col 1, value 3"),
-     (datetime.datetime.now(), "Cool data col 2, value 1", "Cool data col 2, value 2", "Cool data col 2, value 3"),
+     ((datetime.datetime.now(), 'datetime'), "Cool data col 1, value 1", "Cool data col 1, value 2", "Cool data col 1, value 3"),
+     ((datetime.datetime.now(), 'datetime'), "Cool data col 2, value 1", "Cool data col 2, value 2", "Cool data col 2, value 3"),
     ]
     
     headers = ["Timestamp", "Data 1", "Data 2", "Data 3"]
@@ -187,7 +188,28 @@ def get_cool_data1(files_found, report_folder, seeker, wrap_text):
     
     # Timeline:
     scripts.ilapfuncs.timeline(report_folder, report_name, rows, headers)
+```
+### Special Data Handlers
 
+The report generation has the capability to apply handlers on certain types of data. The handlers allow for the 
+output data to have additional formatting or functions applied to it inside the report. The date type that drove 
+this feature was datetimes. The handling built into the reporting allows for the viewer of the report to choose 
+a timezone to display the time in. This can be expanded to include other data types as well.
+
+Here are the current date types with special handlers
+- `datetime` designates this as a timestamp that can be adjusted by the timezone display setting
+- `date` designates as a date that can be adjusted by the date format setting
+- `time` designates as a time that can be adjusted by the time format setting and by timezone setting
+- `phonenumber` designates as a phone number that can be formatted to that expected by the region it's from
+
+Use the special handlers by passing a value and a string inside a Tuple
+```python
+row = (
+    (created_date, 'datetime'), # tuple using 'datetime' handler
+    first_name,
+    last_name,
+    (mobile_num, 'phonenumber') # tuple using 'phonenumber' handler
+)
 ```
 
 ## Acknowledgements

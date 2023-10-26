@@ -28,29 +28,24 @@ def get_bumble(files_found, report_folder, seeker, wrap_text, timezone_offset):
     db = open_sqlite_db_readonly(chat_db)
     cursor = db.cursor()
     cursor.execute('''
-    select
-    database2.data,
-    case secondaryIndex_isReadIndex.isIncoming
-        when 0 then 'Outgoing'
-        when 1 then 'Incoming'
-    end as "Direction",
-    case secondaryIndex_isReadIndex.isRead
-        when 0 then ''
-        when 1 then 'Yes'
-    end as "Message Read"
-    from database2
-    join secondaryIndex_isReadIndex on database2.rowid = secondaryIndex_isReadIndex.rowid
+        select
+        database2.data,
+        case secondaryIndex_isReadIndex.isIncoming
+            when 0 then 'Outgoing'
+            when 1 then 'Incoming'
+        end as "Direction",
+        case secondaryIndex_isReadIndex.isRead
+            when 0 then ''
+            when 1 then 'Yes'
+        end as "Message Read"
+        from database2
+        join secondaryIndex_isReadIndex on database2.rowid = secondaryIndex_isReadIndex.rowid
     ''')
     
     all_rows = cursor.fetchall()
     usageentries = len(all_rows)
     data_list = []
-    bumble_datecreated = ''
-    bumble_datemodified = ''
-    bumble_message = ''
-    bumble_receiver = ''
-    bumble_sender = ''
-    
+
     if usageentries > 0:
         for row in all_rows:
 
@@ -77,36 +72,42 @@ def get_bumble(files_found, report_folder, seeker, wrap_text, timezone_offset):
                 bumble_receiver = plist.get('self.toPersonUid','')
                 bumble_message = plist.get('self.messageText','')
             
-                data_list.append((bumble_datecreated, bumble_datemodified, bumble_sender, bumble_receiver, bumble_message, row[1], row[2]))
+                data_list.append((
+                    (bumble_datecreated, 'datetime'),
+                    (bumble_datemodified, 'datetime'),
+                    bumble_sender, bumble_receiver, bumble_message, row[1], row[2]
+                ))
             else: pass
                 
         description = 'Bumble - Messages'
-        report = ArtifactHtmlReport('Bumble - Messages')
-        report.start_artifact_report(report_folder, 'Bumble - Messages')
+        report = ArtifactHtmlReport(description)
+        report.start_artifact_report(report_folder, description)
         report.add_script()
         data_headers = (
-            'Created Timestamp','Modified Timestamp','Sender ID','Receiver ID','Message','Message Direction','Message Read')  # Don't remove the comma, that is required to make this a tuple as there is only 1 element
+            'Created Timestamp','Modified Timestamp','Sender ID','Receiver ID','Message',
+            'Message Direction','Message Read'
+        )
         
         report.write_artifact_data_table(data_headers, data_list, chat_db)
         report.end_artifact_report()
         
-        tsvname = f'Bumble - Messages'
+        tsvname = description
         tsv(report_folder, data_headers, data_list, tsvname)
         
-        tlactivity = f'Bumble - Messages'
+        tlactivity = description
         timeline(report_folder, tlactivity, data_list, data_headers)
         
     else:
-        logfunc('Bumble - Messages data available')
+        logfunc('Bumble - Messages data not available')
     
     db = open_sqlite_db_readonly(account_db)
     cursor = db.cursor()
     cursor.execute('''
-    select
-    data,
-    key
-    from database2
-    where key = 'lastLocation' or key = 'appVersion' or key = 'userName' or key = 'userId'
+        select
+        data,
+        key
+        from database2
+        where key = 'lastLocation' or key = 'appVersion' or key = 'userName' or key = 'userId'
     ''')
     
     all_rows1 = cursor.fetchall()
@@ -145,7 +146,7 @@ def get_bumble(files_found, report_folder, seeker, wrap_text, timezone_offset):
                 bumble_lastlat = plist.get('kCLLocationCodingKeyRawCoordinateLatitude','')
                 bumble_lastlong = plist.get('kCLLocationCodingKeyRawCoordinateLongitude','') 
                 
-                data_list_account.append(('Timestamp',str(bumble_timestamp)))
+                data_list_account.append( ('Timestamp', (str(bumble_timestamp), 'datetime')) )
                 data_list_account.append(('Last Latitude',bumble_lastlat))
                 data_list_account.append(('Last Longitude',bumble_lastlong))
                 
@@ -156,23 +157,22 @@ def get_bumble(files_found, report_folder, seeker, wrap_text, timezone_offset):
             else: pass
             
         description = 'Bumble - Account Details'
-        report = ArtifactHtmlReport('Bumble - Account Details')
-        report.start_artifact_report(report_folder, 'Bumble - Account Details')
+        report = ArtifactHtmlReport(description)
+        report.start_artifact_report(report_folder, description)
         report.add_script()
-        data_headers_account = (
-            'Key', 'Values')  # Don't remove the comma, that is required to make this a tuple as there is only 1 element
+        data_headers_account = ( 'Key', 'Values' )
         
         report.write_artifact_data_table(data_headers_account, data_list_account, account_db)
         report.end_artifact_report()
         
-        tsvname = f'Bumble - Account Details'
+        tsvname = description
         tsv(report_folder, data_headers_account, data_list_account, tsvname)
         
-        tlactivity = f'Bumble - Account Details'
+        tlactivity = description
         timeline(report_folder, tlactivity, data_list_account, data_headers_account)
         
     else:
-        logfunc('No Bumble - Account Details data available')
+        logfunc('Bumble - Account Details data not available')
     
     db.close()
 

@@ -44,18 +44,29 @@ https://www.youtube.com/watch?v=7qvVFfBM2NU
 
 ## Compile to executable
 
-To compile to an executable so you can run this on a system without python installed.
-If using Python 3.10 and above delete the arguments from the following terminal commands.
+Compile to an executable (.exe file) to run this on a system without python installed. This must be built first from 
+a system that has python installed. Python 3.10 and up (3.10 is not the same as 3.1) works 
+different from 3.9 and below.
 
-To create ileapp.exe, run:
+### Print Python Version
+Run this at a command prompt:
+```commandline
+python --version
+```
 
+### Python version 3.10 and up
+Run one of these lines in the base folder of this script package:
+
+```
+pyinstaller ileapp.spec
+
+pyinstaller ileappGUI.spec
+```
+### Python version 3.9 and below
+Run one of these lines in the base folder of this script package:
 ```
 pyinstaller --onefile ileapp.spec
-```
 
-To create ileappGUI.exe, run:
-
-```
 pyinstaller --onefile --noconsole ileappGUI.spec
 ```
 

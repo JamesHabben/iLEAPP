@@ -1,6 +1,7 @@
 import html
 import os
 import datetime
+import inspect
 from datetime import timezone, timedelta
 from dateutil import parser
 from scripts.html_parts import *
@@ -194,9 +195,25 @@ class ArtifactHtmlReport:
     def write_raw_html(self, code):
         self.report_file.write(code)
 
+    def get_calling_script_name(self):
+        # Get the frame of the current code execution
+        current_frame = inspect.currentframe()
+        # Get the caller's frame (the script that imported the module)
+        caller_frame = inspect.getouterframes(current_frame, 2)[2]
+        # Extract the file name (script name) from the caller's frame
+        script_name = os.path.basename(caller_frame.filename)
+        html_string = f'<div class="module_name">Module Filename: {script_name}</div>'
+        return html_string
+
     def end_artifact_report(self):
         if self.report_file:
-            self.report_file.write(body_main_trailer + body_end + self.script_code + page_footer)
+            self.report_file.write(
+                self.get_calling_script_name() +
+                body_main_trailer +
+                body_end +
+                self.script_code +
+                page_footer
+            )
             self.report_file.close()
             self.report_file = None
 

@@ -198,6 +198,17 @@ def convert_sqlite_epoch(epoch_date, timezone_offset=0):
         logfunc(f"Date conversion error")
         return False
 
+def convert_unix_epoch(epoch_date, timezone_offset=0):
+    # use for these type of dates datetime(zdate,'unixepoch')
+    try:
+        date_obj = datetime.fromtimestamp(epoch_date)
+        if timezone_offset:
+            date_obj = date_obj + timedelta(hours=timezone_offset)
+        return date_obj
+    except ValueError:
+        logfunc(f"Date conversion error")
+        return False
+
 def open_sqlite_db_readonly(path):
     '''Opens an sqlite db in read-only mode, so original db (and -wal/journal are intact)'''
     if is_platform_windows():

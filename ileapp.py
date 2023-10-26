@@ -6,6 +6,7 @@ import typing
 import plugin_loader
 import scripts.report as report
 import traceback
+import webbrowser
 from scripts.search_files import *
 from scripts.ilapfuncs import *
 from scripts.version_info import aleapp_version
@@ -44,8 +45,11 @@ def main():
                               "or 'itunes' for a folder containing a raw iTunes backup with hashed paths and names."))
     parser.add_argument('-o', '--output_path', required=False, action="store",
                         help='Path to base output folder (this must exist)')
+    parser.add_argument('-r', '--open_report', required=False, action='store_true',
+                        help='The report will open at the conclusion of this processing.')
     parser.add_argument('-i', '--input_path', required=False, action="store", help='Path to input file/folder')
-    parser.add_argument('-tz', '--timezone', required=False, action="store", default='UTC', type=str, help="Timezone name (e.g., 'America/New_York')")
+    parser.add_argument('-tz', '--timezone', required=False, action="store", default='UTC', type=str,
+                        help="Timezone name (e.g., 'America/New_York')")
     parser.add_argument('-w', '--wrap_text', required=False, action="store_false", default=True,
                         help='Do not wrap text for output of data files')
     parser.add_argument('-p', '--artifact_paths', required=False, action="store_true",
@@ -100,6 +104,8 @@ def main():
 
     crunch_artifacts(list(loader.plugins), extracttype, input_path, out_params, 1, wrap_text, loader, casedata, time_offset)
 
+    if args.open_report:
+        webbrowser.open(f'{out_params.report_folder_base}/index.html')
 
 def crunch_artifacts(
         plugins: typing.Sequence[plugin_loader.PluginSpec], extracttype, input_path, out_params, ratio, wrap_text,

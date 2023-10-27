@@ -151,22 +151,16 @@ class ArtifactHtmlReport:
         )
         self.report_file.write('</thead><tbody>')
 
-        if html_escape:
-            for row in data_list:
-                if html_no_escape:
-                    self.report_file.write('<tr>' + ''.join(
-                    f'{format_value(x) if h not in html_no_escape else x}' for x, h in zip(row, data_headers)
-                ) + '</tr>')
+        for row in data_list:
+            row_content = []
+            for value, header in zip(row, data_headers):
+                if html_escape and header not in html_no_escape:
+                    row_content.append(f'{format_value(value)}')
                 else:
-                    self.report_file.write('<tr>' + ''.join(
-                        f'{format_value(x)}' for x in row
-                    ) + '</tr>'),
-        else:
-            for row in data_list:
-                self.report_file.write('<tr>' + ''.join(
-                    f'<td>{x}</td>' for x in row
-                ) + '</tr>')
-        
+                    row_content.append(f'<td>{value}</td>')
+            row_html = '<tr>' + ''.join(row_content) + '</tr>'
+            self.report_file.write(row_html)
+
         self.report_file.write('</tbody>')
         if cols_repeated_at_bottom:
             self.report_file.write('<tfoot><tr>' + ''.join(

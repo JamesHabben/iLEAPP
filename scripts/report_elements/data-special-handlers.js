@@ -143,13 +143,6 @@
     const savedRegionalFormatting = localStorage.getItem('regionalFormatting') === 'true';
     $('#regionalFormattingSwitch').prop('checked', savedRegionalFormatting);
 
-    // Update saved settings and reformat phone numbers when the switch is toggled
-    $('#regionalFormattingSwitch').on('change', function() {
-        const regionalFormattingEnabled = $(this).is(':checked');
-        localStorage.setItem('regionalFormatting', regionalFormattingEnabled);
-        updatePhoneNumbers();
-    });
-
     function updatePhoneNumbers() {
         // Check the state of the regional formatting switch
         const savedRegionalFormatting = localStorage.getItem('regionalFormatting') === 'true';
@@ -221,6 +214,13 @@
     }
 
     $(document).ready(function() {
+        // Update saved settings and reformat phone numbers when the switch is toggled
+        $('#regionalFormattingSwitch').on('change', function() {
+            const regionalFormattingEnabled = $(this).is(':checked');
+            localStorage.setItem('regionalFormatting', regionalFormattingEnabled);
+            updatePhoneNumbers();
+        });
+
         // Initialize the popover for icons
         $(document).on('click', '.icon-info', function (e) {
             $('[data-toggle="popover"]').popover('hide');

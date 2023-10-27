@@ -102,6 +102,47 @@
     scrollbar-width: thin !important;
 }
 
+[data-theme="dark"] .modal-content {
+    background-color: #111 !important;
+}
+[data-theme="dark"] .modal-header .close {
+    color: #eee; /* or any other color you prefer */
+}
+[data-theme="dark"] .modal-footer .btn-secondary {
+    background-color: #555 !important;
+    color: #eee !important;
+    border-color: #777 !important;
+}
+
+[data-theme="dark"] .modal-footer .btn-primary {
+    background-color: #007bff !important;
+    color: #eee !important;
+    border-color: #0056b3 !important;
+}
+
+[data-theme="dark"] .form-control:focus {
+    background-color: #555 !important;
+    color: #eee !important;
+    border-color: #777 !important;  /* Adjust border color if needed */
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;  /* Adjust box shadow if needed */
+}
+[data-theme="dark"] .popover {
+    background-color: #111 !important;
+    border-color: #555 !important;
+    color: #eee !important;
+}
+
+[data-theme="dark"] .popover-header {
+    background-color: #333 !important;
+    color: #eee !important;
+    border-bottom-color: #555 !important;
+}
+
+[data-theme="dark"] .popover-body {
+    background-color: #111 !important;
+    color: #eee !important;
+}
+
 /* For Chrome & Safari 
 *::-webkit-scrollbar {
     width: 10px; 

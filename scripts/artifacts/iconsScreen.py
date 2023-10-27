@@ -85,7 +85,7 @@ def get_iconsScreen(files_found, report_folder, seeker, wrap_text, timezone_offs
         report.add_script()
         data_headers = ((f'Apps per Screens',))
         report.write_artifact_data_table(
-            data_headers, data_list, file_found, html_escape=False)
+            data_headers, data_list, file_found, html_escape=False, cols_repeated_at_bottom=False)
         report.end_artifact_report()
 
 

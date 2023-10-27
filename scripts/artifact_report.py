@@ -164,7 +164,7 @@ class ArtifactHtmlReport:
         else:
             for row in data_list:
                 self.report_file.write('<tr>' + ''.join(
-                    f'{format_value(x)}' for x in row
+                    f'<td>{x}</td>' for x in row
                 ) + '</tr>')
         
         self.report_file.write('</tbody>')

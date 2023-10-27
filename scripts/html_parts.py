@@ -39,8 +39,12 @@ page_header = \
         
         <!-- Data Special Handlers -->
         <script src="_elements/data-special-handlers.js"></script>
-    </head>
+        
+
+      </head>
     <body>
+        <!-- Dark Mode -->
+        <script src="_elements/dark-mode-switch.js"></script>
 """
 # body_part_1 includes fixed navbar at top and starting tags for rest of page
 # Variables = {version_info}
@@ -50,10 +54,11 @@ body_start = \
     <nav class="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
         <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">{0}</a>
         <div class="custom-control custom-switch">
-            <input type="checkbox" class="custom-control-input" id="darkSwitch" />
-            <label class="custom-control-label mr-2" for="darkSwitch" style="color:white">Dark Switch</label>
+            <a href="settings.html" class="btn btn-primary">
+                <i data-feather="settings"></i> Display Settings
+            </a>
         </div>
-        <script src="_elements/dark-mode-switch.js"></script>
+        
     </nav>
 
     <div class="container-fluid">
@@ -210,6 +215,47 @@ tabs_code = \
     </div>
 """
 
+settings_tabs_code = \
+"""
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="case-tab" data-toggle="tab" href="#dark" role="tab" aria-controls="dark" 
+                aria-selected="true">Dark Mode</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="device-list-tab" data-toggle="tab" href="#date" role="tab" aria-controls="date" 
+                aria-selected="false">Dates & Times</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="run-log-tab" data-toggle="tab" href="#phone" role="tab" aria-controls="phone" 
+                aria-selected="false">Phone Numbers</a>
+        </li>
+    </ul>
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="dark" role="tabpanel" aria-labelledby="dark-tab"><br />{}</div>
+        <div class="tab-pane fade" id="date" role="tabpanel" aria-labelledby="date-tab"><br />{}</div>
+        <div class="tab-pane fade" id="phone" role="tabpanel" aria-labelledby="phone-tab"><br />{}</div>
+    </div>
+"""
+
+
+# card for timezone display settings
+card_darkmode_settings = \
+"""
+<div class="card bg-white" style="padding: 20px;">
+    <h3 class="card-title">Dark Mode Display Settings</h3>
+    <div class="card-body">
+        <div id="darkmodeSettings">
+            <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="darkSwitch" />
+                <label class="custom-control-label" for="darkSwitch">Enable Dark Mode</label>
+            </div>
+            <script src="_elements/dark-mode-switch.js"></script>
+        </div>
+    </div>
+</div>
+"""
+
 # card for timezone display settings
 card_timezone_settings = \
 """
@@ -231,6 +277,11 @@ card_timezone_settings = \
         </button>
     </div>
 </div>
+"""
+
+# card for timezone display settings
+card_phonenumber_settings = \
+"""
 <div class="card bg-white" style="padding: 20px;">
     <h3 class="card-title">Phone Number Display Settings</h3>
     <div class="card-body">
@@ -441,6 +492,7 @@ nav_bar_script_footer = \
         });
     </script>
 """
+
 default_responsive_table_script = \
 """
     <script>
@@ -453,15 +505,6 @@ default_responsive_table_script = \
             //$('#infiniteLoading').remove();
         });
     </script>
-"""
-
-
-timezone_scripts = \
-"""
-<script>
- 
-
-</script>
 """
 
 page_footer = \

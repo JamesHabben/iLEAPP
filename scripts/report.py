@@ -967,7 +967,6 @@ def generate_report(reportfolderbase, time_in_secs, time_HMS, extraction_type, i
             # Now write out entire html page for artifact
             f = open(os.path.join(reportfolderbase, filename), 'w', encoding='utf8')
             artifact_data = insert_sidebar_code(artifact_data, active_nav_list_data, path)
-            artifact_data += timezone_scripts
             f.write(artifact_data)
             f.close()
 
@@ -979,7 +978,8 @@ def generate_report(reportfolderbase, time_in_secs, time_HMS, extraction_type, i
             except OSError:
                 pass # Perhaps it was not empty!
 
-    # Create index.html's page content
+    # Create index.html and settings.html page content
+    create_settings_html(reportfolderbase, nav_list_data)
     create_index_html(reportfolderbase, time_in_secs, time_HMS, extraction_type, image_input_path, nav_list_data, casedata)
     elements_folder = os.path.join(reportfolderbase, '_elements')
     os.mkdir(elements_folder)
@@ -1029,6 +1029,45 @@ def get_file_content(path):
     f.close()
     return data
 
+
+def create_settings_html(reportfolderbase, nav_list_data):
+    '''Write out the settings.html page to the report folder'''
+    content = '<br />'
+    content += """
+                   <div class="card bg-white" style="padding: 20px;">
+                   <h2 class="card-title">Display Settings</h2>
+               """  # CARD start
+
+    # Dark Mode Config Card
+    tab1_content = card_darkmode_settings
+
+    # Date Display Config Card
+    tab2_content = card_timezone_settings
+    tab2_content += modal_timezone
+    tab2_content += modal_datetime_format
+
+    # Phone Number Display Config Card
+    tab3_content = card_phonenumber_settings
+
+    content += settings_tabs_code.format(tab1_content, tab2_content, tab3_content )
+
+    content += '</div>'  # CARD end
+
+    filename = 'settings.html'
+    page_title = 'iLEAPP Report'
+    body_heading = 'iOS Logs Events And Protobuf Parser'
+    body_description = 'iLEAPP is an open source project that aims to parse every known iOS artifact for the purpose of forensic analysis.'
+    active_nav_list_data = mark_item_active(nav_list_data, filename) + nav_bar_script
+
+    f = open(os.path.join(reportfolderbase, filename), 'w', encoding='utf8')
+    f.write(page_header.format(page_title))
+    f.write(body_start.format(f"iLEAPP {aleapp_version}"))
+    f.write(body_sidebar_setup + active_nav_list_data + body_sidebar_trailer)
+    f.write(body_main_header + body_main_data_title.format(body_heading, body_description))
+    f.write(content)
+    f.write(body_main_trailer + body_end + nav_bar_script_footer + page_footer)
+    f.close()
+
 def create_index_html(reportfolderbase, time_in_secs, time_HMS, extraction_type, image_input_path, nav_list_data, casedata):
     '''Write out the index.html page to the report folder'''
     content = '<br />'
@@ -1054,12 +1093,6 @@ def create_index_html(reportfolderbase, time_in_secs, time_HMS, extraction_type,
             All dates and times are in UTC unless noted otherwise!
             </p>
         """
-
-    # Date Display Configuration Settings
-    tab1_content += card_timezone_settings
-    tab1_content += modal_timezone
-    tab1_content += modal_datetime_format
-    tab1_content += timezone_scripts
 
     # Get script run log (this will be tab2)
     devinfo_files_path = os.path.join(reportfolderbase, 'Script Logs', 'DeviceInfo.html')

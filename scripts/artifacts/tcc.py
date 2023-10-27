@@ -20,7 +20,7 @@ def get_tcc(files_found, report_folder, seeker, wrap_text, timezone_offset):
     cursor = open_sqlite_file_readonly(file_found)
     cursor.execute('''
         select 
-            datetime(last_modified,'unixepoch'),
+            last_modified,
             client,
             service,
             case auth_value
@@ -38,9 +38,6 @@ def get_tcc(files_found, report_folder, seeker, wrap_text, timezone_offset):
     if usageentries > 0:
         data_list =[]
         for row in all_rows:
-            timestamp = convert_ts_human_to_utc(row[0])
-            timestamp = convert_utc_human_to_timezone(timestamp,timezone_offset)
-            
             data_list.append((
                 (convert_unix_epoch(row['last_modified']), 'datetime'),
                 row['client'],
@@ -53,7 +50,7 @@ def get_tcc(files_found, report_folder, seeker, wrap_text, timezone_offset):
         report.start_artifact_report(report_folder, 'TCC - Permissions')
         report.add_script()
         data_headers = ('Last Modified Timestamp','Bundle ID','Service','Access')
-        report.write_artifact_data_table(data_headers, data_list, file_found, html_escape=False)
+        report.write_artifact_data_table(data_headers, data_list, file_found)
         report.end_artifact_report()
         
         tsvname = 'TCC - Permissions'

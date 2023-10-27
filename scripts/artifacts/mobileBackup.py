@@ -1,5 +1,6 @@
 import os
 import plistlib
+from datetime import datetime
 
 from scripts.artifact_report import ArtifactHtmlReport
 from scripts.ilapfuncs import logfunc, logdevinfo, tsv, is_platform_windows 
@@ -19,7 +20,7 @@ def get_mobileBackup(files_found, report_folder, seeker, wrap_text, timezone_off
                 if key == 'isCloud':
                     data_list.append((key, val))
                 if key == 'date':
-                    data_list.append((key, val))
+                    data_list.append((key, (val, 'datetime')))
         else:
             pass
 
@@ -32,7 +33,7 @@ def get_mobileBackup(files_found, report_folder, seeker, wrap_text, timezone_off
                 if key == 'WasCloudRestore':
                     data_list.append((key, val))
                 if key == 'RestoreDate':
-                    data_list.append((key, val))
+                    data_list.append((key, (val, 'datetime')))
 
             
     report = ArtifactHtmlReport('Mobile Backup')

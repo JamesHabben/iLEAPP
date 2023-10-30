@@ -1057,7 +1057,7 @@ def create_settings_html(reportfolderbase, nav_list_data):
     page_title = 'iLEAPP Report'
     body_heading = 'iOS Logs Events And Protobuf Parser'
     body_description = 'iLEAPP is an open source project that aims to parse every known iOS artifact for the purpose of forensic analysis.'
-    active_nav_list_data = nav_bar_script
+    active_nav_list_data = nav_list_data + nav_bar_script
 
     f = open(os.path.join(reportfolderbase, filename), 'w', encoding='utf8')
     f.write(page_header.format(page_title))

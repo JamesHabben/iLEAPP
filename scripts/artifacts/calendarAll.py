@@ -110,7 +110,7 @@ def get_calendarAll(files_found, report_folder, seeker, wrap_text, timezone_offs
 	
 		description = ''
 		report = ArtifactHtmlReport('Calendar Items')
-		report.start_artifact_report(report_folder, 'Items', description)
+		report.start_artifact_report(report_folder, 'Calendar Items', description)
 		report.add_script()
 		data_headers = ('Start Date','Start Timezone','End Date','End Timezone',
 						'All Day?','Summary','Calendar ID','Calendar Name','Last Modified')
@@ -150,7 +150,7 @@ def get_calendarAll(files_found, report_folder, seeker, wrap_text, timezone_offs
 	
 		description = ''
 		report = ArtifactHtmlReport('Calendar Identity')
-		report.start_artifact_report(report_folder, 'Identity', description)
+		report.start_artifact_report(report_folder, 'Calendar Identity', description)
 		report.add_script()
 		data_headers = ('Display Name','Address','First Name','Last Name')     
 		report.write_artifact_data_table(data_headers, data_list, file_found)

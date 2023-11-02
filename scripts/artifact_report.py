@@ -107,7 +107,6 @@ class ArtifactHtmlReport:
                 elif data_type == 'time':
                     # Format as no date only time, using 24-hour format for sorting
                     try:
-                        # Try parsing using dateutil parser
                         time_obj = parser.parse(value).time()
                     except ValueError:
                         return f'<td>{value}</td>'
@@ -115,8 +114,11 @@ class ArtifactHtmlReport:
                     return f'<td data-sort="{time_value}"><div data-time="{time_value}"></div></td>'
 
                 elif data_type == 'phonenumber':
-                    # Format as a string of phone number
                     return f'<td><div data-phonenumber="{value}"></div></td>'
+
+                elif data_type == 'color':
+                    return f'<td><div data-color="{value}"></div></td>'
+
                 else:
                     return f'<td>{value}</td>'
 

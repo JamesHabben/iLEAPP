@@ -24,7 +24,7 @@ import datetime
 import io
 
 from scripts.artifact_report import ArtifactHtmlReport
-from scripts.ilapfuncs import logfunc, tsv, timeline, is_platform_windows, open_sqlite_db_readonly
+from scripts.ilapfuncs import logfunc, tsv, timeline, is_platform_windows, open_sqlite_file_readonly
 
 
 def get_cloudkitSharing(files_found, report_folder, seeker, wrap_text, timezone_offset):
@@ -39,25 +39,26 @@ def get_cloudkitSharing(files_found, report_folder, seeker, wrap_text, timezone_
 def get_cloudkitServerSharedData(file_found, report_folder, seeker, wrap_text):
     user_dictionary = {}
 
-    db = open_sqlite_db_readonly(file_found)
-    cursor = db.cursor()
+    cursor = open_sqlite_file_readonly(file_found)
     cursor.execute('''
-    SELECT Z_PK, ZSERVERSHAREDATA 
-    FROM
-    ZICCLOUDSYNCINGOBJECT
-    WHERE
-    ZSERVERSHAREDATA NOT NULL
+        SELECT 
+            Z_PK, 
+            ZSERVERSHAREDATA 
+        FROM
+            ZICCLOUDSYNCINGOBJECT
+        WHERE
+            ZSERVERSHAREDATA NOT NULL
     ''')
 
     all_rows = cursor.fetchall()
     for row in all_rows:
 
-        filename = os.path.join(report_folder, 'zserversharedata_' + str(row[0]) + '.bplist')
+        filename = os.path.join(report_folder, 'zserversharedata_' + str(row['Z_PK']) + '.bplist')
         output_file = open(filename, "wb")
-        output_file.write(row[1])
+        output_file.write(row['ZSERVERSHAREDATA'])
         output_file.close()
 
-        deserialized_plist = nd.deserialize_plist(io.BytesIO(row[1]))
+        deserialized_plist = nd.deserialize_plist(io.BytesIO(row['ZSERVERSHAREDATA']))
         for item in deserialized_plist:
             if 'Participants' in item:
                 for participant in item['Participants']:
@@ -78,7 +79,6 @@ def get_cloudkitServerSharedData(file_found, report_folder, seeker, wrap_text):
 
                     user_dictionary[record_id] = [record_id, email_address, phone_number, name_prefix, first_name,
                                                   middle_name, last_name, name_suffix, nickname]
-    db.close()
 
     # Build the array after dealing with all the files 
     user_list = list(user_dictionary.values())
@@ -101,14 +101,15 @@ def get_cloudkitServerSharedData(file_found, report_folder, seeker, wrap_text):
 
 
 def get_cloudkitServerRecordData(file_found, report_folder, seeker, wrap_text):
-    db = open_sqlite_db_readonly(file_found)
-    cursor = db.cursor()
+    cursor = open_sqlite_file_readonly(file_found)
     cursor.execute('''
-    select z_pk, zserverrecorddata 
-    from
-    ziccloudsyncingobject
-    where
-    zserverrecorddata not null
+        select 
+            z_pk, 
+            zserverrecorddata 
+        from
+            ziccloudsyncingobject
+        where
+            zserverrecorddata not null
     ''')
 
     note_data = []
@@ -118,12 +119,12 @@ def get_cloudkitServerRecordData(file_found, report_folder, seeker, wrap_text):
 
         for row in all_rows:
 
-            filename = os.path.join(report_folder, 'zserverrecorddata_' + str(row[0]) + '.bplist')
+            filename = os.path.join(report_folder, 'zserverrecorddata_' + str(row['z_pk']) + '.bplist')
             output_file = open(filename, "wb")
-            output_file.write(row[1])
+            output_file.write(row['zserverrecorddata'])
             output_file.close()
 
-            deserialized_plist = nd.deserialize_plist(io.BytesIO(row[1]))
+            deserialized_plist = nd.deserialize_plist(io.BytesIO(row['zserverrecorddata']))
             creator_id = ''
             last_modified_id = ''
             creation_date = ''
@@ -147,7 +148,8 @@ def get_cloudkitServerRecordData(file_found, report_folder, seeker, wrap_text):
                 elif 'RecordID' in item:
                     record_id = item['RecordID']['RecordName']
 
-            note_data.append([record_id, record_type, creation_date, creator_id, last_modified_date, last_modified_id,
+            note_data.append([record_id, record_type, (creation_date, 'datetime'), creator_id,
+                              (last_modified_date, 'datetime'), last_modified_id,
                               last_modified_device])
 
         description = 'CloudKit Note Sharing - Notes information shared via CloudKit. Look up the Record ID in the ZICCLOUDSYYNCINGOBJECT.ZIDENTIFIER column. '
@@ -164,7 +166,6 @@ def get_cloudkitServerRecordData(file_found, report_folder, seeker, wrap_text):
     else:
         logfunc('No Cloudkit - Cloudkit Note Sharing data available')
 
-    db.close()
 
 # __artifacts__ = {
 #     "cloudkitsharing": (

@@ -187,16 +187,19 @@ def open_sqlite_file_readonly(file_path):
 
 
 def convert_sqlite_epoch(epoch_date, timezone_offset=0):
-    # use for these type of dates datetime(zdate+978307200,'unixepoch')
     try:
-        epoch_start = datetime(2001, 1, 1, tzinfo=timezone.utc)
-        date_obj = epoch_start + timedelta(seconds=epoch_date)
-        if timezone_offset:
-            date_obj = date_obj + timedelta(hours=timezone_offset)
-        return date_obj
+        if epoch_date is not None:
+            epoch_start = datetime(2001, 1, 1, tzinfo=timezone.utc)
+            date_obj = epoch_start + timedelta(seconds=epoch_date)
+            if timezone_offset:
+                date_obj = date_obj + timedelta(hours=timezone_offset)
+            return date_obj
+        else:
+            logfunc("Epoch date is None, cannot convert.")
+            return None
     except ValueError:
-        logfunc(f"Date conversion error")
-        return False
+        logfunc("Date conversion error")
+        return None
 
 def convert_unix_epoch(epoch_date, timezone_offset=0):
     # use for these type of dates datetime(zdate,'unixepoch')

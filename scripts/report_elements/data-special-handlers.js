@@ -179,6 +179,7 @@ function updateDates() {
     datetimeDivs.forEach(div => {
         const timestamp = div.getAttribute('data-datetime');
         try {
+            div.innerHTML = '';
             createInfoIcon(div, 'datetime', formatDateTime(timestamp));
         } catch (error) {
             div.textContent = timestamp;
@@ -190,6 +191,7 @@ function updateDates() {
     dateDivs.forEach(div => {
         const datestamp = div.getAttribute('data-date');
         try {
+            div.innerHTML = '';
             createInfoIcon(div, 'date', formatDate(datestamp))
         } catch (error) {
             div.textContent = formattedDate;
@@ -201,6 +203,7 @@ function updateDates() {
     timeDivs.forEach(div => {
         const timestamp = div.getAttribute('data-time');
         try {
+            div.innerHTML = '';
             createInfoIcon(div, 'datetime', formatTime(timestamp));
         } catch (error) {
             div.textContent = timestamp;
@@ -267,6 +270,146 @@ function getTimePopContent(dateTime) {
 
 
 // ========================================
+// color handler
+// ========================================
+
+function updateColors() {
+    // Select all divs with a data-color attribute
+    const colorDivs = document.querySelectorAll('div[data-color]');
+
+    colorDivs.forEach(div => {
+        // Get the color from the data attribute
+        const color = div.getAttribute('data-color');
+
+        if (color && color.toLowerCase() !== 'none') {
+            // Create a new div element for the color square
+            const colorSquare = document.createElement('div');
+            colorSquare.style.backgroundColor = color;
+            colorSquare.style.width = '15px';
+            colorSquare.style.height = '15px';
+            colorSquare.style.display = 'inline-block';
+            colorSquare.style.marginRight = '5px';
+
+            div.innerHTML = '';
+            div.appendChild(colorSquare);
+            createInfoIcon(div, 'color', color);
+        }
+    });
+
+    // Initialize the popovers
+    initializePopovers(getColorPopContent);
+}
+
+function hexToRgb(hex) {
+    // Remove the hash at the start if it's there
+    hex = hex.replace(/^#/, '');
+
+    // Parse r, g, b values
+    let bigint = parseInt(hex, 16);
+    let r = (bigint >> 16) & 255;
+    let g = (bigint >> 8) & 255;
+    let b = bigint & 255;
+
+    return { r, g, b };
+}
+
+function rgbToHsl(r, g, b) {
+    r /= 255, g /= 255, b /= 255;
+
+    let max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+
+    if(max == min){
+        h = s = 0;  // achromatic
+    } else {
+        let d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch(max){
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+    }
+
+    return { h: h * 360, s: s * 100, l: l * 100 };
+}
+
+
+function getColorInfo(color) {
+    // Convert the color to RGB format if it's in HEX
+    let rgbColor;
+    if (color.startsWith("#")) {
+        // Remove the hash at the start if it's there
+        color = color.slice(1);
+        const bigint = parseInt(color, 16);
+        const r = (bigint >> 16) & 255;
+        const g = (bigint >> 8) & 255;
+        const b = bigint & 255;
+        rgbColor = `rgb(${r}, ${g}, ${b})`;
+    } else {
+        rgbColor = color;
+    }
+
+    // Now use the color-blind library to get color blind friendly versions
+    const colorBlindFriendly = {
+        protanomaly: colorBlind.protanomaly(rgbColor),
+        deuteranomaly: colorBlind.deuteranomaly(rgbColor),
+        tritanomaly: colorBlind.tritanomaly(rgbColor),
+    };
+
+    return colorBlindFriendly;
+}
+
+function getColorPopContent(colorValue) {
+    // Convert HTML color to RGB
+    const rgb = hexToRgb(colorValue); // Assume you have a function hexToRgb
+    // Convert RGB to HSL
+    const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b); // Assume you have a function rgbToHsl
+    // Get color-blind-friendly versions
+    const colorBlindFriendly = getColorInfo(colorValue);
+
+    return `
+        <table class="table table-bordered">
+            <tr><td>HTML Color</td>
+                <td style="background-color: ${colorValue}; width: 15px;"></div> </td>
+                <td>${colorValue}</td></tr>
+            <tr><td>RGB Values</td>
+                <td style="background-color: ${colorValue}; width: 15px;"></td>
+                <td>(${rgb.r}, ${rgb.g}, ${rgb.b})</td></tr>
+            <tr><td>HSL Values</td>
+                <td style="background-color: ${colorValue}; width: 15px;"></td>
+                <td>(${hsl.h.toFixed(2)}, ${hsl.s.toFixed(2)}%, ${hsl.l.toFixed(2)}%)</td></tr>
+            <tr><td>Protanomaly</td>
+                <td style="background-color: ${colorBlindFriendly.protanomaly}; width: 15px;"></td>
+                <td>${colorBlindFriendly.protanomaly}</td></tr>
+            <tr><td>Deuteranomaly</td>
+                <td style="background-color: ${colorBlindFriendly.deuteranomaly}; width: 15px;"></td>
+                <td>${colorBlindFriendly.deuteranomaly}</td></tr>
+            <tr><td>Tritanomaly</td>
+                <td style="background-color: ${colorBlindFriendly.tritanomaly}; width: 15px;"></td>
+                <td>${colorBlindFriendly.tritanomaly}</td></tr>
+            <!-- ... other rows as needed ... -->
+        </table>
+    `;
+}
+
+
+document.addEventListener('DOMContentLoaded', updateColors);
+
+function updateColorBoxes() {
+    document.querySelectorAll('.color-box').forEach(box => {
+        const colorValue = box.getAttribute('data-bg-color');
+        box.style.backgroundColor = colorValue;
+    });
+    console.log('ran')
+}
+
+// Call this function each time a popover is shown.
+// You may need to adjust this to fit the logic of your application.
+$('[data-toggle="popover"]').on('shown.bs.popover', updateColorBoxes);
+
+// ========================================
 // phone number format handler
 // ========================================
 // Set the initial state of the switch based on saved settings
@@ -299,6 +442,7 @@ function updatePhoneNumbers() {
         if (savedRegionalFormatting) {
             try {
                 const formattedNumber = libphonenumber.parsePhoneNumber(phoneNumber).formatInternational();
+                div.innerHTML = '';
                 createInfoIcon(div, 'phonenumber', formattedNumber);
             } catch (error) {
                 div.textContent = phoneNumber;
@@ -342,6 +486,8 @@ function getContentCallback(dataType) {
             return getDateTimePopContent;
         case 'date':
             return getDateTimePopContent;
+        case 'color':
+            return getColorPopContent;
         default:
             throw new Error(`Unsupported data type: ${dataType}`);
     }
@@ -356,6 +502,8 @@ function initializePopovers() {
     $.fn.popover.Constructor.Default.whiteList.div = [];
     $.fn.popover.Constructor.Default.whiteList.tbody = [];
     $.fn.popover.Constructor.Default.whiteList.thead = [];
+    $.fn.popover.Constructor.Default.whiteList['*'].push('style');
+
 
     $('[data-toggle="popover"]').popover({
         title: 'Info',
@@ -417,7 +565,7 @@ function createInfoIcon(parentDiv, dataType, dataValue) {
     icon.setAttribute('title', `Extra Info`);
 
     // Add elements to parent
-    parentDiv.innerHTML = '';
+    //parentDiv.innerHTML = '';
     parentDiv.appendChild(span);
     parentDiv.appendChild(icon);
 }

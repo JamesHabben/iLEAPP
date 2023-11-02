@@ -42,7 +42,7 @@ def get_calendarAll(files_found, report_folder, seeker, wrap_text, timezone_offs
 				row['rowid'],
 				row['title'],
 				row['flags'],
-				row['color'],
+				(row['color'], 'color'),
 				row['symbolic_color_name'],
 				row['external_id'],
 				row['self_identity_email'],

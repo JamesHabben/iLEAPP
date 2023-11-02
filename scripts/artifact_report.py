@@ -94,7 +94,7 @@ class ArtifactHtmlReport:
                         date_obj = datetime.datetime.strptime(value, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
                     else:
                         date_obj = value
-                    return f'<td data-sort="{value.isoformat()}"><div data-timestamp="{value.isoformat()}"></div></td>'
+                    return f'<td data-sort="{value.isoformat()}"><div data-datetime="{value.isoformat()}"></div></td>'
 
                 elif data_type == 'date':
                     # Format as only the date component

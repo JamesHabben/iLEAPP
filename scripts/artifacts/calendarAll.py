@@ -8,73 +8,112 @@ import sqlite3
 import json
 
 from scripts.artifact_report import ArtifactHtmlReport
-from scripts.ilapfuncs import logfunc, tsv, timeline, is_platform_windows, open_sqlite_db_readonly
+from scripts.ilapfuncs import logfunc, tsv, timeline, is_platform_windows, open_sqlite_file_readonly, convert_sqlite_epoch
 
 
 def get_calendarAll(files_found, report_folder, seeker, wrap_text, timezone_offset):
 	file_found = str(files_found[0])
 	#os.chmod(file_found, 0o0777)
-	db = open_sqlite_db_readonly(file_found)
-	cursor = db.cursor()
+	cursor = open_sqlite_file_readonly(file_found)
 	cursor.execute(
-	"""
-	select 
-	title,
-	flags,
-	color,
-	symbolic_color_name,
-	external_id,
-	self_identity_email
-	from Calendar
-	""")
+		"""
+		select 
+			rowid,
+			title,
+			flags,
+			color,
+			symbolic_color_name,
+			external_id,
+			self_identity_email,
+			sharing_status,
+			shared_owner_name,
+			shared_owner_address,
+			subcal_url
+		from Calendar
+		"""
+	)
 
 	all_rows = cursor.fetchall()
 	usageentries = len(all_rows)
 	data_list = []    
 	if usageentries > 0:
 		for row in all_rows:
-			data_list.append((row[0],row[1],row[2],row[3],row[4],row[5]))
+			data_list.append((
+				row['rowid'],
+				row['title'],
+				row['flags'],
+				row['color'],
+				row['symbolic_color_name'],
+				row['external_id'],
+				row['self_identity_email'],
+				row['subcal_url'],
+				row['sharing_status'],
+				row['shared_owner_name'],
+				row['shared_owner_address']
+			))
 	
 		description = ''
-		report = ArtifactHtmlReport('Calendar List')
-		report.start_artifact_report(report_folder, 'List', description)
+		report = ArtifactHtmlReport('Calendar Names')
+		report.start_artifact_report(report_folder, 'Calendar Names', description)
 		report.add_script()
-		data_headers = ('Title','Flags','Color','Symbolic Color Name','External ID','Self Identity Email')     
+		data_headers = ('Row ID', 'Title','Flags','Color','Symbolic Color Name',
+						'External ID','Self Identity Email', 'Remote URL', 'Sharing Status',
+						'Shared Owner Name', 'Shared Owner Email')
 		report.write_artifact_data_table(data_headers, data_list, file_found)
 		report.end_artifact_report()
 		
-		tsvname = 'Calendar List '
+		tsvname = 'Calendar Names'
 		tsv(report_folder, data_headers, data_list, tsvname)
 	else:
-		logfunc('No data available for Calendar List')
+		logfunc('No data available for Calendar Names')
 	
 	cursor.execute(
-	"""
-	Select
-	DATETIME(start_date + 978307200, 'UNIXEPOCH') as startdate,
-	start_tz,
-	DATETIME(end_date + 978307200, 'UNIXEPOCH') as enddate,
-	end_tz,
-	all_day,
-	summary,
-	calendar_id,
-	DATETIME(last_modified+ 978307200, 'UNIXEPOCH') as lastmod
-	from CalendarItem
-	order by startdate
-	""")
+		"""
+		SELECT 
+			start_date,
+			start_tz,
+			end_date,
+			end_tz,
+			all_day,
+			summary,
+			calendar_id,
+			title,
+			last_modified
+		FROM CalendarItem
+		INNER JOIN calendar ON calendar_id = calendar.rowid
+		ORDER BY start_date;
+		"""
+	)
 
 	all_rows = cursor.fetchall()
 	usageentries = len(all_rows)
 	data_list = []    
 	if usageentries > 0:
 		for row in all_rows:
-			data_list.append((row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7]))
+			if row['all_day'] == 1:
+				start_value = (convert_sqlite_epoch(row['start_date']), 'date')
+				end_value = (convert_sqlite_epoch(row['end_date']), 'date')
+			else:
+				start_value = (convert_sqlite_epoch(row['start_date']), 'datetime')
+				end_value = (convert_sqlite_epoch(row['end_date']), 'datetime')
+			data_list.append((
+				start_value,
+				row['start_tz'],
+				end_value,
+				row['end_tz'],
+				row['all_day'],
+				row['summary'],
+				row['calendar_id'],
+				row['title'],
+				(convert_sqlite_epoch(row['last_modified']), 'datetime')
+			))
 	
 		description = ''
 		report = ArtifactHtmlReport('Calendar Items')
 		report.start_artifact_report(report_folder, 'Items', description)
 		report.add_script()
-		data_headers = ('Start Date','Start Timezone','End Date','End Timezone','All Day?','Summary','Calendar ID','Last Modified')     
+		data_headers = ('Start Date','Start Timezone','End Date','End Timezone',
+						'All Day?','Summary','Calendar ID','Calendar Name','Last Modified')
 		report.write_artifact_data_table(data_headers, data_list, file_found)
 		report.end_artifact_report()
 		
@@ -87,21 +126,27 @@ def get_calendarAll(files_found, report_folder, seeker, wrap_text, timezone_offs
 		logfunc('No data available for Calendar Items')
 	
 	cursor.execute(
-	"""
-	SELECT
-	display_name,
-	address,
-	first_name,
-	last_name
-	from Identity
-	""")
+		"""
+		SELECT
+			display_name,
+			address,
+			first_name,
+			last_name
+		from Identity
+		"""
+	)
 
 	all_rows = cursor.fetchall()
 	usageentries = len(all_rows)
 	data_list = []    
 	if usageentries > 0:
 		for row in all_rows:
-			data_list.append((row[0],row[1],row[2],row[3]))
+			data_list.append((
+				row['display_name'],
+				row['address'],
+				row['first_name'],
+				row['last_name']
+			))
 	
 		description = ''
 		report = ArtifactHtmlReport('Calendar Identity')

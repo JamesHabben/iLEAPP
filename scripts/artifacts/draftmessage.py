@@ -4,7 +4,7 @@ import nska_deserialize as nd
 import datetime
 from pathlib import Path
 from scripts.artifact_report import ArtifactHtmlReport
-from scripts.ilapfuncs import logfunc, tsv, timeline, is_platform_windows, open_sqlite_db_readonly
+from scripts.ilapfuncs import logfunc, tsv, timeline, is_platform_windows, open_sqlite_file_readonly
 
 def get_draftmessage(files_found, report_folder, seeker, wrap_text, timezone_offset):
     data_list = []
@@ -24,12 +24,16 @@ def get_draftmessage(files_found, report_folder, seeker, wrap_text, timezone_off
             continue
     
         modifiedtime = os.path.getmtime(file_found)
-        modifiedtime = (datetime.datetime.fromtimestamp(int(modifiedtime)).strftime('%Y-%m-%d %H:%M:%S'))
+        modifiedtime = (datetime.datetime.fromtimestamp(int(modifiedtime))) #.strftime('%Y-%m-%d %H:%M:%S'))
         
         with open(file_found, 'rb') as fp:
             pl = plistlib.load(fp)
             deserialized_plist = nd.deserialize_plist_from_string(pl['text'])
-            data_list.append((modifiedtime, directoryname, deserialized_plist['NSString']))
+            data_list.append((
+                (modifiedtime, 'datetime'),
+                (directoryname, 'phonenumber'),
+                deserialized_plist['NSString']
+            ))
     
     if len(data_list) > 0:
         folderlocation = str(path.resolve().parents[1])

@@ -11,7 +11,7 @@
 
 from scripts.artifact_report import ArtifactHtmlReport
 from scripts.ilapfuncs import logfunc, tsv, kmlgen, timeline, is_platform_windows, generate_thumbnail, \
-    open_sqlite_db_readonly
+    open_sqlite_file_readonly, convert_sqlite_epoch
 from scripts.builds_ids import OS_build
 
 
@@ -23,32 +23,30 @@ def get_photosMigration(files_found, report_folder, seeker, wrap_text, timezone_
             break
       
 
-    db = open_sqlite_db_readonly(file_found)
-    cursor = db.cursor()
-
+    cursor = open_sqlite_file_readonly(file_found)
     cursor.execute("""
-        SELECT zMigrationHistory.Z_PK AS 'zMigrationHistory-zPK',
-          zMigrationHistory.Z_ENT AS 'zMigrationHistory-zENT',
-          zMigrationHistory.Z_OPT AS 'zMigrationHistory-zOPT',
-          DateTime(zMigrationHistory.ZMIGRATIONDATE + 978307200, 'UNIXEPOCH') AS 'zMigrationHistory-Migration Date',
-          zMigrationHistory.ZINDEX AS 'zMigrationHistory-Index',
-          CASE zMigrationHistory.ZMIGRATIONTYPE
-            WHEN 0 THEN '0-StillTesting'
-            WHEN 1 THEN '1-StillTesting'
-            WHEN 2 THEN '2-iOS Update-2'
-            WHEN 3 THEN '3-iOS History Start/Factory Reset-3'
-            ELSE 'Unknown-New-Value!: ' || zMigrationHistory.ZMIGRATIONTYPE || ''
-          END AS 'zMigrationHistory-Migration Type',
-          zMigrationHistory.ZFORCEREBUILDREASON AS 'zMigrationHistory-Force Rebuild Reason',
-          zMigrationHistory.ZSOURCEMODELVERSION AS 'zMigrationHistory-Source Model Version',
-          zMigrationHistory.ZMODELVERSION AS 'zMigrationHistory-Model Version',
-          zMigrationHistory.ZOSVERSION AS 'zMigrationHistory-OSVersion-BuildfromDB',
-          zMigrationHistory.ZORIGIN AS 'zMigrationHistory-Origin',
-          zMigrationHistory.ZSTOREUUID AS 'zMigrationHistory-Store UUID',
-          zMigrationHistory.ZGLOBALKEYVALUES AS 'zMigrationHistory-Global Key Values/HEX'
+        SELECT 
+            zMigrationHistory.Z_PK,
+            zMigrationHistory.Z_ENT AS 'zMigrationHistory-zENT',
+            zMigrationHistory.Z_OPT AS 'zMigrationHistory-zOPT',
+            zMigrationHistory.ZMIGRATIONDATE,
+            zMigrationHistory.ZINDEX,
+            CASE zMigrationHistory.ZMIGRATIONTYPE
+                WHEN 0 THEN '0-StillTesting'
+                WHEN 1 THEN '1-StillTesting'
+                WHEN 2 THEN '2-iOS Update-2'
+                WHEN 3 THEN '3-iOS History Start/Factory Reset-3'
+                ELSE 'Unknown-New-Value!: ' || zMigrationHistory.ZMIGRATIONTYPE || ''
+            END AS 'Migration_Type',
+            zMigrationHistory.ZFORCEREBUILDREASON,
+            zMigrationHistory.ZSOURCEMODELVERSION,
+            zMigrationHistory.ZMODELVERSION,
+            zMigrationHistory.ZOSVERSION,
+            zMigrationHistory.ZORIGIN,
+            zMigrationHistory.ZSTOREUUID,
+            zMigrationHistory.ZGLOBALKEYVALUES
         FROM ZMIGRATIONHISTORY zMigrationHistory
         ORDER BY zMigrationHistory.ZMIGRATIONDATE
-
     """)
     all_rows = cursor.fetchall()
     usageentries = len(all_rows)
@@ -56,10 +54,20 @@ def get_photosMigration(files_found, report_folder, seeker, wrap_text, timezone_
     counter = 0
     if usageentries > 0:
         for row in all_rows:
-            ios_version = row[9] + ' - ' + OS_build[row[9]]
+            ios_version = row['ZOSVERSION'] + ' - ' + OS_build[row['ZOSVERSION']]
 
 
-            data_list.append((row[3], row[4], row[5], row[6], row[7], row[8], ios_version, row[10], row[11]))
+            data_list.append((
+                (convert_sqlite_epoch(row['ZMIGRATIONDATE']), 'datetime'),
+                row['ZINDEX'],
+                row['Migration_Type'],
+                row['ZFORCEREBUILDREASON'],
+                row['ZSOURCEMODELVERSION'],
+                row['ZMODELVERSION'],
+                ios_version,
+                row['ZORIGIN'],
+                row['ZSTOREUUID']
+            ))
 
             counter += 1
 
@@ -67,7 +75,8 @@ def get_photosMigration(files_found, report_folder, seeker, wrap_text, timezone_
         report = ArtifactHtmlReport('Photos.sqlite Migrations')
         report.start_artifact_report(report_folder, 'Migrations', description)
         report.add_script()
-        data_headers = ('Date', 'Index', 'Type', 'Force Rebuild Reason', 'Source Model Version', 'Model Version', 'Build/iOS Version', 'Origin', 'Store UUID')
+        data_headers = ('Date', 'Index', 'Type', 'Force Rebuild Reason', 'Source Model Version',
+                        'Model Version', 'Build/iOS Version', 'Origin', 'Store UUID')
         report.write_artifact_data_table(data_headers, data_list, file_found)
         report.end_artifact_report()
 
@@ -80,7 +89,6 @@ def get_photosMigration(files_found, report_folder, seeker, wrap_text, timezone_
     else:
         logfunc('No data available for Photos.sqlite metadata')
 
-    db.close()
     return
 
 

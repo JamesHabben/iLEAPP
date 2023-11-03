@@ -19,63 +19,63 @@ def get_sms(files_found, report_folder, seeker, wrap_text, timezone_offset):
     db = open_sqlite_db_readonly(file_found)
     sms_df = pd.read_sql_query('''
     select
-    case
-        when LENGTH(message.date) = 9 then 
-        datetime(message.date + 978307200,'unixepoch')
-        when LENGTH(message.date) = 18 then 
-        datetime(message.date/1000000000 + 978307200,'unixepoch')
-        else 'N/A'
-    end as "Message Timestamp",
-    case
-        when LENGTH(message.date_read) = 9 then
-        datetime(message.date_read + 978307200,'unixepoch')
-        when LENGTH(message.date_read) = 18 then
-        datetime(message.date_read/1000000000 + 978307200,'unixepoch')
-        else 'N/A'
-    end as "Read Timestamp",
-    message.text as "Message",
-    message.service as "Service",
-    case
-        when message.is_from_me = 0
-        then 'Incoming'
-        when message.is_from_me = 1
-        then 'Outgoing'
-    end as "Message Direction",
-    case 
-        when message.is_sent = 0
-        then ''
-        when message.is_sent = 1
-        then 'Yes'
-    end as "Message Sent",
-    case
-        when message.is_delivered = 0
-        then ''
-        when message.is_delivered = 1
-        then 'Yes'
-    end as "Message Delivered",
-    case
-        when message.is_read = 0
-        then ''
-        when message.is_read = 1
-        then 'Yes'
-    end as "Message Read",
-    message.account as "Account",
-    chat.account_login as "Account Login",
-    chat.chat_identifier as "Chat Contact ID",
-    attachment.transfer_name as "Attachment Name",
-    attachment.filename as "Attachment Path",
-    case
-        when LENGTH(message.date) = 9 then 
-        datetime(attachment.created_date + 978307200,'unixepoch')
-        when LENGTH(message.date) = 18 then 
-        datetime(attachment.created_date/1000000000 + 978307200,'unixepoch')
-    end as "Attachment Timestamp",
-    attachment.mime_type as "Attachment Mimetype",
-    attachment.total_bytes as "Attachment Size",
-    message.rowid as "Message Row ID",
-    chat_message_join.chat_id as "Chat ID",
-    message.is_from_me as "From Me"
-    from message
+        case
+            when LENGTH(message.date) = 9 then 
+            datetime(message.date + 978307200,'unixepoch')
+            when LENGTH(message.date) = 18 then 
+            datetime(message.date/1000000000 + 978307200,'unixepoch')
+            else 'N/A'
+        end as "Message Timestamp",
+        case
+            when LENGTH(message.date_read) = 9 then
+            datetime(message.date_read + 978307200,'unixepoch')
+            when LENGTH(message.date_read) = 18 then
+            datetime(message.date_read/1000000000 + 978307200,'unixepoch')
+            else 'N/A'
+        end as "Read Timestamp",
+        message.text as "Message",
+        message.service as "Service",
+        case
+            when message.is_from_me = 0
+            then 'Incoming'
+            when message.is_from_me = 1
+            then 'Outgoing'
+        end as "Message Direction",
+        case 
+            when message.is_sent = 0
+            then ''
+            when message.is_sent = 1
+            then 'Yes'
+        end as "Message Sent",
+        case
+            when message.is_delivered = 0
+            then ''
+            when message.is_delivered = 1
+            then 'Yes'
+        end as "Message Delivered",
+        case
+            when message.is_read = 0
+            then ''
+            when message.is_read = 1
+            then 'Yes'
+        end as "Message Read",
+        message.account as "Account",
+        chat.account_login as "Account Login",
+        chat.chat_identifier as "Chat Contact ID",
+        attachment.transfer_name as "Attachment Name",
+        attachment.filename as "Attachment Path",
+        case
+            when LENGTH(message.date) = 9 then 
+            datetime(attachment.created_date + 978307200,'unixepoch')
+            when LENGTH(message.date) = 18 then 
+            datetime(attachment.created_date/1000000000 + 978307200,'unixepoch')
+        end as "Attachment Timestamp",
+        attachment.mime_type as "Attachment Mimetype",
+        attachment.total_bytes as "Attachment Size",
+        message.rowid as "Message Row ID",
+        chat_message_join.chat_id as "Chat ID",
+        message.is_from_me as "From Me"
+        from message
     left join message_attachment_join on message.ROWID = message_attachment_join.message_id
     left join attachment on message_attachment_join.attachment_id = attachment.ROWID
     left join chat_message_join on message.ROWID = chat_message_join.message_id
@@ -91,7 +91,12 @@ def get_sms(files_found, report_folder, seeker, wrap_text, timezone_offset):
         report.add_script()
 
         sms_df = sms_df.rename(
-                columns={"Message Timestamp": "data-time", 'Message Row ID': "message-id", "Message": "message", "Chat Contact ID": "data-name", "From Me": "from_me", "Attachment Mimetype": "content-type"}
+                columns={"Message Timestamp": "data-time",
+                         'Message Row ID': "message-id",
+                         "Message": "message",
+                         "Chat Contact ID": "data-name",
+                         "From Me": "from_me",
+                         "Attachment Mimetype": "content-type"}
                 )
         sms_df["data-time"] = pd.to_datetime(sms_df["data-time"])
 
@@ -125,7 +130,11 @@ def get_sms(files_found, report_folder, seeker, wrap_text, timezone_offset):
         report = ArtifactHtmlReport('SMS & iMessage - Messages')
         report.start_artifact_report(report_folder, 'SMS & iMessage - Messages')
         report.add_script()
-        data_headers = ('Message Timestamp','Read Timestamp','Message','Service','Message Direction','Message Sent','Message Delivered','Message Read','Account','Account Login','Chat Contact ID','Attachment Name','Attachment Path','Attachment Timestamp','Attachment Mimetype','Attachment Size (Bytes)','Message Row ID','Chat ID','From Me')
+        data_headers = ('Message Timestamp','Read Timestamp','Message','Service',
+                        'Message Direction','Message Sent','Message Delivered','Message Read',
+                        'Account','Account Login','Chat Contact ID','Attachment Name',
+                        'Attachment Path','Attachment Timestamp','Attachment Mimetype','Attachment Size (Bytes)',
+                        'Message Row ID','Chat ID','From Me')
         report.write_artifact_data_table(data_headers, data_list, file_found)
         report.end_artifact_report()
         

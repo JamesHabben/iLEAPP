@@ -21,7 +21,7 @@ def get_AllTrails(files_found, report_folder, seeker, wrap_text, timezone_offset
                 WHEN 1 THEN 'Easy'
                 WHEN 3 THEN 'Moderate'
                 WHEN 5 THEN 'Hard'
-            END,
+            END as difficulty,
             ZTRAIL.ZRATING,
             ZTRAIL.ZREVIEWCOUNT,
             ZTRAIL.ZLENGTH,
@@ -56,7 +56,7 @@ def get_AllTrails(files_found, report_folder, seeker, wrap_text, timezone_offset
                 data_list.append((
                     row['ZNAME'],
                     row['ZROUTETYPENAME'],
-                    row['ZDIFFICULTY'],
+                    row['difficulty'],
                     row['ZRATING'],
                     row['ZREVIEWCOUNT'],
                     row['ZLENGTH'],

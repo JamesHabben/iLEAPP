@@ -320,7 +320,14 @@ def get_notificationsDuet(files_found, report_folder, seeker, wrap_text, timezon
             date2 = (struct.unpack_from("<d",lastdate)[0])
             convertedtime2 = timestampsconv(date2)
             #print(f'Date2: {convertedtime2}')
-            data_list.append((convertedtime1,guid,title,subtitle,bundledata,bodyread,bundleidread,optionaltextread,bundleid2read,optionalgmarkeread,appleidread,convertedtime2, filename))
+            data_list.append((
+                (convertedtime1, 'datetime'),
+                guid,title,subtitle,bundledata,bodyread,bundleidread,
+                optionaltextread,bundleid2read,optionalgmarkeread,
+                appleidread,
+                (convertedtime2, 'datetime'),
+                filename
+            ))
             
             convertedtime1 = guid = title = subtitle = bundledata = bodyread = bundleidread = optionaltextread = bundleid2read = optionalgmarkeread = appleidread = convertedtime2 =  ''
             
@@ -342,7 +349,9 @@ def get_notificationsDuet(files_found, report_folder, seeker, wrap_text, timezon
             report = ArtifactHtmlReport(f'Notifications Duet')
             report.start_artifact_report(report_folder, f'Notifications Duet - {filename}', description)
             report.add_script()
-            data_headers = ('Timestamp','GUID','Title','Subtitle','Bundle Data','Body','Bundle ID', 'Optional Text', 'Bundle ID', 'Optional GUID', 'Apple ID', 'Timestamp', 'Filename')
+            data_headers = ('Timestamp','GUID','Title','Subtitle',
+                            'Bundle Data','Body','Bundle ID', 'Optional Text',
+                            'Bundle ID', 'Optional GUID', 'Apple ID', 'Timestamp', 'Filename')
             report.write_artifact_data_table(data_headers, data_list, file_found)
             report.end_artifact_report()
             

@@ -46,8 +46,8 @@ def get_slack(files_found, report_folder, seeker, wrap_text, timezone_offset):
         if usageentries > 0:
             for row in all_rows:
                 data_list.append((
-                    (row[1], 'datetime'),
-                    (row[0]),
+                    (row[0], 'datetime'),
+                    row[1],
                     row[1], row[2], row[3], row[4], row[5], row[6]
                 ))
                 
@@ -111,8 +111,8 @@ def get_slack(files_found, report_folder, seeker, wrap_text, timezone_offset):
         if usageentries > 0:
             for row in all_rows:
                 data_list.append((
-                    (row[1], 'datetime'),
-                    (row[0]),
+                    (row[0], 'datetime'),
+                    row[1],
                     row[1], row[2], row[3], row[4], row[5],
                     row[6], row[7], row[8], row[9], row[10],
                     row[11], row[12], row[13], row[14],

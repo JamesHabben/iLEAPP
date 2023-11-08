@@ -9,7 +9,7 @@ from scripts.ilapfuncs import logfunc, tsv, timeline
 
 
 def format_time(date_time_str):
-    date_time_obj = datetime.datetime.strptime(date_time_str, '%Y%m%d')
+    date_time_obj = datetime.datetime.strptime(date_time_str, '%Y%mm%dd')
     formatted = '{}-{}-{}'.format(date_time_obj.year, date_time_obj.month, date_time_obj.day)
     return formatted
 

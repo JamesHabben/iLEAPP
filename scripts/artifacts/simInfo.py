@@ -52,7 +52,8 @@ def get_siminfo(files_found, report_folder, seeker, wrap_text, timezone_offset):
                             ts = timestampcalc(ts)
                             data_listb.append((
                                 (ts, 'datetime'),
-                                tag,simlabelstoreid,text
+                                (tag, 'phonenumber'),
+                                simlabelstoreid,text
                             ))
                         
                         

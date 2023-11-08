@@ -93,7 +93,8 @@ class ArtifactHtmlReport:
                     if isinstance(value, str):
                         formats = [
                             '%Y-%m-%d %H:%M:%S.%f',  # With fractional seconds
-                            '%Y-%m-%d %H:%M:%S'  # Without fractional seconds
+                            '%Y-%m-%d %H:%M:%S',     # Without fractional seconds
+                            '%Y-%m-%dT%H:%M:%SZ'     # iso format without fractional seconds
                         ]
                         for date_format in formats:
                             try:

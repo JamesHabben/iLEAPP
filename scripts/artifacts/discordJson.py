@@ -6,6 +6,7 @@ import shutil
 import errno
 from pathlib import Path
 import scripts.artifacts.artGlobals
+from datetime import datetime
 
 from packaging import version
 from scripts.artifact_report import ArtifactHtmlReport
@@ -51,9 +52,13 @@ def get_discordJson(files_found, report_folder, seeker, wrap_text, timezone_offs
 									
 								if 'timestamp' in jsonfinal[x]:
 									timestamp = (jsonfinal[x]['timestamp'])
+									timestamp = timestamp[:-3] + timestamp[-2:]
+									timestamp = datetime.fromisoformat(timestamp)
 									
 								if 'edited_timestamp' in jsonfinal[x]:
 									editedtimestamp = (jsonfinal[x]['edited_timestamp'])
+									editedtimestamp = editedtimestamp[:-3] + editedtimestamp[-2:]
+									editedtimestamp = datetime.fromisoformat(editedtimestamp)
 								
 								if 'content' in jsonfinal[x]:
 									content = jsonfinal[x]['content']
@@ -110,7 +115,13 @@ def get_discordJson(files_found, report_folder, seeker, wrap_text, timezone_offs
 											y = y + 1
 											
 								pathedhead, pathedtail = os.path.split(pathed)	
-								data_list.append((timestamp, editedtimestamp, username,  botuser, content, attachments, userid, channelid, emdeddedauthor, authorurl, authoriconurl, embededurl, embededdescript, footertext, footericonurl, pathedtail))
+								data_list.append((
+									timestamp,
+									editedtimestamp,
+									username,  botuser, content, attachments,
+									userid, channelid, emdeddedauthor, authorurl, authoriconurl,
+									embededurl, embededdescript, footertext, footericonurl, pathedtail
+								))
 
 								x = x + 1
 						else:

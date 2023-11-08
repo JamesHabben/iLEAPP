@@ -69,12 +69,12 @@ def get_photosDbexif(files_found, report_folder, seeker, wrap_text, timezone_off
             cursor = db.cursor()
             cursor.execute('''
             SELECT
-            DATETIME(ZDATECREATED+978307200,'UNIXEPOCH') AS DATECREATED,
-            DATETIME(ZMODIFICATIONDATE+978307200,'UNIXEPOCH') AS MODIFICATIONDATE,
-            ZDIRECTORY,
-            ZFILENAME,
-            ZLATITUDE,
-            ZLONGITUDE
+                DATETIME(ZDATECREATED+978307200,'UNIXEPOCH') AS DATECREATED,
+                DATETIME(ZMODIFICATIONDATE+978307200,'UNIXEPOCH') AS MODIFICATIONDATE,
+                ZDIRECTORY,
+                ZFILENAME,
+                ZLATITUDE,
+                ZLONGITUDE
             FROM ZASSET
             ''')
             
@@ -218,7 +218,13 @@ def get_photosDbexif(files_found, report_folder, seeker, wrap_text, timezone_off
                                     results = None
                                     logfunc(f'Error getting exif on: {search}')
                                 
-                                data_list.append((thumb,suspecttime,offset, suspectcoordinates,zdatecreated,zmodificationdate,zdirectory,zfilename,zlatitude,zlongitude,creationchanged,latitude,longitude,exifdata))
+                                data_list.append((
+                                    thumb,suspecttime,offset, suspectcoordinates,
+                                    (zdatecreated, 'datetime'),
+                                    (zmodificationdate, 'datetime'),
+                                    zdirectory,zfilename,zlatitude,zlongitude,
+                                    (creationchanged, 'datetime'),
+                                    latitude,longitude,exifdata))
                         
                             else:
                                 """ videos. Nees to figure this out
@@ -234,11 +240,15 @@ def get_photosDbexif(files_found, report_folder, seeker, wrap_text, timezone_off
                     
                 
             if data_list:
-                description = 'All times labeled as False require validation. Compare database times and geolocation points to their EXIF counterparts. Timestamp value is in UTC. Exif Creation/Change timestamp is on local time. Use Possible Exif Offset column value to compare the times.'
+                description = ('All times labeled as False require validation. Compare database times and geolocation '
+                               'points to their EXIF counterparts. Timestamp value is in UTC. Exif Creation/Change '
+                               'timestamp is on local time. Use Possible Exif Offset column value to compare the '
+                               'times.')
                 report = ArtifactHtmlReport(f'Photos.sqlite Analysis')
                 report.start_artifact_report(report_folder, f'Photos.sqlite Analysis', description)
                 report.add_script()
-                data_headers = ('Media','Same Timestamps?','Possible Exif Offset','Same Coordinates?','Timestamp','Timestamp Modification','Directory','Filename','Latitude DB','Longitude DB','Exif Creation/Changed','Latitude','Longitude','Exif')
+                data_headers = ('Media','Same Timestamps?','Possible Exif Offset','Same Coordinates?','Timestamp',
+                                'Timestamp Modification','Directory','Filename','Latitude DB','Longitude DB','Exif Creation/Changed','Latitude','Longitude','Exif')
                 report.write_artifact_data_table(data_headers, data_list, file_found, html_no_escape=['Media','Exif'])
                 report.end_artifact_report()
                 

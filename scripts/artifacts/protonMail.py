@@ -234,7 +234,9 @@ def get_protonMail(files_found, report_folder, seeker, wrap_text, timezone_offse
           else:
             attpath = f'<a href="{attpath}"> Link to {mimetype} </>'
         
-        data_list.append((decryptedtime, sender_info, aggregatorto, aggregatorfor, title, decryptedbody, mime, isencrypted, ZFILESIZE, attpath, ZFILENAME, AMIMETYPE))
+        data_list.append((
+            (decryptedtime, 'datetime'),
+            sender_info, aggregatorto, aggregatorfor, title, decryptedbody, mime, isencrypted, ZFILESIZE, attpath, ZFILENAME, AMIMETYPE))
         
         encfilename = ''
         

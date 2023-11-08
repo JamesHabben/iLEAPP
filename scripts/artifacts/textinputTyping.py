@@ -41,7 +41,10 @@ def get_textinputTyping(files_found, report_folder, seeker, wrap_text, timezone_
                             if c == 'pendingEntries': 
                                 #print(d) #this is a list
                                 for e in d:
-                                    data_list.append((e['timestamp'], e['senderIdentifier'], e['text'], '' ))
+                                    data_list.append((
+                                        (e['timestamp'], 'datetime'),
+                                        e['senderIdentifier'], e['text'], ''
+                                    ))
         
         data_list.append(('','', finalvalue, 'True'))
 

@@ -49,7 +49,10 @@ def get_iCloudWifi(files_found, report_folder, seeker, wrap_text, timezone_offse
                                     added_at = str(datetime_obj)
                                 else:
                                     added_at = 'Not Available'
-                                data_list.append((bssid, ssid, added_by, enabled, added_at))
+                                data_list.append((
+                                    bssid, ssid, added_by, enabled,
+                                    (added_at, 'datetime')
+                                ))
 
     if len(data_list) > 0:
         report = ArtifactHtmlReport('iCloud Wifi Networks')

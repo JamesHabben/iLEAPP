@@ -21,10 +21,15 @@ def get_alarms(files_found, report_folder, seeker, wrap_text, timezone_offset):
                         dismiss_date = alarms_dict.get('MTAlarmDismissDate', '')
                         repeat_schedule = decode_repeat_schedule(alarms_dict['MTAlarmRepeatSchedule'])
 
-                        data_list.append((alarm_title, alarms_dict['MTAlarmEnabled'], fire_date, dismiss_date,
-                                          alarms_dict['MTAlarmLastModifiedDate'], ', '.join(repeat_schedule),
-                                          alarms_dict['MTAlarmSound']['$MTSound']['MTSoundToneID'],
-                                          alarms_dict['MTAlarmIsSleep'], alarms_dict['MTAlarmBedtimeDoNotDisturb'], ''))
+                        data_list.append((
+                            alarm_title, alarms_dict['MTAlarmEnabled'],
+                            (fire_date, 'datetime'),
+                            (dismiss_date, 'datetime'),
+                            (alarms_dict['MTAlarmLastModifiedDate'], 'datetime'),
+                            ', '.join(repeat_schedule),
+                            alarms_dict['MTAlarmSound']['$MTSound']['MTSoundToneID'],
+                            alarms_dict['MTAlarmIsSleep'], alarms_dict['MTAlarmBedtimeDoNotDisturb'], ''
+                        ))
 
                 if 'MTSleepAlarm' in pl['MTAlarms']:
                     for sleep_alarms in pl['MTAlarms']['MTSleepAlarm']:
@@ -34,17 +39,23 @@ def get_alarms(files_found, report_folder, seeker, wrap_text, timezone_offset):
 
                         repeat_schedule = decode_repeat_schedule(sleep_alarm_dict['MTAlarmRepeatSchedule'])
 
-                        data_list.append((alarm_title, sleep_alarm_dict['MTAlarmEnabled'], sleep_alarm_dict['MTAlarmFireDate'],
-                                          sleep_alarm_dict['MTAlarmDismissDate'], sleep_alarm_dict['MTAlarmLastModifiedDate'],
-                                         ', '.join(repeat_schedule), sleep_alarm_dict['MTAlarmSound']['$MTSound']['MTSoundToneID'],
-                                          sleep_alarm_dict['MTAlarmIsSleep'], sleep_alarm_dict['MTAlarmBedtimeDoNotDisturb'],
-                                          sleep_alarm_dict['MTAlarmBedtimeFireDate']))
+                        data_list.append((
+                            alarm_title, sleep_alarm_dict['MTAlarmEnabled'],
+                            (sleep_alarm_dict['MTAlarmFireDate'], 'datetime'),
+                            (sleep_alarm_dict['MTAlarmDismissDate'], 'datetime'),
+                            (sleep_alarm_dict['MTAlarmLastModifiedDate'], 'datetime'),
+                            ', '.join(repeat_schedule), sleep_alarm_dict['MTAlarmSound']['$MTSound']['MTSoundToneID'],
+                            sleep_alarm_dict['MTAlarmIsSleep'], sleep_alarm_dict['MTAlarmBedtimeDoNotDisturb'],
+                            (sleep_alarm_dict['MTAlarmBedtimeFireDate'], 'datetime')
+                        ))
 
     if len(data_list) > 0:
         report = ArtifactHtmlReport('Alarms')
         report.start_artifact_report(report_folder, 'Alarms')
         report.add_script()
-        data_headers = ('Alarm Title', 'Alarm Enabled', 'Fire Date', 'Dismiss Date', 'Last Modified', 'Repeat Schedule', 'Alarm Sound', 'Is Sleep Alarm', 'Bedtime Not Disturbed', 'Bedtime Fire Date')
+        data_headers = ('Alarm Title', 'Alarm Enabled', 'Fire Date', 'Dismiss Date',
+                        'Last Modified', 'Repeat Schedule', 'Alarm Sound', 'Is Sleep Alarm',
+                        'Bedtime Not Disturbed', 'Bedtime Fire Date')
         report.write_artifact_data_table(data_headers, data_list, file_found)
         report.end_artifact_report()
 

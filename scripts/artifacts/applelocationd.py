@@ -3,7 +3,7 @@ import os
 import plistlib
 
 from scripts.artifact_report import ArtifactHtmlReport
-from scripts.ilapfuncs import logfunc, logdevinfo, tsv, is_platform_windows 
+from scripts.ilapfuncs import logfunc, logdevinfo, tsv, is_platform_windows, convert_apple_epoch
 
 def get_applelocationd(files_found, report_folder, seeker, wrap_text, timezone_offset):
     data_list = []
@@ -20,6 +20,10 @@ def get_applelocationd(files_found, report_folder, seeker, wrap_text, timezone_o
                 data_list.append(('Last System Version', val))
                 logdevinfo(f"Last System Version: {val}")
                 
+            elif key in ('kP6MWDNextEstimateTime', 'steadinessClassificationNextClassificationTime',
+                         'VO2MaxCloudKitLastForcedFetch', 'VO2MaxCloudKitManagerNextActivityTime'):
+                data_list.append(( key, (convert_apple_epoch(val), 'datetime') ))
+
             else:
                 data_list.append((key, val ))
                 

@@ -22,22 +22,22 @@ def get_imoHD_Chat(files_found, report_folder, seeker, wrap_text, timezone_offse
     db = open_sqlite_db_readonly(file_found)
     cursor = db.cursor()
     cursor.execute('''
-    select
-    case ZIMOCHATMSG.ZTS
-        when 0 then ''
-        else datetime(ZTS/1000000000,'unixepoch')
-    end  as "Timestamp",
-    ZIMOCONTACT.ZDISPLAY as "Sender Display Name",
-    ZIMOCHATMSG.ZALIAS as "Sender Alias",
-    ZIMOCONTACT.ZDIGIT_PHONE,
-    ZIMOCHATMSG.ZTEXT as "Message",
-    case ZIMOCHATMSG.ZISSENT
-        when 0 then 'Received'
-        when 1 then 'Sent'
-    end as "Message Status",
-    ZIMOCHATMSG.ZIMDATA
-    from ZIMOCHATMSG
-    left join ZIMOCONTACT ON ZIMOCONTACT.ZBUID = ZIMOCHATMSG.ZA_UID
+        select
+            case ZIMOCHATMSG.ZTS
+                when 0 then ''
+                else datetime(ZTS/1000000000,'unixepoch')
+            end  as "Timestamp",
+            ZIMOCONTACT.ZDISPLAY as "Sender Display Name",
+            ZIMOCHATMSG.ZALIAS as "Sender Alias",
+            ZIMOCONTACT.ZDIGIT_PHONE,
+            ZIMOCHATMSG.ZTEXT as "Message",
+            case ZIMOCHATMSG.ZISSENT
+                when 0 then 'Received'
+                when 1 then 'Sent'
+            end as "Message Status",
+            ZIMOCHATMSG.ZIMDATA
+        from ZIMOCHATMSG
+        left join ZIMOCONTACT ON ZIMOCONTACT.ZBUID = ZIMOCHATMSG.ZA_UID
     ''')
     
     all_rows = cursor.fetchall()
@@ -71,7 +71,8 @@ def get_imoHD_Chat(files_found, report_folder, seeker, wrap_text, timezone_offse
                     try:
                         plist = nd.deserialize_plist(plist_file_object)
                     except (nd.DeserializeError, nd.biplist.NotBinaryPlistException, nd.biplist.InvalidPlistException,
-                        nd.plistlib.InvalidFileException, nd.ccl_bplist.BplistError, ValueError, TypeError, OSError, OverflowError) as ex:
+                        nd.plistlib.InvalidFileException, nd.ccl_bplist.BplistError, ValueError,
+                            TypeError, OSError, OverflowError) as ex:
                         logfunc(f'Failed to read plist for {row[0]}, error was:' + str(ex))
                     
                 itemAction = plist['type']
@@ -90,7 +91,13 @@ def get_imoHD_Chat(files_found, report_folder, seeker, wrap_text, timezone_offse
                 else:
                     attachmentURL = ''
                     
-            data_list.append((timestamp, senderName, senderAlias, senderPhone, message, messageStatus, itemAction, attachmentURL, thumb))
+            data_list.append((
+                (timestamp, 'datetime'),
+                senderName,
+                senderAlias,
+                (senderPhone, 'phonenumber'),
+                message, messageStatus, itemAction, attachmentURL, thumb
+            ))
         
         description = 'IMO HD Chat - Messages'
         report = ArtifactHtmlReport('IMO HD Chat - Messages')
@@ -98,7 +105,7 @@ def get_imoHD_Chat(files_found, report_folder, seeker, wrap_text, timezone_offse
         report.add_script()
         data_headers = (
             'Timestamp', 'Sender Name', 'Sender Alias', 'Sender Phone', 'Message', 'Message Status', 'Item Action',
-            'Attachment URL', 'Attachment')  # Don't remove the comma, that is required to make this a tuple as there is only 1 element
+            'Attachment URL', 'Attachment')
         
         report.write_artifact_data_table(data_headers, data_list, file_found, html_no_escape=['Attachment'])
         report.end_artifact_report()
@@ -113,13 +120,13 @@ def get_imoHD_Chat(files_found, report_folder, seeker, wrap_text, timezone_offse
         logfunc('IMO HD Chat - Messages data available')
         
     cursor.execute('''
-    select
-    ZPH_NAME,
-    ZALIAS,
-    ZPHONE,
-    "https://cdn.imoim.us/s/object/" || ZICON_ID || "/" as "Profile Pic",
-    ZBUID
-    from ZIMOCONTACT
+        select
+            ZPH_NAME,
+            ZALIAS,
+            ZPHONE,
+            "https://cdn.imoim.us/s/object/" || ZICON_ID || "/" as "Profile Pic",
+            ZBUID
+        from ZIMOCONTACT
     ''')
     
     all_rows = cursor.fetchall()
@@ -129,10 +136,16 @@ def get_imoHD_Chat(files_found, report_folder, seeker, wrap_text, timezone_offse
         report = ArtifactHtmlReport('IMO HD Chat - Contacts')
         report.start_artifact_report(report_folder, 'IMO HD Chat - Contacts')
         report.add_script()
-        data_headers = ('Contact Name','Contact Alias','Contact Phone','Profile Pic URL','User ID') # Don't remove the comma, that is required to make this a tuple as there is only 1 element
+        data_headers = ('Contact Name','Contact Alias','Contact Phone','Profile Pic URL','User ID')
         data_list = []
         for row in all_rows:
-            data_list.append((row[0],row[1],row[2],row[3],row[4]))
+            data_list.append((
+                row[0],
+                row[1],
+                (row[2], 'phonenumber'),
+                row[3],
+                row[4]
+            ))
 
         report.write_artifact_data_table(data_headers, data_list, file_found)
         report.end_artifact_report()

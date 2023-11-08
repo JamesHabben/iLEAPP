@@ -38,7 +38,10 @@ def get_siminfo(files_found, report_folder, seeker, wrap_text, timezone_offset):
                                 eapaka = z.get('eap_aka', '')
                                 types = z.get('type', '')
                                 nosrc = z.get('no_src', '')
-                                data_lista.append(((tss, 'datetime'),mdn,esim,types,cbid,nosrc,labelid,labelidconf,eapaka,cbver))
+                                data_lista.append((
+                                    (tss, 'datetime'),
+                                    mdn,esim,types,cbid,nosrc,labelid,labelidconf,eapaka,cbver
+                                ))
                                 
                     if key == 'unique-sim-label-store':
                         for x, y in val.items():
@@ -47,7 +50,10 @@ def get_siminfo(files_found, report_folder, seeker, wrap_text, timezone_offset):
                             text = y.get('text', '')
                             ts = y.get('ts', '')
                             ts = timestampcalc(ts)
-                            data_listb.append(((ts, 'datetime'),tag,simlabelstoreid,text))
+                            data_listb.append((
+                                (ts, 'datetime'),
+                                tag,simlabelstoreid,text
+                            ))
                         
                         
     if data_lista:

@@ -149,13 +149,18 @@ def get_ooklaSpeedtestData(files_found, report_folder, seeker, wrap_text, timezo
     data_list = []    
     if usageentries > 0:
         for row in all_rows:
-            data_list.append((row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10]))
+            data_list.append((
+                (row[0], 'datetime'),
+                row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10]
+            ))
         
             description = ''
             report = ArtifactHtmlReport('Applications')
             report.start_artifact_report(report_folder, 'Ookla Speedtest', description)
             report.add_script()
-            data_headers = ('Timestamp','External IP Address','Internal IP Address','Carrier Name','ISP','Wifi SSID','WAN Type','Device Model','Latitude','Longitude','Accuracy in Meters' )     
+            data_headers = ('Timestamp','External IP Address','Internal IP Address','Carrier Name',
+                            'ISP','Wifi SSID','WAN Type','Device Model',
+                            'Latitude','Longitude','Accuracy in Meters' )
             report.write_artifact_data_table(data_headers, data_list, file_found)
             report.end_artifact_report()
             

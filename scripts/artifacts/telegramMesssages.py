@@ -360,7 +360,10 @@ def get_telegramMessages(files_found, report_folder, seeker, wrap_text, timezone
                 else:
                     thumb = ''
                     
-                data_list.append((ts,direction,authorid,text,forwarddate,forwardfrom,hadWarn,thumb))
+                data_list.append((
+                    (ts, 'datetime'),
+                    direction,authorid,text,forwarddate,forwardfrom,hadWarn,thumb
+                ))
             #     return hadWarn
                 
                 

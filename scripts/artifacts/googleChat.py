@@ -19,23 +19,23 @@ def get_googleChat(files_found, report_folder, seeker, wrap_text, timezone_offse
     db = open_sqlite_db_readonly(file_found)
     cursor = db.cursor()
     cursor.execute('''
-    SELECT
-    datetime(topic_messages.create_time/1000000,'unixepoch') AS "Message Time",
-    CASE
-    WHEN group_type=1 THEN "Group Message"
-    WHEN group_type=2 THEN "1-to-1 Message"
-    ELSE group_type
-    END AS "Group Type",
-    Groups.name AS "Conversation Name",
-    users.name AS "Message Author",
-    topic_messages.text_body AS "Message",
-    topic_messages.reactions AS "Message Reactions",
-    topic_messages.annotation AS "Message Annotation (Possible Attachment Information)"
-    FROM 
-    topic_messages
-    JOIN users ON users.user_id=topic_messages.creator_id
-    JOIN Groups ON Groups.group_id=topic_messages.group_id
-    ORDER BY "Message Time" ASC
+        SELECT
+            datetime(topic_messages.create_time/1000000,'unixepoch') AS "Message Time",
+            CASE
+                WHEN group_type=1 THEN "Group Message"
+                WHEN group_type=2 THEN "1-to-1 Message"
+                ELSE group_type
+            END AS "Group Type",
+            Groups.name AS "Conversation Name",
+            users.name AS "Message Author",
+            topic_messages.text_body AS "Message",
+            topic_messages.reactions AS "Message Reactions",
+            topic_messages.annotation AS "Message Annotation (Possible Attachment Information)"
+        FROM 
+            topic_messages
+        JOIN users ON users.user_id=topic_messages.creator_id
+        JOIN Groups ON Groups.group_id=topic_messages.group_id
+        ORDER BY "Message Time" ASC
     ''')
     
     all_rows = cursor.fetchall()
@@ -88,7 +88,10 @@ def get_googleChat(files_found, report_folder, seeker, wrap_text, timezone_offse
                     mediafilename = ''
                     media = ''
             
-            data_list.append((row[0],row[1],row[2],row[3],row[4],mediafilename,thumb,reaction,reactionuser))
+            data_list.append((
+                (row[0], 'datetime'),
+                row[1],row[2],row[3],row[4],mediafilename,thumb,reaction,reactionuser
+            ))
             mediafilename = thumb = reaction = reactionuser = ''
             
         
@@ -96,7 +99,8 @@ def get_googleChat(files_found, report_folder, seeker, wrap_text, timezone_offse
         report = ArtifactHtmlReport('Google Chat')
         report.start_artifact_report(report_folder, 'Google Chat', description)
         report.add_script()
-        data_headers = ('Timestamp','Group Type','Conversation Name','Message Author','Message','Filename','Media','Reaction','Reaction User' )     
+        data_headers = ('Timestamp','Group Type','Conversation Name','Message Author',
+                        'Message','Filename','Media','Reaction','Reaction User' )
         report.write_artifact_data_table(data_headers, data_list, file_found, html_no_escape=['Media'])
         report.end_artifact_report()
         

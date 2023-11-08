@@ -25,15 +25,27 @@ def get_metamask(files_found, report_folder, seeker, wrap_text, timezone_offset)
                     s = json_object['backgroundState']['PreferencesController']['identities'][accs]['importTime'] / 1000.0
                     import_time = datetime.datetime.fromtimestamp(s).strftime('%Y-%m-%d %H:%M:%S.%f')
                     balance = int(str(json_object['backgroundState']['AccountTrackerController']['accounts'][accs]['balance']), 16)
-                    wallets.append((import_time, str(json_object['backgroundState']['PreferencesController']['identities'][accs]['name']) , accs, balance/(10**18)))
+                    wallets.append((
+                        (import_time, 'datetime'),
+                        str(json_object['backgroundState']['PreferencesController']['identities'][accs]['name']) , accs, balance/(10**18)
+                    ))
                 for contactId in json_object['backgroundState']['AddressBookController']['addressBook']:
                     for contact in json_object['backgroundState']['AddressBookController']['addressBook'][contactId]:
-                        contacts.append((str(json_object['backgroundState']['AddressBookController']['addressBook'][contactId][contact]['name']), str(json_object['backgroundState']['AddressBookController']['addressBook'][contactId][contact]['address'])))
+                        contacts.append((
+                            str(json_object['backgroundState']['AddressBookController']['addressBook'][contactId][contact]['name']),
+                            str(json_object['backgroundState']['AddressBookController']['addressBook'][contactId][contact]['address'])
+                        ))
                 for transaction in json_object['backgroundState']['TransactionController']['transactions']:
                     s = transaction['time'] / 1000.0
                     transaction_time = datetime.datetime.fromtimestamp(s).strftime('%Y-%m-%d %H:%M:%S.%f')
                     transaction_value = int(str(transaction['transaction']['value']), 16) / (10**18)
-                    transactions.append((transaction_time, str(transaction['transaction']['from']),str(transaction['transaction']['to']),transaction_value , transaction['transactionHash']))
+                    transactions.append((
+                        (transaction_time, 'datetime'),
+                        str(transaction['transaction']['from']),
+                        str(transaction['transaction']['to']),
+                        transaction_value ,
+                        transaction['transactionHash']
+                    ))
                 for history in json_browser["history"]:
                     artifacts_from_in_app_browser.append((str(history["url"]),str(history['name'])))
 

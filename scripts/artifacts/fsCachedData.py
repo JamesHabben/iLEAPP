@@ -24,7 +24,13 @@ def get_fsCachedData(files_found, report_folder, seeker, wrap_text, timezone_off
         if os.path.isfile(file_found):
             mime = magic.from_file(file_found, mime=True)
             media = media_to_html(file_found, files_found, report_folder)
-            data_list.append((utc_modified_date, media, mime, filename, file_found))
+            data_list.append((
+                (utc_modified_date, 'datetime'),
+                media,
+                mime,
+                filename,
+                file_found
+            ))
         
     
     if len(data_list) > 0:

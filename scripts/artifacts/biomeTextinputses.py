@@ -142,10 +142,13 @@ def get_biomeTextinputses(files_found, report_folder, seeker, wrap_text, timezon
                 #print(types)
                 
                 timestart = (timestampsconv(protostuff['2']))
-                timestart = convert_utc_human_to_timezone(timestart, timezone_offset)
+                #timestart = convert_utc_human_to_timezone(timestart, timezone_offset)
                 bundleid = (protostuff.get('3',''))
                 
-                data_list.append((timestart, bundleid))
+                data_list.append((
+                    (timestart, 'datetime'),
+                    bundleid
+                ))
         
             modresult = (sizeofnotificaton % 8)
             resultante =  8 - modresult

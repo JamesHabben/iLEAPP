@@ -56,12 +56,15 @@ ORDER BY ZPAYMENT.ZDISPLAYDATE ASC
         
         data_list = []
         for row in all_rows:
-            data_list.append((row[6], row[1], row[2], row[0], row[3], row[5], row[4]))
+            data_list.append((
+                (row[6], 'datetime'),
+                row[1], row[2], row[0], row[3], row[5], row[4]))
 
         report = ArtifactHtmlReport('Transactions')
         report.start_artifact_report(report_folder, 'Transactions')
         report.add_script()
-        data_headers = ('Transaction Date', 'Display Name', 'Cashtag', 'Account Owner Role', 'Currency Amount', 'Transaction State', 'Transaction State')
+        data_headers = ('Transaction Date', 'Display Name', 'Cashtag', 'Account Owner Role',
+                        'Currency Amount', 'Transaction State', 'Transaction State')
         report.write_artifact_data_table(data_headers, data_list, db_file)
         report.end_artifact_report()
 

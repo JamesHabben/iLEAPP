@@ -18,9 +18,9 @@ def get_filesAppsdb(files_found, report_folder, seeker, wrap_text, timezone_offs
     db = open_sqlite_db_readonly(file_found)
     cursor = db.cursor()
     cursor.execute('''
-    SELECT * 
-    FROM
-    DEVICES
+        SELECT * 
+        FROM
+            DEVICES
     ''')
 
     all_rows = cursor.fetchall()
@@ -47,12 +47,12 @@ def get_filesAppsdb(files_found, report_folder, seeker, wrap_text, timezone_offs
     
     
     cursor.execute('''
-    SELECT
-    item_birthtime,
-    item_filename,
-    version_mtime
-    FROM
-    server_items
+        SELECT
+            item_birthtime,
+            item_filename,
+            version_mtime
+        FROM
+            server_items
     ''')
     
     all_rows = cursor.fetchall()
@@ -62,7 +62,11 @@ def get_filesAppsdb(files_found, report_folder, seeker, wrap_text, timezone_offs
         for row in all_rows:
             birthtime = datetime.datetime.fromtimestamp(row[0])
             versionmtime = datetime.datetime.fromtimestamp(row[2])
-            data_list.append((birthtime, row[1], versionmtime))
+            data_list.append((
+                (birthtime, 'datetime'),
+                row[1],
+                (versionmtime, 'datetime')
+            ))
             
         description = ''
         report = ArtifactHtmlReport('Files App - iCloud Server Items')

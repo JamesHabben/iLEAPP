@@ -71,7 +71,11 @@ def get_secretCalculator(files_found, report_folder, seeker, wrap_text, timezone
                         if seekerResults:
                             attachmentFile = seekerResults[0]
                             thumb = media_to_html(attachmentFile, (attachmentFile,), report_folder)
-                        data_list.append((row[0], thumb, row[4], row[1], fileNameToSearch.replace('\\', '/'), row[3]))
+                        data_list.append((
+                            (row[0], 'datetime'),
+                            thumb, row[4],
+                            (row[1], 'datetime'),
+                            fileNameToSearch.replace('\\', '/'), row[3]))
 
                 description = 'Secret Calculator'
                 report = ArtifactHtmlReport('Secret Calculator')

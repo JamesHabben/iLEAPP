@@ -144,18 +144,23 @@ def get_biomeBattperc(files_found, report_folder, seeker, wrap_text, timezone_of
                 
                 activity = (protostuff['1']['1'])
                 timestart = (timestampsconv(protostuff['2']))
-                timestart = convert_utc_human_to_timezone(timestart, timezone_offset)
+                #timestart = convert_utc_human_to_timezone(timestart, timezone_offset)
                 
                 timeend = (timestampsconv(protostuff['3']))
-                timeend = convert_utc_human_to_timezone(timeend, timezone_offset)
+                #timeend = convert_utc_human_to_timezone(timeend, timezone_offset)
                 
                 timewrite = (timestampsconv(protostuff['8']))
-                timewrite = convert_utc_human_to_timezone(timewrite, timezone_offset)
+                #timewrite = convert_utc_human_to_timezone(timewrite, timezone_offset)
                 
                 percent = (protostuff['4']['5'])
                 actionguid = (protostuff['5'])
                 
-                data_list.append((timestart, timeend, timewrite, activity, percent, actionguid))
+                data_list.append((
+                    (timestart, 'datetime'),
+                    (timeend, 'datetime'),
+                    (timewrite, 'datetime'),
+                    activity, percent, actionguid
+                ))
         
             modresult = (sizeofnotificaton % 8)
             resultante =  8 - modresult

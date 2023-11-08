@@ -52,8 +52,8 @@ def get_biomeSync(files_found, report_folder, seeker, wrap_text, timezone_offset
                     timestamp = row[0]
                 else:
                     timestamp = row[0]
-                    timestamp = convert_ts_human_to_utc(timestamp)
-                    timestamp = convert_utc_human_to_timezone(timestamp, timezone_offset)
+                    #timestamp = convert_ts_human_to_utc(timestamp)
+                    #timestamp = convert_utc_human_to_timezone(timestamp, timezone_offset)
                 
                 for key, value in OS_build.items():
                     if str(row[4]) == key:
@@ -61,7 +61,10 @@ def get_biomeSync(files_found, report_folder, seeker, wrap_text, timezone_offset
                         break
                     else: os_build = 'Unknown'
             
-                data_list.append((timestamp,row[1],row[2],row[3],row[4],os_build,row[5]))
+                data_list.append((
+                    (timestamp, 'datetime'),
+                    row[1],row[2],row[3],row[4],os_build,row[5]
+                ))
 
             report.write_artifact_data_table(data_headers, data_list, file_found)
             report.end_artifact_report()

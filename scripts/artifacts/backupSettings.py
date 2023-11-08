@@ -19,14 +19,14 @@ def get_backupSettings(files_found, report_folder, seeker, wrap_text, timezone_o
             
             if key == 'LastiTunesBackupDate':
                 lastime = timestampsconv(val)
-                data_list.append(('Last iTunes Backup Date', lastime))
+                data_list.append(('Last iTunes Backup Date', (lastime, 'datetime')))
                 logdevinfo(f"Last iTunes Backup Date: {lastime}")
             elif key == 'LastiTunesBackupTZ':
                 data_list.append((key, val))
                 logdevinfo(f"Last iTunes Backup TZ: {val}")
             elif key == 'LastCloudBackupDate':
                 lastcloudtime = timestampsconv(val)
-                data_list.append(('Last Cloud iTunes Backup Date', lastcloudtime))
+                data_list.append(('Last Cloud iTunes Backup Date', (lastcloudtime, 'datetime')))
                 logdevinfo(f"Last Cloud iTunes Backup Date: {lastcloudtime}")
             elif key == 'LastCloudBackupTZ':
                 data_list.append((key, val))

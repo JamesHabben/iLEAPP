@@ -120,7 +120,9 @@ def get_mobileInstall(files_found, report_folder, seeker, wrap_text, timezone_of
                 # db.commit()
                 file_datainserts.append(datainsert)
                 path = ''
-                tsv_tml_data_list.append((inserttime, actiondesc, bundleid, path))
+                tsv_tml_data_list.append((
+                    (inserttime, 'datetime'),
+                    actiondesc, bundleid, path))
 
                 # logfunc()
             
@@ -176,7 +178,9 @@ def get_mobileInstall(files_found, report_folder, seeker, wrap_text, timezone_of
                 # db.commit()
                 file_datainserts.append(datainsert)
               
-                tsv_tml_data_list.append((inserttime, actiondesc, bundleid, path))
+                tsv_tml_data_list.append((
+                    (inserttime, 'datetime'),
+                    actiondesc, bundleid, path))
                 # logfunc()
               
             matchObj = re.search(
@@ -231,7 +235,9 @@ def get_mobileInstall(files_found, report_folder, seeker, wrap_text, timezone_of
                 # db.commit()
                 file_datainserts.append(datainsert)
 
-                tsv_tml_data_list.append((inserttime, actiondesc, bundleid, path))
+                tsv_tml_data_list.append((
+                    (inserttime, 'datetime'),
+                    actiondesc, bundleid, path))
                 # logfunc()
 
             matchObj = re.search(
@@ -286,7 +292,9 @@ def get_mobileInstall(files_found, report_folder, seeker, wrap_text, timezone_of
                 # db.commit()
                 file_datainserts.append(datainsert)
 
-                tsv_tml_data_list.append((inserttime, actiondesc, bundleid, path))
+                tsv_tml_data_list.append((
+                    (inserttime, 'datetime'),
+                    actiondesc, bundleid, path))
                 # logfunc()
 
             matchObj = re.search(
@@ -340,7 +348,9 @@ def get_mobileInstall(files_found, report_folder, seeker, wrap_text, timezone_of
                 # db.commit()
                 file_datainserts.append(datainsert)
 
-                tsv_tml_data_list.append((inserttime, actiondesc, bundleid, path))
+                tsv_tml_data_list.append((
+                    (inserttime, 'datetime'),
+                    actiondesc, bundleid, path))
 
             matchObj = re.search(
                 r"(Uninstalling identifier )", line
@@ -387,7 +397,9 @@ def get_mobileInstall(files_found, report_folder, seeker, wrap_text, timezone_of
                 # db.commit()
                 file_datainserts.append(datainsert)
 
-                tsv_tml_data_list.append((inserttime, actiondesc, bundleid, ''))
+                tsv_tml_data_list.append((
+                    (inserttime, 'datetime'),
+                    actiondesc, bundleid, ''))
 
             matchObj = re.search(r"(main: Reboot detected)", line)  # Regex for reboots
             if matchObj:
@@ -424,7 +436,9 @@ def get_mobileInstall(files_found, report_folder, seeker, wrap_text, timezone_of
                 # db.commit()
                 file_datainserts.append(datainsert)
 
-                tsv_tml_data_list.append((inserttime, actiondesc, bundleid, path))
+                tsv_tml_data_list.append((
+                    (inserttime, 'datetime'),
+                    actiondesc, bundleid, path))
 
             matchObj = re.search(
                 r"(Attempting Delta patch update of )", line
@@ -477,7 +491,9 @@ def get_mobileInstall(files_found, report_folder, seeker, wrap_text, timezone_of
                 # db.commit()
                 file_datainserts.append(datainsert)
 
-                tsv_tml_data_list.append((inserttime, actiondesc, bundleid, path))
+                tsv_tml_data_list.append((
+                    (inserttime, 'datetime'),
+                    actiondesc, bundleid, path))
                 # logfunc()
         # end for line in file:
         if file_datainserts:
@@ -530,18 +546,27 @@ def get_mobileInstall(files_found, report_folder, seeker, wrap_text, timezone_of
                 uninstallcount = uninstallcount + 1
                 totalapps = totalapps + 1
                 # tofile1 = row[0] + ' ' + row[1] + ' ' + row[2] + ' ' + row[3] + '\n'
-                data_list_uninstalled.append((row[0], row[2],))
+                data_list_uninstalled.append((
+                    (row[0], 'datetime'),
+                    row[2],
+                ))
                 # logfunc()
             elif row[1] == "Uninstalling identifier":
                 # logfunc(row[0], row[1], row[2], row[3])
                 uninstallcount = uninstallcount + 1
                 totalapps = totalapps + 1
                 # tofile1 = row[0] + ' ' + row[1] + ' ' + row[2] + ' ' + row[3] + '\n'
-                data_list_uninstalled.append((row[0], row[2],))
+                data_list_uninstalled.append((
+                    (row[0], 'datetime'),
+                    row[2],
+                ))
                 # logfunc()
             else:
                 # logfunc(row[0], row[1], row[2], row[3])
-                data_list_installed.append((row[0], row[2],))
+                data_list_installed.append((
+                    (row[0], 'datetime'),
+                    row[2],
+                ))
                 installedcount = installedcount + 1
                 totalapps = totalapps + 1
 
@@ -633,7 +658,10 @@ def get_mobileInstall(files_found, report_folder, seeker, wrap_text, timezone_of
     for row in all_rows:
         # logfunc(row[0])
         # logfunc(row[0], row[1], row[2], row[3])
-        data_list_reboots.append((row[0], row[1]))
+        data_list_reboots.append((
+            (row[0], 'datetime'),
+            row[1]
+        ))
         sysstatecount = sysstatecount + 1
 
     if len(all_rows) > 0:

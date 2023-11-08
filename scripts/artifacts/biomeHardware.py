@@ -117,7 +117,7 @@ def get_biomeHardware(files_found, report_folder, seeker, wrap_text, timezone_of
             date1 = ab.read(8) 
             date1 = (struct.unpack_from("<d",date1)[0])
             convertedtime1 = timestampsconv(date1)
-            convertedtime1 = convert_utc_human_to_timezone(convertedtime1, timezone_offset)
+            #convertedtime1 = convert_utc_human_to_timezone(convertedtime1, timezone_offset)
             #print(convertedtime1)
             segbtime = convertedtime1
             
@@ -144,7 +144,10 @@ def get_biomeHardware(files_found, report_folder, seeker, wrap_text, timezone_of
                 
                 hardware = (protostuff['1'])
                 
-                data_list.append((segbtime, hardware))
+                data_list.append((
+                    (segbtime, 'datetime'),
+                    hardware
+                ))
         
             modresult = (sizeofnotificaton % 8)
             resultante =  8 - modresult

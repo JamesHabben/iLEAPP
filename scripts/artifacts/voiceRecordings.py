@@ -44,7 +44,10 @@ def get_voiceRecordings(files_found, report_folder, seeker, wrap_text, timezone_
                             </audio> 
                             '''.format(m4a_file)
 
-                data_list.append((ct, pl['RCSavedRecordingTitle'], pl['RCComposedAVURL'].split('//')[1], audio))
+                data_list.append((
+                    (ct, 'datetime'),
+                    pl['RCSavedRecordingTitle'], pl['RCComposedAVURL'].split('//')[1], audio
+                ))
 
         report = ArtifactHtmlReport('Voice Recordings')
         report.start_artifact_report(report_folder, 'Voice Recordings')

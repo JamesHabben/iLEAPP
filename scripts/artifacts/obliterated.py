@@ -15,7 +15,7 @@ def get_obliterated(files_found, report_folder, seeker, wrap_text, timezone_offs
     logdevinfo(f'Obliterated Timestamp: {utc_modified_date}')
     
     data_list = []
-    data_list.append((utc_modified_date,))
+    data_list.append(( (utc_modified_date, 'datetime') , ))
     
     if len(data_list) > 0:
         report = ArtifactHtmlReport('Obliterated Time')

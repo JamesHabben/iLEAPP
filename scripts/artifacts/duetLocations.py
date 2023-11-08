@@ -151,11 +151,15 @@ def get_duetLocations(files_found, report_folder, seeker, wrap_text, timezone_of
                         elif key == 'kCLLocationCodingKeySpeed':
                             speed = value
                             
-                    data_list.append((timestamp,latitude,longitude,horzacc,altitude,speed))
+                    data_list.append((
+                        (timestamp, 'datetime'),
+                        latitude,longitude,horzacc,altitude,speed
+                    ))
                     timestamp = latitude = longitude = horzacc, altitude = ''
                     
                 except (nd.DeserializeError, nd.biplist.NotBinaryPlistException, nd.biplist.InvalidPlistException,
-                        nd.plistlib.InvalidFileException, nd.ccl_bplist.BplistError, ValueError, TypeError, OSError, OverflowError) as ex:
+                        nd.plistlib.InvalidFileException, nd.ccl_bplist.BplistError,
+                        ValueError, TypeError, OSError, OverflowError) as ex:
                     logfunc(f'Failed to read plist, error was:' + str(ex))
                 
             modresult = (sizeofnotificaton % 8)

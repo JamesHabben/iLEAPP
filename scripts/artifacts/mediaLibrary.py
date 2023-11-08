@@ -16,30 +16,47 @@ def get_mediaLibrary(files_found, report_folder, seeker, wrap_text, timezone_off
     try:
         cursor.execute(
         """
-        SELECT ext.title, ext.media_kind, itep.format,
-                ext.location, ext.total_time_ms, ext.file_size, ext.year,
-                alb.album, alba.album_artist, com.composer, gen.genre,
-                ite.track_number, art.artwork_token,
-                itev.extended_content_rating, itev.movie_info,
-                ext.description_long, sto.account_id,
-                strftime(\'%d/%m/%Y %H:%M:%S\', 
-                datetime(sto.date_purchased + 978397200, \'unixepoch\'))
-                date_purchased, sto.store_item_id, sto.purchase_history_id, ext.copyright
-                from item_extra
-                ext join item_store sto using (item_pid)
-                join item ite using (item_pid)
-                join item_stats ites using (item_pid)
-                join item_playback itep using (item_pid)
-                join item_video itev using (item_pid)
-                left join album alb on sto.item_pid=alb.representative_item_pid
-                left join album_artist alba
-                on sto.item_pid=alba.representative_item_pid
-                left join composer com on
-                sto.item_pid=com.representative_item_pid
-                left join genre gen on sto.item_pid=gen.representative_item_pid
-                left join item_artist itea on
-                sto.item_pid=itea.representative_item_pid
-                left join artwork_token art on sto.item_pid=art.entity_pid
+        SELECT 
+            ext.title, 
+            ext.media_kind, 
+            itep.format,
+            ext.location, 
+            ext.total_time_ms, 
+            ext.file_size, 
+            ext.year,
+            alb.album, 
+            alba.album_artist, 
+            com.composer, 
+            gen.genre,
+            ite.track_number, 
+            art.artwork_token,
+            itev.extended_content_rating, 
+            itev.movie_info,
+            ext.description_long, 
+            sto.account_id,
+            strftime(\'%d/%m/%Y %H:%M:%S\', datetime(sto.date_purchased + 978397200, \'unixepoch\'))
+            date_purchased, 
+            sto.store_item_id, 
+            sto.purchase_history_id, 
+            ext.copyright
+        from item_extra
+        ext join item_store sto using (item_pid)
+        join item ite using (item_pid)
+        join item_stats ites using (item_pid)
+        join item_playback itep using (item_pid)
+        join item_video itev using (item_pid)
+        left join album alb 
+            on sto.item_pid=alb.representative_item_pid
+        left join album_artist alba
+            on sto.item_pid=alba.representative_item_pid
+        left join composer com 
+            on sto.item_pid=com.representative_item_pid
+        left join genre gen 
+            on sto.item_pid=gen.representative_item_pid
+        left join item_artist itea 
+            on sto.item_pid=itea.representative_item_pid
+        left join artwork_token art 
+            on sto.item_pid=art.entity_pid
         """
         )
     except:

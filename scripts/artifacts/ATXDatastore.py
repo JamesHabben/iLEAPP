@@ -30,23 +30,26 @@ def get_atxDatastore(files_found, report_folder, seeker, wrap_text, timezone_off
     cursor = db.cursor()
 
     cursor.execute('''attach database "''' + localdb + '''" as Local ''')
-    cursor.execute('''select 
-alog.id AS Id,
-alog.bundleId AS bundleId,
-alogAction.actionType as ptype,
-Local.ZRTLEARNEDLOCATIONOFINTERESTMO.ZLOCATIONLATITUDE as latitude, 
-Local.ZRTLEARNEDLOCATIONOFINTERESTMO.ZLOCATIONLONGITUDE as longitude,
-DateTime(alog.date + 978307200, 'UNIXEPOCH') as date,
-DateTime(alog.appSessionStartDate + 978307200, 'UNIXEPOCH') as appSessionStartDate,
-DateTime(alog.appSessionEndDate + 978307200, 'UNIXEPOCH') as appSessionEndDate,
-hex(alog.location) as location,
-hex(alog.prevLocation) as prevLocation,
-alog.motionType as potionType,
-alog.geohash as geohash,
-alog.coarseGeohash as coarseGeohash
-FROM alog 
-INNER JOIN alogAction on alogAction.id = alog.actionType
-LEFT JOIN Local.ZRTLEARNEDLOCATIONOFINTERESTMO on Local.ZRTLEARNEDLOCATIONOFINTERESTMO.ZIDENTIFIER = alog.location
+    cursor.execute('''
+        select 
+            alog.id AS Id,
+            alog.bundleId AS bundleId,
+            alogAction.actionType as ptype,
+            Local.ZRTLEARNEDLOCATIONOFINTERESTMO.ZLOCATIONLATITUDE as latitude, 
+            Local.ZRTLEARNEDLOCATIONOFINTERESTMO.ZLOCATIONLONGITUDE as longitude,
+            DateTime(alog.date + 978307200, 'UNIXEPOCH') as date,
+            DateTime(alog.appSessionStartDate + 978307200, 'UNIXEPOCH') as appSessionStartDate,
+            DateTime(alog.appSessionEndDate + 978307200, 'UNIXEPOCH') as appSessionEndDate,
+            hex(alog.location) as location,
+            hex(alog.prevLocation) as prevLocation,
+            alog.motionType as potionType,
+            alog.geohash as geohash,
+            alog.coarseGeohash as coarseGeohash
+        FROM alog 
+        INNER JOIN alogAction 
+            on alogAction.id = alog.actionType
+        LEFT JOIN Local.ZRTLEARNEDLOCATIONOFINTERESTMO 
+            on Local.ZRTLEARNEDLOCATIONOFINTERESTMO.ZIDENTIFIER = alog.location
                             ''')
 
     all_rows = cursor.fetchall()
@@ -56,20 +59,27 @@ LEFT JOIN Local.ZRTLEARNEDLOCATIONOFINTERESTMO on Local.ZRTLEARNEDLOCATIONOFINTE
         data_list = []
         for row in all_rows:
             timestamp = convert_ts_human_to_utc(row[5])
-            timestamp = convert_utc_human_to_timezone(timestamp,timezone_offset)
+            #timestamp = convert_utc_human_to_timezone(timestamp,timezone_offset)
             
             startdate = convert_ts_human_to_utc(row[6])
-            startdate = convert_utc_human_to_timezone(startdate,timezone_offset)
+            #startdate = convert_utc_human_to_timezone(startdate,timezone_offset)
             
             enddate = convert_ts_human_to_utc(row[7])
-            enddate = convert_utc_human_to_timezone(enddate,timezone_offset)
+            #enddate = convert_utc_human_to_timezone(enddate,timezone_offset)
             
-            data_list.append((timestamp, row[2],row[3],row[4],startdate,enddate,row[8],row[9],row[0]))
+            data_list.append((
+                (timestamp, 'datetime'),
+                row[2],row[3],row[4],
+                (startdate, 'datetime'),
+                (enddate, 'datetime'),
+                row[8],row[9],row[0]
+            ))
 
         report = ArtifactHtmlReport('ATXDataStore')
         report.start_artifact_report(report_folder, 'ATXDataStore')
         report.add_script()
-        data_headers = ('Timestamp', 'Type', 'Latitude', 'Longitude', 'AppSessionStartDate', 'AppSessionEndDate', 'Location', 'Previous Location','ID', )
+        data_headers = ('Timestamp', 'Type', 'Latitude', 'Longitude', 'AppSessionStartDate',
+                        'AppSessionEndDate', 'Location', 'Previous Location','ID', )
         report.write_artifact_data_table(data_headers, data_list, atxdb)
         report.end_artifact_report()
 

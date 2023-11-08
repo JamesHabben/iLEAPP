@@ -11,7 +11,7 @@
 
 from scripts.artifact_report import ArtifactHtmlReport
 from scripts.ilapfuncs import logfunc, tsv, kmlgen, timeline, is_platform_windows, generate_thumbnail, \
-    open_sqlite_file_readonly, convert_sqlite_epoch
+    open_sqlite_file_readonly, convert_apple_epoch
 from scripts.builds_ids import OS_build
 
 
@@ -58,7 +58,7 @@ def get_photosMigration(files_found, report_folder, seeker, wrap_text, timezone_
 
 
             data_list.append((
-                (convert_sqlite_epoch(row['ZMIGRATIONDATE']), 'datetime'),
+                (convert_apple_epoch(row['ZMIGRATIONDATE']), 'datetime'),
                 row['ZINDEX'],
                 row['Migration_Type'],
                 row['ZFORCEREBUILDREASON'],

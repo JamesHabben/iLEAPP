@@ -123,7 +123,7 @@ def get_biomeNowplaying(files_found, report_folder, seeker, wrap_text, timezone_
                 #print(protostuff)
                 
                 timestart = (timestampsconv(protostuff['2']))
-                timestart = convert_utc_human_to_timezone(timestart, timezone_offset)
+                #timestart = convert_utc_human_to_timezone(timestart, timezone_offset)
                 bundleid = (protostuff['15'])
                 info = (protostuff.get('10',''))
                 info2 = (protostuff.get('8',''))
@@ -135,7 +135,10 @@ def get_biomeNowplaying(files_found, report_folder, seeker, wrap_text, timezone_
                         output = (f"{protostuff['14'][0]['3']} <-> {protostuff['14'][1]['3']}")
                 else:
                     output = ''
-                data_list.append((timestart, bundleid, output, info, info2, info3))
+                data_list.append((
+                    (timestart, 'datetime'),
+                    bundleid, output, info, info2, info3
+                ))
                 
             modresult = (sizeofnotificaton % 8)
             resultante =  8 - modresult

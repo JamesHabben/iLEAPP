@@ -78,7 +78,9 @@ def get_notificationsXII(files_found, report_folder, seeker, wrap_text, timezone
                             other_dict[k] = str(v)
                     if subtitle:
                         title += f'[{subtitle}]'
-                    data_list.append((creation_date, bundle_name, title, message, str(other_dict)))
+                    data_list.append((
+                        (creation_date, 'datetime'),
+                        bundle_name, title, message, str(other_dict)))
                 p.close()
                 
             elif "AttachmentsList" in file_name:

@@ -2,7 +2,7 @@ import os
 import plistlib
 import datetime
 from scripts.artifact_report import ArtifactHtmlReport
-from scripts.ilapfuncs import logfunc, tsv, timeline, is_platform_windows, open_sqlite_db_readonly
+from scripts.ilapfuncs import logfunc, tsv, timeline, is_platform_windows, open_sqlite_db_readonly, convert_unix_epoch
 
 def convertcocoa(timevalue):
   if timevalue == '':
@@ -42,25 +42,35 @@ def get_locServicesconfig(files_found, report_folder, seeker, wrap_text, timezon
         authorization = value.get('Authorization', '')
         locationtimestopped = convertcocoa(value.get('LocationTimeStopped', ''))
         
-    data_list_clientsplist.append((fencetimestarted, 'FenceTimeStarted'))
-    data_list_clientsplist.append((comsumptionperiod, 'ConsumptionPeriodBegin'))
-    data_list_clientsplist.append((receivinglocationinformationtimestopped, 'ReceivingLocationInformationTimeStopped'))
-    data_list_clientsplist.append((authorization, 'Authorization'))
-    data_list_clientsplist.append((locationtimestopped, 'LocationTimeStopped'))
+    data_list_clientsplist.append(( 'FenceTimeStarted', (fencetimestarted, 'datetime') ))
+    data_list_clientsplist.append(( 'ConsumptionPeriodBegin', (comsumptionperiod, 'datetime') ))
+    data_list_clientsplist.append(( 'ReceivingLocationInformationTimeStopped',
+                                    (receivinglocationinformationtimestopped, 'datetime') ))
+    data_list_clientsplist.append(( 'Authorization', authorization ))
+    data_list_clientsplist.append(( 'LocationTimeStopped', locationtimestopped ))
       
         
     for key, value in locationdplist.items():
-      data_list_locationdplist.append((key, value))
+      data_list_locationdplist.append(( key, value ))
       
     for key, value in routinedplist.items():
       if key != 'CloudKitAccountInfoCache':
-        data_list_routinedplist.append((value, key))
+        if key in ('CKStartupTime'):
+            data_list_routinedplist.append(( key, (convert_unix_epoch(value), 'datetime') ))
+        elif key in ('LastAssetUpdateDate', 'LastExitDate.CoreRoutineHelperService',
+                     'LastLaunchDate.CoreRoutineHelperService', 'LastLaunchDate.routined',
+                     'LastSuccessfulAssetUpdateDate', 'learnedLocationEngineTrainLocationsOfInterestLastCompletionDate',
+                     'LearnedLocationEngineTrainVisitsLastAttemptDate',
+                     'RTDefaultsPersistenceMirroringManagerBackgroundLastExportDate',
+                     'RTDefaultsPersistenceMirroringManagerBackgroundLastImportDate'):
+            data_list_routinedplist.append((key, (value, 'datetime')))
+        data_list_routinedplist.append(( key, value ))
       
     if len(data_list_routinedplist) > 0:
       report = ArtifactHtmlReport('LSC - com.apple.routined.plist')
       report.start_artifact_report(report_folder, 'LSC - com.apple.routined.plist')
       report.add_script()
-      data_headers = ('Value', 'Key')
+      data_headers = ('Key', 'Value')
       report.write_artifact_data_table(data_headers, data_list_routinedplist, file_found)
       report.end_artifact_report()
 

@@ -35,7 +35,11 @@ def get_mobileContainerManager(files_found, report_folder, seeker, wrap_text, ti
                     concat_date = year + "-" + str(month_number) + "-" + day + " " + time 
                     dtime_obj = datetime.strptime(concat_date, '%Y-%m-%d %H:%M:%S')
                     
-                    data_list.append((str(dtime_obj), group, str(linecount)))
+                    data_list.append((
+                        (dtime_obj, 'datetime'),
+                        group,
+                        str(linecount)
+                    ))
 
     
     report = ArtifactHtmlReport('Mobile Container Manager')

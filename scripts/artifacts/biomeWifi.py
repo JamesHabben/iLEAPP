@@ -137,15 +137,19 @@ def get_biomeWifi(files_found, report_folder, seeker, wrap_text, timezone_offset
                 #print(types)
                 
                 timestart = (timestampsconv(protostuff['2']))
-                timestart = convert_utc_human_to_timezone(timestart, timezone_offset)
+                #timestart = convert_utc_human_to_timezone(timestart, timezone_offset)
                 
                 timeend = (timestampsconv(protostuff['3']))
-                timeend = convert_utc_human_to_timezone(timeend, timezone_offset)
+                #timeend = convert_utc_human_to_timezone(timeend, timezone_offset)
                 
                 
                 network = protostuff['4']['3']
                 
-                data_list.append((timestart, timeend, network))
+                data_list.append((
+                    (timestart, 'datetime'),
+                    (timeend, 'datetime'),
+                    network
+                ))
         
             modresult = (sizeofnotificaton % 8)
             resultante =  8 - modresult

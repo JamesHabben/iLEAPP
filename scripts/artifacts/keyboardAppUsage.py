@@ -13,7 +13,11 @@ def get_keyboardAppUsage(files_found, report_folder, seeker, wrap_text, timezone
             plist_content = plistlib.load(plist_file)
             for app in plist_content:
                 for entry in plist_content[app]:
-                    data_list.append((entry['startDate'], app, entry['appTime'], ', '.join(map(str, entry['keyboardTimes']))))
+                    data_list.append((
+                        (entry['startDate'], 'date'),
+                        app,
+                        entry['appTime'],
+                        ', '.join(map(str, entry['keyboardTimes']))))
 
     if len(data_list) > 0:
         report = ArtifactHtmlReport('Keyboard Application Usage')

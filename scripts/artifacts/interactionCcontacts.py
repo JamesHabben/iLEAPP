@@ -8,7 +8,7 @@ from packaging import version #use to search per version number
 
 from scripts.artifact_report import ArtifactHtmlReport
 from scripts.ilapfuncs import (logfunc, tsv, timeline, is_platform_windows,
-                               open_sqlite_file_readonly, convert_sqlite_epoch)
+                               open_sqlite_file_readonly, convert_apple_epoch)
 
 def get_interactionCcontacts(files_found, report_folder, seeker, wrap_text, timezone_offset):
     for file_found in files_found:
@@ -49,16 +49,16 @@ def get_interactionCcontacts(files_found, report_folder, seeker, wrap_text, time
         if version.parse(iOSversion) >= version.parse("10"):
             for row in all_rows:
                 data_list.append((
-                    (convert_sqlite_epoch(row['zstartdate']), 'datetime'),
-                    (convert_sqlite_epoch(row['zenddate']), 'datetime'),
+                    (convert_apple_epoch(row['zstartdate']), 'datetime'),
+                    (convert_apple_epoch(row['zenddate']), 'datetime'),
                     row['zbundleid'],
                     row['zdisplayname'],
                     (row['zidentifier'], 'phonenumber'),
                     row['zdirection'],
                     row['zisresponse'],
                     row['zrecipientcount'],
-                    (convert_sqlite_epoch(row['zcreationdate']), 'datetime'),
-                    (convert_sqlite_epoch(row['zcreationdate']), 'datetime'),
+                    (convert_apple_epoch(row['zcreationdate']), 'datetime'),
+                    (convert_apple_epoch(row['zcreationdate']), 'datetime'),
                     row['zcontenturl']
                 ))
 
@@ -102,7 +102,7 @@ def get_interactionCcontacts(files_found, report_folder, seeker, wrap_text, time
         if version.parse(iOSversion) >= version.parse("10"):
             for row in all_rows:
                 data_list.append((
-                    (convert_sqlite_epoch(row['ZCREATIONDATE']), 'datetime'),
+                    (convert_apple_epoch(row['ZCREATIONDATE']), 'datetime'),
                     row['zbundleid'],
                     row['ztargetbundleid'],
                     row['zuuid'],

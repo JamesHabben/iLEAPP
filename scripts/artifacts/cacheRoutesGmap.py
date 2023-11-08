@@ -25,7 +25,9 @@ def get_cacheRoutesGmap(files_found, report_folder, seeker, wrap_text, timezone_
                 try: 
                     lat = deserialized['$objects'][x]['_coordinateLat']
                     lon = deserialized['$objects'][x]['_coordinateLong'] #lat longs
-                    data_list.append((datetime_time, lat, lon, file_found))
+                    data_list.append((
+                        (datetime_time, 'datetime'),
+                        lat, lon, file_found))
                 except:
                     pass    
             

@@ -45,13 +45,20 @@ def get_mobileActivationLogs(files_found, report_folder, seeker, wrap_text, time
                         upgrade_match = re.search((r'((.*)(Upgrade\s+from\s+[\w]+\s+to\s+[\w]+\s+detected\.$))'), values)
                         if upgrade_match:
                             upgrade = upgrade_match.group(3)            
-                            data_list.append((ma_datetime, upgrade, file_name))
+                            data_list.append((
+                                (dtime_obj, 'datetime'),
+                                upgrade,
+                                file_name
+                            ))
                     
                     if '____________________ Mobile Activation Startup _____________________' in values:
                         activationcount += 1
                         ma_startup_line = str(linecount)
                         ma_startup = (f'Mobile Activation Startup at line: {ma_startup_line}')
-                        data_list.append((ma_datetime, ma_startup, file_name))
+                        data_list.append((
+                            (dtime_obj, 'datetime'),
+                            ma_startup,
+                            file_name))
 
                 upgrade_entries = (f'Found {hitcount} Upgrade entries in {file_name}')
                 boot_entries = (f'Found {activationcount} Mobile Activation entries in {file_name}')

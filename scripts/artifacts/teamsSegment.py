@@ -26,29 +26,43 @@ def get_teamsSegment(files_found, report_folder, seeker, wrap_text, timezone_off
                     altitude = serial[2]['altitude']
                     vertacc = serial[2]['verticalAccuracy']
                     horiacc = serial[2]['horizontalAccuracy']
-                    data_list_location.append((locationtimestamp, longitude, latitude, speed, altitude, vertacc, horiacc))
+                    data_list_location.append((
+                        (locationtimestamp, 'datetime'),
+                        longitude, latitude, speed, altitude, vertacc, horiacc))
                     
                 if serial[1] == 'motion':
                     motionact = (serial[2]['activityName'])
-                    data_list_motion.append((timestamp, motionact))
+                    data_list_motion.append((
+                        (timestamp, 'datetime'),
+                        motionact
+                    ))
                     
                 if serial[1] == 'timeCheck':
                     tczone = serial[2]['timezone']
                     tcoffset = serial[2]['offset']
                     tcreason = serial[2]['reason']
-                    data_list_timecheck.append((timestamp, tczone, tcoffset, tcreason))
+                    data_list_timecheck.append((
+                        (timestamp, 'datetime'),
+                        tczone, tcoffset, tcreason
+                    ))
                     
                 if serial[1] == 'power':
                     plugged = serial[2]['isPluggedIn']
                     batlvl = serial[2]['batteryLevel']
-                    data_list_power.append((timestamp, plugged, batlvl))
+                    data_list_power.append((
+                        (timestamp, 'datetime'),
+                        plugged, batlvl
+                    ))
                     
                 if serial[1] == 'stateChange':
                     agg = ' '
                     for a, b in serial[2].items():
                         agg = agg + (f'{a}: {b} ')
                     agg = agg.lstrip()
-                    data_list_statechange.append((timestamp, agg))
+                    data_list_statechange.append((
+                        (timestamp, 'datetime'),
+                        agg
+                    ))
 
     if len(data_list_location) > 0:
         report = ArtifactHtmlReport('Microsoft Teams Locations')

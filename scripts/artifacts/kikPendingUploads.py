@@ -51,7 +51,10 @@ def get_kikPendingUploads(files_found, report_folder, seeker, wrap_text, timezon
         
         thumb = f'<img src="{report_folder}{contentID}"  width="300"></img>'
         
-        data_list.append((uploadStartTime, appID, contentID, progress, retriesRemaining, state, thumb))
+        data_list.append((
+            (uploadStartTime, 'datetime'),
+            appID, contentID, progress, retriesRemaining, state, thumb
+        ))
 
         a_dict = {}
                         
@@ -75,7 +78,8 @@ def get_kikPendingUploads(files_found, report_folder, seeker, wrap_text, timezon
             report = ArtifactHtmlReport('Kik Pending Uploads')
             report.start_artifact_report(report_folder, 'Kik Pending Uploads', description)
             report.add_script()
-            data_headers = ('Upload Start Time','App ID','Content ID','Progress','Retries Remaining','State','Pending File')
+            data_headers = ('Upload Start Time','App ID','Content ID','Progress',
+                            'Retries Remaining','State','Pending File')
             report.write_artifact_data_table(data_headers, data_list, head_tail[0],html_no_escape=['Pending File'])
             report.end_artifact_report()
             
@@ -87,6 +91,7 @@ def get_kikPendingUploads(files_found, report_folder, seeker, wrap_text, timezon
 __artifacts__ = {
     "kikPendingUploads": (
         "Kik",
-        ('*/mobile/Containers/Shared/AppGroup/*/cores/private/*/chunked_upload_storage/pending_uploads','*/mobile/Containers/Shared/AppGroup/*/cores/private/*/chunked_upload_storage/data_cache/*'),
+        ('*/mobile/Containers/Shared/AppGroup/*/cores/private/*/chunked_upload_storage/pending_uploads',
+         '*/mobile/Containers/Shared/AppGroup/*/cores/private/*/chunked_upload_storage/data_cache/*'),
         get_kikPendingUploads)
 }

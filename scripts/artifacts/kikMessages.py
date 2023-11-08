@@ -19,23 +19,23 @@ def get_kikMessages(files_found, report_folder, seeker, wrap_text, timezone_offs
     db = open_sqlite_db_readonly(file_found)
     cursor = db.cursor()
     cursor.execute('''
-    SELECT
-    datetime(ZKIKMESSAGE.ZRECEIVEDTIMESTAMP +978307200,'UNIXEPOCH') AS RECEIVEDTIME,
-    datetime(ZKIKMESSAGE.ZTIMESTAMP +978307200,'UNIXEPOCH') as TIMESTAMP,
-    ZKIKMESSAGE.ZBODY,
-    case ZKIKMESSAGE.ZTYPE
-        when 1 then 'Received'
-        when 2 then 'Sent'
-        when 3 then 'Group Admin'
-        when 4 then 'Group Message'
-        else 'Unknown' end as 'Type',
-    ZKIKMESSAGE.ZUSER,
-    ZKIKUSER.ZDISPLAYNAME,
-    ZKIKUSER.ZUSERNAME,
-    ZKIKATTACHMENT.ZCONTENT
-    from ZKIKMESSAGE
-    left join ZKIKUSER on ZKIKMESSAGE.ZUSER = ZKIKUSER.Z_PK
-    left join ZKIKATTACHMENT on ZKIKMESSAGE.Z_PK = ZKIKATTACHMENT.ZMESSAGE
+        SELECT
+            datetime(ZKIKMESSAGE.ZRECEIVEDTIMESTAMP +978307200,'UNIXEPOCH') AS RECEIVEDTIME,
+            datetime(ZKIKMESSAGE.ZTIMESTAMP +978307200,'UNIXEPOCH') as TIMESTAMP,
+            ZKIKMESSAGE.ZBODY,
+            case ZKIKMESSAGE.ZTYPE
+                when 1 then 'Received'
+                when 2 then 'Sent'
+                when 3 then 'Group Admin'
+                when 4 then 'Group Message'
+                else 'Unknown' end as 'Type',
+            ZKIKMESSAGE.ZUSER,
+            ZKIKUSER.ZDISPLAYNAME,
+            ZKIKUSER.ZUSERNAME,
+            ZKIKATTACHMENT.ZCONTENT
+        from ZKIKMESSAGE
+        left join ZKIKUSER on ZKIKMESSAGE.ZUSER = ZKIKUSER.Z_PK
+        left join ZKIKATTACHMENT on ZKIKMESSAGE.Z_PK = ZKIKATTACHMENT.ZMESSAGE
     ''')
 
     all_rows = cursor.fetchall()
@@ -48,7 +48,11 @@ def get_kikMessages(files_found, report_folder, seeker, wrap_text, timezone_offs
             attachmentName = str(row[7])
             thumb = media_to_html(attachmentName, files_found, report_folder)
             
-            data_list.append((row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], thumb))
+            data_list.append((
+                (row[0], 'datetime'),
+                (row[1], 'datetime'),
+                row[2], row[3], row[4], row[5], row[6], row[7], thumb
+            ))
 
         description = 'Kik Messages'
         report = ArtifactHtmlReport('Kik Messages')
@@ -67,17 +71,17 @@ def get_kikMessages(files_found, report_folder, seeker, wrap_text, timezone_offs
         logfunc('No Kik Messages data available')
         
     cursor.execute('''
-    SELECT
-    Z_PK,
-    ZDISPLAYNAME,
-    ZUSERNAME,
-    ZEMAIL,
-    ZJID,
-    ZFIRSTNAME,
-    ZLASTNAME,
-    datetime(ZPPTIMESTAMP/1000,'unixepoch'),
-    ZPPURL
-    FROM ZKIKUSER
+        SELECT
+            Z_PK,
+            ZDISPLAYNAME,
+            ZUSERNAME,
+            ZEMAIL,
+            ZJID,
+            ZFIRSTNAME,
+            ZLASTNAME,
+            datetime(ZPPTIMESTAMP/1000,'unixepoch'),
+            ZPPURL
+        FROM ZKIKUSER
     ''')
 
     all_rows = cursor.fetchall()
@@ -86,13 +90,19 @@ def get_kikMessages(files_found, report_folder, seeker, wrap_text, timezone_offs
     
     if usageentries > 0:
         for row in all_rows:
-            data_list.append((row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8]))
+            data_list.append((
+                row[0], row[1], row[2], row[3], row[4], row[5], row[6],
+                (row[7], 'datetime'),
+                row[8]
+            ))
 
         description = 'Kik Users'
         report = ArtifactHtmlReport('Kik Users')
         report.start_artifact_report(report_folder, 'Kik Users', description)
         report.add_script()
-        data_headers = ('PK','Display Name','User Name','Email','JID','First Name','Last Name','Profile Pic Timestamp','Profile Pic URL')     
+        data_headers = ('PK','Display Name','User Name','Email',
+                        'JID','First Name','Last Name','Profile Pic Timestamp',
+                        'Profile Pic URL')
         report.write_artifact_data_table(data_headers, data_list, file_found)
         report.end_artifact_report()
         

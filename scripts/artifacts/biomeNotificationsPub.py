@@ -123,7 +123,7 @@ def get_biomeNotificationsPub(files_found, report_folder, seeker, wrap_text, tim
                 #print(protostuff)
                 
                 timestart = (timestampsconv(protostuff['2']))
-                timestart = convert_utc_human_to_timezone(timestart, timezone_offset)
+                #timestart = convert_utc_human_to_timezone(timestart, timezone_offset)
                 bundleid = (protostuff['14'])
                 data1 = (protostuff.get('8',''))
                 data2 = (protostuff.get('9',''))
@@ -134,7 +134,10 @@ def get_biomeNotificationsPub(files_found, report_folder, seeker, wrap_text, tim
                     data4 = data4.decode()
                 data = (protostuff.get('1',''))
                 
-                data_list.append((timestart, bundleid, data1, data2, data3, data4, data5, data))
+                data_list.append((
+                    (timestart, 'datetime'),
+                    bundleid, data1, data2, data3, data4, data5, data
+                ))
                 
             modresult = (sizeofnotificaton % 8)
             resultante =  8 - modresult

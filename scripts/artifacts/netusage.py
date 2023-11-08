@@ -3,7 +3,7 @@ import textwrap
 
 from scripts.artifact_report import ArtifactHtmlReport
 from scripts.ilapfuncs import (logfunc, tsv, timeline, is_platform_windows, open_sqlite_file_readonly,
-                               convert_sqlite_epoch)
+                               convert_apple_epoch)
 
 def get_netusage(files_found, report_folder, seeker, wrap_text, timezone_offset):
     
@@ -50,9 +50,9 @@ def get_netusage(files_found, report_folder, seeker, wrap_text, timezone_offset)
                 data_list = []
                 for row in all_rows:
                     data_list.append((
-                        (convert_sqlite_epoch(row['ZTIMESTAMP']), 'datetime'),
-                        (convert_sqlite_epoch(row['ZFIRSTTIMESTAMP']), 'datetime'),
-                        (convert_sqlite_epoch(row['ZTIMESTAMP']), 'datetime'),
+                        (convert_apple_epoch(row['ZTIMESTAMP']), 'datetime'),
+                        (convert_apple_epoch(row['ZFIRSTTIMESTAMP']), 'datetime'),
+                        (convert_apple_epoch(row['ZTIMESTAMP']), 'datetime'),
                         row['ZBUNDLENAME'],
                         row['ZPROCNAME'],
                         row['usage_kind'],
@@ -111,8 +111,8 @@ def get_netusage(files_found, report_folder, seeker, wrap_text, timezone_offset)
                         netname, id_mac = '', ''
 
                     data_list.append((
-                        (convert_sqlite_epoch(row['ZFIRSTTIMESTAMP']), 'datetime'),
-                        (convert_sqlite_epoch(row['ZTIMESTAMP']), 'datetime'),
+                        (convert_apple_epoch(row['ZFIRSTTIMESTAMP']), 'datetime'),
+                        (convert_apple_epoch(row['ZTIMESTAMP']), 'datetime'),
                         netname,
                         id_mac,
                         row['net_kind'],
@@ -172,9 +172,9 @@ def get_netusage(files_found, report_folder, seeker, wrap_text, timezone_offset)
                 data_list = []
                 for row in all_rows:
                     data_list.append((
-                        (convert_sqlite_epoch(row['live_timestamp']), 'datetime'),
-                        (convert_sqlite_epoch(row['ZFIRSTTIMESTAMP']), 'datetime'),
-                        (convert_sqlite_epoch(row['process_timestamp']), 'datetime'),
+                        (convert_apple_epoch(row['live_timestamp']), 'datetime'),
+                        (convert_apple_epoch(row['ZFIRSTTIMESTAMP']), 'datetime'),
+                        (convert_apple_epoch(row['process_timestamp']), 'datetime'),
                         row['ZBUNDLENAME'],
                         row['ZPROCNAME'],
                         row['live_kind'],

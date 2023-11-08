@@ -6,7 +6,7 @@ from scripts.ilapfuncs import logfunc, tsv, timeline, is_platform_windows, logde
 
     
 def timestampcalc(timevalue):
-    timestamp = (datetime.datetime.fromtimestamp(int(timevalue)/1000).strftime('%Y-%m-%d %H:%M:%S'))
+    timestamp = (datetime.datetime.fromtimestamp(int(timevalue)/1000)) #.strftime('%Y-%m-%d %H:%M:%S'))
     return timestamp
 
 def get_airtags(files_found, report_folder, seeker, wrap_text, timezone_offset):
@@ -115,13 +115,60 @@ def get_airtags(files_found, report_folder, seeker, wrap_text, timezone_offset):
                 sloc = (safeloc['address'].get('locality'))
                 scount = (safeloc['address'].get('country'))
                 
-                data_list_safeloc.append((stimestamp, name, serial, id, rname, remoji, ris, sname, stype, sid, sva, sha, slong, slat, sfloor, sisina, sisold, salt, ssub, slabel, sstreet, scountry, sstate, sadmin, pstreetn, sformated, smapfull, sthro, saoi, sloc, scount))	
+                data_list_safeloc.append((
+                    (stimestamp, 'datetime'),
+                    name, serial, id, rname, remoji, ris, sname,
+                    stype, sid, sva, sha, slong, slat, sfloor, sisina, sisold,
+                    salt, ssub, slabel, sstreet, scountry, sstate, sadmin,
+                    pstreetn, sformated, smapfull, sthro, saoi, sloc, scount
+                ))
                 
-            data_list_info.append((name, serial, id, rname, remoji, ris, ptype, maname, pid, vid, ap, gid, owner, batstat, lostmode, cap, sysver,))
+            data_list_info.append((
+                name, serial, id, rname, remoji, ris, ptype, maname,
+                pid, vid, ap, gid, owner, batstat, lostmode, cap, sysver,
+            ))
             
-            data_list_location.append((ltimestamp, name, serial, id, rname, remoji, ris, ptype, maname, pid, vid, ap, gid, owner, batstat, lostmode, cap, sysver, asubAdministrativeArea, aslabel, astreetAddress, acountryCode, astateCode, administrativeArea, astreetName, aformattedAddressLines, amapItemFullAddress, afullThroroughfare, areaOfInterest, alocality, lpostype, lverticalAccuracy, llong, lisin, lisold, lhorz, llat, lalt, lloc, acountry))
+            data_list_location.append((
+                (ltimestamp, 'datetime'),
+                name,
+                serial,
+                id,
+                rname, remoji, ris, ptype, maname, pid, vid, ap, gid, owner, batstat, lostmode, cap, sysver,
+                asubAdministrativeArea, aslabel, astreetAddress, acountryCode, astateCode, administrativeArea,
+                astreetName, aformattedAddressLines, amapItemFullAddress, afullThroroughfare, areaOfInterest,
+                alocality, lpostype, lverticalAccuracy, llong, lisin, lisold, lhorz, llat, lalt, lloc, acountry
+            ))
             
-            data_list_crowdloc.append((crowdtimestamp, name, serial, id, rname, remoji, ris, ptype, maname, pid, vid, ap, gid, owner, batstat, lostmode, cap, sysver, crowdpostype, crowdvert, crowdlong, crowdlat, crowdalt, crowdfloor, crowdisacc, crowdisold, crowdhorzcc, crowdlocfin ))
+            data_list_crowdloc.append((
+                (crowdtimestamp, 'datetime'),
+                name,
+                serial,
+                id,
+                rname,
+                remoji,
+                ris,
+                ptype,
+                maname,
+                pid,
+                vid,
+                ap,
+                gid,
+                owner,
+                batstat,
+                lostmode,
+                cap,
+                sysver,
+                crowdpostype,
+                crowdvert,
+                crowdlong,
+                crowdlat,
+                crowdalt,
+                crowdfloor,
+                crowdisacc,
+                crowdisold,
+                crowdhorzcc,
+                crowdlocfin
+            ))
 
     if data_list_safeloc:
         report = ArtifactHtmlReport('Safe Locations')

@@ -3,7 +3,7 @@ import os
 import plistlib
 
 from scripts.artifact_report import ArtifactHtmlReport
-from scripts.ilapfuncs import logfunc, logdevinfo, tsv, is_platform_windows 
+from scripts.ilapfuncs import logfunc, logdevinfo, tsv, is_platform_windows, convert_apple_epoch
 
 def timestampsconv(webkittime):
     unix_timestamp = webkittime + 978307200
@@ -23,8 +23,11 @@ def get_timezoneInfo(files_found, report_folder, seeker, wrap_text, timezone_off
                 
             elif key == 'lastBootstrapDate':
                 times = timestampsconv(val)
-                data_list.append(('lastBootstrapDate', times))
+                data_list.append(( 'lastBootstrapDate', (times, 'datetime') ))
                 logdevinfo(f"Last Bootstrap Date: {times}")
+
+            elif key in ('MetricsSamplingLotteryWindowStart_pageRender'):
+                data_list.append(( key, (convert_apple_epoch(val), 'datetime') ))
                 
             else:
                 data_list.append((key, val ))

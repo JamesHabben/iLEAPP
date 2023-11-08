@@ -78,7 +78,11 @@ def get_restoreLog(files_found, report_folder, seeker, wrap_text, timezone_offse
                             event = splitline7[:splitline7.find("\"")]
                         else: pass
                         
-                        data_list.append((timestamp_formatted,originalOSBuild,og_version_num,currentOSBuild,cur_version_num,event,deviceClass,deviceModel,batteryIsCharging))
+                        data_list.append((
+                            (timestamp_formatted, 'datetime'),
+                            originalOSBuild,og_version_num,currentOSBuild,cur_version_num,
+                            event,deviceClass,deviceModel,batteryIsCharging
+                        ))
                         
                     else: pass
                     

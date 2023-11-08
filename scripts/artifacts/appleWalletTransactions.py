@@ -11,20 +11,20 @@ def get_appleWalletTransactions(files_found, report_folder, seeker, wrap_text, t
             db = open_sqlite_db_readonly(file_found)
             cursor = db.cursor()
             cursor.execute('''SELECT
-                            DATETIME(TRANSACTION_DATE + 978307200,'UNIXEPOCH'),
-                            MERCHANT_NAME,
-                            LOCALITY,
-                            ADMINISTRATIVE_AREA,
-                            CAST(AMOUNT AS REAL)/10000,
-                            CURRENCY_CODE,
-                            DATETIME(LOCATION_DATE + 978307200,'UNIXEPOCH'),
-                            LOCATION_LATITUDE,
-                            LOCATION_LONGITUDE,
-                            LOCATION_ALTITUDE,
-                            PEER_PAYMENT_COUNTERPART_HANDLE,
-                            PEER_PAYMENT_MEMO,
-                            TRANSACTION_STATUS,
-                            TRANSACTION_TYPE
+                                DATETIME(TRANSACTION_DATE + 978307200,'UNIXEPOCH'),
+                                MERCHANT_NAME,
+                                LOCALITY,
+                                ADMINISTRATIVE_AREA,
+                                CAST(AMOUNT AS REAL)/10000,
+                                CURRENCY_CODE,
+                                DATETIME(LOCATION_DATE + 978307200,'UNIXEPOCH'),
+                                LOCATION_LATITUDE,
+                                LOCATION_LONGITUDE,
+                                LOCATION_ALTITUDE,
+                                PEER_PAYMENT_COUNTERPART_HANDLE,
+                                PEER_PAYMENT_MEMO,
+                                TRANSACTION_STATUS,
+                                TRANSACTION_TYPE
                             FROM PAYMENT_TRANSACTION
                             ''')
         
@@ -42,20 +42,26 @@ def get_appleWalletTransactions(files_found, report_folder, seeker, wrap_text, t
                 timestamptrdate = ''
             else:
                 timestamptrdate = convert_ts_human_to_utc(row[0])
-                timestamptrdate = convert_utc_human_to_timezone(timestamptrdate,timezone_offset)
+                #timestamptrdate = convert_utc_human_to_timezone(timestamptrdate,timezone_offset)
             
             if (timestamplocdate == '') or (timestamplocdate == None):
                 timestamplocdate = ''
             else:
                 timestamplocdate = convert_ts_human_to_utc(row[6])
-                timestamplocdate = convert_utc_human_to_timezone(timestamplocdate,timezone_offset)
+                #timestamplocdate = convert_utc_human_to_timezone(timestamplocdate,timezone_offset)
             
-            data_list.append((timestamptrdate, row[1], row[2], row[3], row[4], row[5], timestamplocdate, row[7], row[8], row[9], row[10], row[11], row[12], row[13]))
+            data_list.append((
+                (timestamptrdate, 'datetime'),
+                row[1], row[2], row[3], row[4], row[5],
+                (timestamplocdate, 'datetime'),
+                row[7], row[8], row[9], row[10], row[11], row[12], row[13]))
 
         report = ArtifactHtmlReport('Transactions')
         report.start_artifact_report(report_folder, 'Transactions')
         report.add_script()
-        data_headers = ('Transaction Date', 'Merchant', 'Locality', 'Administrative Area', 'Currency Amount', 'Currency Type', 'Location Date', 'Latitude', 'Longitude', 'Altitude', 'Peer Payment Handle', 'Payment Memo', 'Transaction Status', 'Transaction Type')
+        data_headers = ('Transaction Date', 'Merchant', 'Locality', 'Administrative Area', 'Currency Amount',
+                        'Currency Type', 'Location Date', 'Latitude', 'Longitude', 'Altitude',
+                        'Peer Payment Handle', 'Payment Memo', 'Transaction Status', 'Transaction Type')
         report.write_artifact_data_table(data_headers, data_list, file_found)
         report.end_artifact_report()
 

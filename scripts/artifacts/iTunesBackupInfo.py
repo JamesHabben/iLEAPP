@@ -54,11 +54,16 @@ def get_iTunesMetadata(applications):
             game_center_enabled = itunes_metadata.get('gameCenterEnabled', '')
             game_center_ever_enabled = itunes_metadata.get('gameCenterEverEnabled', '')
             messages_extension = itunes_metadata.get('hasMessagesExtension', '')
-            app_list.append((bundle_id, item_name, artist_name, version, genre, 
-                            install_date, apple_id, purchase_date, release_date, 
-                            source_app, auto_download, purchased_redownload, 
-                            factory_install, side_loaded, game_center_enabled, 
-                            game_center_ever_enabled, messages_extension))
+            app_list.append((
+                bundle_id, item_name, artist_name, version, genre,
+                (install_date, 'datetime'),
+                apple_id,
+                (purchase_date, 'datetime'),
+                (release_date, 'datetime'),
+                source_app, auto_download, purchased_redownload,
+                factory_install, side_loaded, game_center_enabled,
+                game_center_ever_enabled, messages_extension
+            ))
         elif 'info_plist_bundle_id' in app_data.keys():
             app_info = (bundle_id, )
             app_info += ('',) * 16

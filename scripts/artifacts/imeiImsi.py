@@ -33,11 +33,14 @@ def get_imeiImsi(files_found, report_folder, seeker, wrap_text, timezone_offset)
                 
             elif key == 'PhoneNumber':
                 phonenumber = val
-                data_list.append(('Phone Number', val))
+                data_list.append(( 'Phone Number', (val, 'phonenumber') ))
                 logdevinfo(f"Phone Number: {val}")
-                
+
+            elif key == 'LASDNextUpdate':
+                data_list.append(( key, (val, 'datetime')))
+
             else:
-                data_list.append((key, val ))
+                data_list.append(( key, val ))
                 
     if len(data_list) > 0:
         report = ArtifactHtmlReport('IMEI - IMSI')

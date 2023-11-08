@@ -19,9 +19,9 @@ def get_instagramThreads(files_found, report_folder, seeker, wrap_text, timezone
     db = open_sqlite_db_readonly(file_found)
     cursor = db.cursor()
     cursor.execute('''
-    select
-    metadata
-    from threads
+        select
+            metadata
+        from threads
     ''')
     
     all_rows = cursor.fetchall()
@@ -58,15 +58,16 @@ def get_instagramThreads(files_found, report_folder, seeker, wrap_text, timezone
             userdict[inviterPk] = inviterFull
         
     cursor.execute('''
-    select
-    messages.message_id,
-    messages.thread_id,
-    messages.archive,
-    threads.metadata,
-    threads.thread_messages_range,
-    threads.visual_message_info
-    from messages, threads
-    where messages.thread_id = threads.thread_id
+        select
+            messages.message_id,
+            messages.thread_id,
+            messages.archive,
+            threads.metadata,
+            threads.thread_messages_range,
+            threads.visual_message_info
+        from messages, 
+            threads
+        where messages.thread_id = threads.thread_id
     ''')
 
     all_rows = cursor.fetchall()
@@ -136,9 +137,16 @@ def get_instagramThreads(files_found, report_folder, seeker, wrap_text, timezone
             else:
                 user = ''
                 
-            data_list.append((serverTimestamp, senderpk, user, message, videoChatTitle, videoChatCallID, dmreaction, reactionServerTimestamp, reactionUserID, sharedMediaID, sharedMediaURL))
+            data_list.append((
+                (serverTimestamp, 'datetime'),
+                senderpk, user, message, videoChatTitle, videoChatCallID, dmreaction,
+                reactionServerTimestamp, reactionUserID, sharedMediaID, sharedMediaURL
+            ))
             if videoChatTitle:
-                video_calls.append((serverTimestamp, senderpk, user, videoChatTitle, videoChatCallID))
+                video_calls.append((
+                    (serverTimestamp, 'datetime'),
+                    senderpk, user, videoChatTitle, videoChatCallID
+                ))
 
         description = 'Instagram Threads'
         report = ArtifactHtmlReport('Instagram Threads')

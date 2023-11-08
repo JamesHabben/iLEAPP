@@ -120,13 +120,13 @@ def get_biomeInfocus(files_found, report_folder, seeker, wrap_text, timezone_off
                 
                 activity = (protostuff['1']['1'])
                 timestart = (timestampsconv(protostuff['2']))
-                timestart = convert_utc_human_to_timezone(timestart, timezone_offset)
+                #timestart = convert_utc_human_to_timezone(timestart, timezone_offset)
                 
                 timeend = (timestampsconv(protostuff['3']))
-                timeend = convert_utc_human_to_timezone(timeend, timezone_offset)
+                #timeend = convert_utc_human_to_timezone(timeend, timezone_offset)
                 
                 timewrite = (timestampsconv(protostuff['8']))
-                timewrite = convert_utc_human_to_timezone(timewrite, timezone_offset)
+                #timewrite = convert_utc_human_to_timezone(timewrite, timezone_offset)
                 
                 actionguid = (protostuff['5'])
                 bundleid = (protostuff['4']['3'])
@@ -139,7 +139,12 @@ def get_biomeInfocus(files_found, report_folder, seeker, wrap_text, timezone_off
                     transition = ''
                 
                 
-                data_list.append((timestart, timeend, timewrite, activity, bundleid, transition, actionguid))
+                data_list.append((
+                    (timestart, 'datetime'),
+                    (timeend, 'datetime'),
+                    (timewrite, 'datetime'),
+                    activity, bundleid, transition, actionguid
+                ))
                 
             modresult = (sizeofnotificaton % 8)
             resultante =  8 - modresult

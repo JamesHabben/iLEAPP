@@ -23,7 +23,10 @@ def get_safariRecentWebSearches(files_found, report_folder, seeker, wrap_text, t
             for search in searches:
                 term = search.get('SearchString', '')
                 date = search.get('Date', '')
-                data_list.append((date, term))
+                data_list.append((
+                    (date, 'datetime'),
+                    term
+                ))
         except (biplist.InvalidPlistException, plistlib.InvalidFileException) as ex:
             logfunc(f'Failed to read plist {file_found} ' + str(ex))
                 

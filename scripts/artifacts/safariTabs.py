@@ -20,12 +20,12 @@ def get_safariTabs(files_found, report_folder, seeker, wrap_text, timezone_offse
 
             cursor.execute("""
             select
-            datetime(last_viewed_time+978307200,'unixepoch'), 
-            title, 
-            url, 
-            user_visible_url, 
-            opened_from_link, 
-            private_browsing
+                datetime(last_viewed_time+978307200,'unixepoch'), 
+                title, 
+                url, 
+                user_visible_url, 
+                opened_from_link, 
+                private_browsing
             from
             tabs
             """)
@@ -35,7 +35,10 @@ def get_safariTabs(files_found, report_folder, seeker, wrap_text, timezone_offse
             data_list = []    
             if usageentries > 0:
                 for row in all_rows:
-                    data_list.append((row[0], row[1], row[2], row[3], row[4], row[5]))
+                    data_list.append((
+                        (row[0], 'datetime'),
+                        row[1], row[2], row[3], row[4], row[5]
+                    ))
             
                 description = ''
                 report = ArtifactHtmlReport('Safari Browser - Tabs (BrowserState)')
@@ -62,12 +65,12 @@ def get_safariTabs(files_found, report_folder, seeker, wrap_text, timezone_offse
 
             cursor.execute("""
             select
-            cloud_tabs.system_fields,
-            cloud_tabs.title,
-            cloud_tabs.url,
-            cloud_tab_devices.device_name,
-            cloud_tabs.device_uuid,
-            cloud_tabs.tab_uuid
+                cloud_tabs.system_fields,
+                cloud_tabs.title,
+                cloud_tabs.url,
+                cloud_tab_devices.device_name,
+                cloud_tabs.device_uuid,
+                cloud_tabs.tab_uuid
             from cloud_tabs
             left join cloud_tab_devices on cloud_tab_devices.device_uuid = cloud_tabs.device_uuid
             """)

@@ -19,7 +19,7 @@ def get_dhcpl(files_found, report_folder, seeker, wrap_text, timezone_offset):
             if key == "LeaseLength":
                 data_list.append((key,val))
             if key == "LeaseStartDate":
-                data_list.append((key,val))
+                data_list.append((key, (val, 'datetime') ))
             if key == "RouterHardwareAddress":
                 data_list.append((key,val))
             if key == "RouterIPAddress":

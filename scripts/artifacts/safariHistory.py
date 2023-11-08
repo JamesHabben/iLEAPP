@@ -23,8 +23,8 @@ def get_safariHistory(files_found, report_folder, seeker, wrap_text, timezone_of
     
     cursor.execute("""
     select
-    history_visits.id,
-    history_items.url
+        history_visits.id,
+        history_items.url
     from history_visits
     left join history_items on history_items.id = history_visits.history_item
     order by history_visits.id
@@ -39,17 +39,17 @@ def get_safariHistory(files_found, report_folder, seeker, wrap_text, timezone_of
     
     cursor.execute("""
     select
-    datetime(history_visits.visit_time + 978307200,'unixepoch'),
-    history_visits.title,
-    history_items.url,
-    history_items.visit_count,
-    history_visits.redirect_source,
-    history_visits.redirect_destination,
-    history_visits.id,
-    case history_visits.origin
-        when 0 then "Local Device"
-        when 1 then "iCloud Synced Device"
-    end
+        datetime(history_visits.visit_time + 978307200,'unixepoch'),
+        history_visits.title,
+        history_items.url,
+        history_items.visit_count,
+        history_visits.redirect_source,
+        history_visits.redirect_destination,
+        history_visits.id,
+        case history_visits.origin
+            when 0 then "Local Device"
+            when 1 then "iCloud Synced Device"
+        end
     from history_visits
     left join history_items on history_visits.history_item = history_items.id
     """)
@@ -75,7 +75,13 @@ def get_safariHistory(files_found, report_folder, seeker, wrap_text, timezone_of
                     if str(row[5]) == key:
                         redirect_destination = value
         
-            data_list.append((row[0], row[1], textwrap.fill(row[2], width=100), row[3], textwrap.fill(redirect_source, width=100), textwrap.fill(redirect_destination, width=100), row[6], row[7]))
+            data_list.append((
+                (row[0], 'datetime'),
+                row[1], textwrap.fill(row[2], width=100), row[3],
+                textwrap.fill(redirect_source, width=100),
+                textwrap.fill(redirect_destination, width=100),
+                row[6], row[7]
+            ))
     
         description = ''
         report = ArtifactHtmlReport('Safari Browser - History')

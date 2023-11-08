@@ -31,9 +31,9 @@ def get_teams(files_found, report_folder, seeker, wrap_text, timezone_offset):
     cursor = db.cursor()
     cursor.execute('''
     SELECT
-    datetime('2001-01-01', "ZARRIVALTIME" || ' seconds'),
-    ZIMDISPLAYNAME,
-    ZCONTENT
+        datetime('2001-01-01', "ZARRIVALTIME" || ' seconds'),
+        ZIMDISPLAYNAME,
+        ZCONTENT
     from ZSMESSAGE
     ''')
 
@@ -57,7 +57,10 @@ def get_teams(files_found, report_folder, seeker, wrap_text, timezone_offset):
                                 thumb = f'<img src="{report_folder}/{data_file_name}"></img>'
             except:
                 logfunc(f'Error on block lines 47 - 57, content on {row[0]}')
-            data_list.append((row[0], row[1], row[2], thumb))
+            data_list.append((
+                (row[0], 'datetime'),
+                row[1], row[2], thumb
+            ))
 
         description = 'Teams Messages'
         report = ArtifactHtmlReport('Teams Messages')
@@ -78,11 +81,11 @@ def get_teams(files_found, report_folder, seeker, wrap_text, timezone_offset):
     
     cursor.execute('''
     SELECT
-    ZDISPLAYNAME,
-    zemail,
-    ZPHONENUMBER
+        ZDISPLAYNAME,
+        zemail,
+        ZPHONENUMBER
     from
-    ZDEVICECONTACTHASH
+        ZDEVICECONTACTHASH
     ''')
     
     all_rows = cursor.fetchall()
@@ -91,7 +94,11 @@ def get_teams(files_found, report_folder, seeker, wrap_text, timezone_offset):
     
     if usageentries > 0:
         for row in all_rows:
-            data_list.append((row[0], row[1], row[2]))
+            data_list.append((
+                row[0],
+                row[1],
+                (row[2], 'phonenumber')
+            ))
             
         description = 'Teams Contact'
         report = ArtifactHtmlReport('Teams Contact')
@@ -109,9 +116,9 @@ def get_teams(files_found, report_folder, seeker, wrap_text, timezone_offset):
     
     cursor.execute('''
     SELECT
-    datetime('2001-01-01', "ZTS_LASTSYNCEDAT" || ' seconds'),
-    ZDISPLAYNAME,
-    ZTELEPHONENUMBER
+        datetime('2001-01-01', "ZTS_LASTSYNCEDAT" || ' seconds'),
+        ZDISPLAYNAME,
+        ZTELEPHONENUMBER
     from zuser
     ''')
     
@@ -121,7 +128,11 @@ def get_teams(files_found, report_folder, seeker, wrap_text, timezone_offset):
     
     if usageentries > 0:
         for row in all_rows:
-            data_list.append((row[0], row[1], row[2]))
+            data_list.append((
+                (row[0], 'datetime'),
+                row[1],
+                (row[2], 'phonenumber')
+            ))
             
         description = 'Teams User'
         report = ArtifactHtmlReport('Teams User')
@@ -142,11 +153,11 @@ def get_teams(files_found, report_folder, seeker, wrap_text, timezone_offset):
         
     cursor.execute('''
     SELECT
-    ZCOMPOSETIME,
-    zfrom,
-    ZIMDISPLAYNAME,
-    zcontent,
-    ZPROPERTIES
+        ZCOMPOSETIME,
+        zfrom,
+        ZIMDISPLAYNAME,
+        zcontent,
+        ZPROPERTIES
     from ZSMESSAGE, ZMESSAGEPROPERTIES
     where ZSMESSAGE.ZTSID = ZMESSAGEPROPERTIES.ZTSID
     order by ZCOMPOSETIME
@@ -172,7 +183,8 @@ def get_teams(files_found, report_folder, seeker, wrap_text, timezone_offset):
                 try:
                     plist = nd.deserialize_plist(plist_file_object)                    
                 except (nd.DeserializeError, nd.biplist.NotBinaryPlistException, nd.biplist.InvalidPlistException,
-                        nd.plistlib.InvalidFileException, nd.ccl_bplist.BplistError, ValueError, TypeError, OSError, OverflowError) as ex:
+                        nd.plistlib.InvalidFileException, nd.ccl_bplist.BplistError, ValueError,
+                        TypeError, OSError, OverflowError) as ex:
                     logfunc(f'Failed to read plist for {row[4]}, error was:' + str(ex))
             if 'call-log' in plist:
                 datacalls = json.loads(plist['call-log'])
@@ -189,7 +201,13 @@ def get_teams(files_found, report_folder, seeker, wrap_text, timezone_offset):
                 calltarget = (datacalls['target'])
                 calloriginatordname = (datacalls['originatorParticipant']['displayName'])
                 callparticipantdname = (datacalls['targetParticipant']['displayName'])
-                data_list_calls.append((composetime, row[1], row[2], row[3], callstart, callconnect, callend, calldirection, calltype, callstate, calloriginator, calltarget, calloriginatordname, callparticipantdname))
+                data_list_calls.append((
+                    (composetime, 'datetime'),
+                    row[1], row[2], row[3], callstart,
+                    callconnect, callend, calldirection, calltype,
+                    callstate, calloriginator, calltarget,
+                    calloriginatordname, callparticipantdname
+                ))
             elif 'cards' in plist:
                 cards = json.loads(plist['cards'])
                 cardurl = (cards[0]['content']['body'][0]['selectAction']['url'])
@@ -203,15 +221,26 @@ def get_teams(files_found, report_folder, seeker, wrap_text, timezone_offset):
                     cardexpires = (idcontent.get('expiresAt'))
                     cardexpires  = datetime.datetime.fromtimestamp(cardexpires  / 1000)
                     carddevid = (idcontent.get('deviceId'))
-                data_list_cards.append((composetime, row[1], row[2], row[3], cardurl, cardtitle, cardtext, cardurl2, cardlat, cardlong, cardexpires, carddevid))
+                data_list_cards.append((
+                    (composetime, 'datetime'),
+                    row[1], row[2], row[3], cardurl,
+                    cardtitle, cardtext, cardurl2, cardlat,
+                    cardlong, cardexpires, carddevid
+                ))
             else:
-                data_list_unparsed.append((composetime, row[1], row[2], row[3], plist))
+                data_list_unparsed.append((
+                    (composetime, 'datetime'),
+                    row[1], row[2], row[3], plist
+                ))
                 
         description = 'Microsoft Teams Call Logs'
         report = ArtifactHtmlReport('Microsoft Teams Call Logs')
         report.start_artifact_report(report_folder, 'Teams Call Logs', description)
         report.add_script()
-        data_headers = ('Compose Timestamp', 'From', 'Display Name', 'Content',' Call Start', 'Call Connect', 'Call End', 'Call Direction', 'Call Type', 'Call State', 'Call Originator', 'Call Target', 'Call Originator Name', 'Call Participant Name')
+        data_headers = ('Compose Timestamp', 'From', 'Display Name', 'Content',
+                        'Call Start', 'Call Connect', 'Call End', 'Call Direction',
+                        'Call Type', 'Call State', 'Call Originator', 'Call Target',
+                        'Call Originator Name', 'Call Participant Name')
         report.write_artifact_data_table(data_headers, data_list_calls, file_found)
         report.end_artifact_report()
         
@@ -225,7 +254,9 @@ def get_teams(files_found, report_folder, seeker, wrap_text, timezone_offset):
         report = ArtifactHtmlReport('Microsoft Teams Shared Locations')
         report.start_artifact_report(report_folder, 'Teams Shared Locations', description)
         report.add_script()
-        data_headers = ('Timestamp', 'From', 'Display Name', 'Content','Card URL', 'Card Title', 'Card Text', 'Card URL2', 'Latitude', 'Longitude', 'Card Expires', 'Device ID')
+        data_headers = ('Timestamp', 'From', 'Display Name', 'Content',
+                        'Card URL', 'Card Title', 'Card Text', 'Card URL2',
+                        'Latitude', 'Longitude', 'Card Expires', 'Device ID')
         report.write_artifact_data_table(data_headers, data_list_cards, file_found)
         report.end_artifact_report()
         
@@ -247,7 +278,8 @@ def get_teams(files_found, report_folder, seeker, wrap_text, timezone_offset):
 __artifacts__ = {
     "teams": (
         "Microsoft Teams",
-        ('*/mobile/Containers/Shared/AppGroup/*/SkypeSpacesDogfood/*/Skype*.sqlite*','*/mobile/Containers/Shared/AppGroup/*/SkypeSpacesDogfood/Downloads/*/Images/*'),
+        ('*/mobile/Containers/Shared/AppGroup/*/SkypeSpacesDogfood/*/Skype*.sqlite*',
+         '*/mobile/Containers/Shared/AppGroup/*/SkypeSpacesDogfood/Downloads/*/Images/*'),
         get_teams)
 }
         

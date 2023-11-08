@@ -31,7 +31,7 @@ def get_chromeMediaHistory(files_found, report_folder, seeker, wrap_text, timezo
         cursor = db.cursor()
         cursor.execute('''
         select
-        datetime(last_updated_time_s-11644473600, 'unixepoch') as last_updated_time_s,
+            datetime(last_updated_time_s-11644473600, 'unixepoch') as last_updated_time_s,
             origin_id,
             url,
             strftime('%H:%M:%S',position_ms/1000, 'unixepoch') as position_ms,
@@ -55,7 +55,10 @@ def get_chromeMediaHistory(files_found, report_folder, seeker, wrap_text, timezo
             data_headers = ('Last Updated','Origin ID','URL','Position','Duration','Title','Artist','Album','Source Title') # Don't remove the comma, that is required to make this a tuple as there is only 1 element
             data_list = []
             for row in all_rows:
-                data_list.append((row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8]))
+                data_list.append((
+                    (row[0], 'datetime'),
+                    row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8]
+                ))
 
             report.write_artifact_data_table(data_headers, data_list, file_found)
             report.end_artifact_report()
@@ -98,7 +101,10 @@ def get_chromeMediaHistory(files_found, report_folder, seeker, wrap_text, timezo
             data_headers = ('Last Updated','ID','Origin ID','URL','Watch Time','Has Audio','Has Video') # Don't remove the comma, that is required to make this a tuple as there is only 1 element
             data_list = []
             for row in all_rows:
-                data_list.append((row[0],row[1],row[2],row[3],row[4],row[5],row[6]))
+                data_list.append((
+                    (row[0], 'datetime'),
+                    row[1],row[2],row[3],row[4],row[5],row[6]
+                ))
 
             report.write_artifact_data_table(data_headers, data_list, file_found)
             report.end_artifact_report()
@@ -132,7 +138,10 @@ def get_chromeMediaHistory(files_found, report_folder, seeker, wrap_text, timezo
             data_headers = ('Last Updated','ID','Origin','Aggregate Watchtime') # Don't remove the comma, that is required to make this a tuple as there is only 1 element
             data_list = []
             for row in all_rows:
-                data_list.append((row[0],row[1],row[2],row[3]))
+                data_list.append((
+                    (row[0], 'datetime'),
+                    row[1],row[2],row[3]
+                ))
 
             report.write_artifact_data_table(data_headers, data_list, file_found)
             report.end_artifact_report()

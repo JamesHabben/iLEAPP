@@ -44,7 +44,10 @@ def get_voiceTriggers(files_found, report_folder, seeker, wrap_text, timezone_of
                             </audio> 
                             '''.format(wav_file)
 
-                    data_list.append((creation_date, fl['productType'], fl['utteranceWav'], audio))
+                    data_list.append((
+                        (creation_date, 'datetime'),
+                        fl['productType'], fl['utteranceWav'], audio
+                    ))
 
         report = ArtifactHtmlReport('Voice Triggers')
         report.start_artifact_report(report_folder, 'Voice Triggers')

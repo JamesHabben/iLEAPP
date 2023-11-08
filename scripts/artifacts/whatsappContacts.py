@@ -39,13 +39,13 @@ def get_whatsappContacts(files_found, report_folder, seeker, wrap_text, timezone
     cursor = db.cursor()
     cursor.execute('''
     SELECT
-    ZFULLNAME,
-    ZABOUTTEXT,
-    datetime(ZABOUTTIMESTAMP+978307200, 'UNIXEPOCH'),
-    ZPHONENUMBER,
-    ZPHONENUMBERLABEL,
-    ZWHATSAPPID,
-    ZIDENTIFIER
+        ZFULLNAME,
+        ZABOUTTEXT,
+        datetime(ZABOUTTIMESTAMP+978307200, 'UNIXEPOCH'),
+        ZPHONENUMBER,
+        ZPHONENUMBERLABEL,
+        ZWHATSAPPID,
+        ZIDENTIFIER
     FROM ZWAADDRESSBOOKCONTACT
     ''')
     all_rows = cursor.fetchall()
@@ -54,7 +54,12 @@ def get_whatsappContacts(files_found, report_folder, seeker, wrap_text, timezone
     if usageentries > 0:
         for row in all_rows:
             
-            data_list.append((row[0], row[1], row[2], row[3], row[4], row[5],row[6]))
+            data_list.append((
+                row[0], row[1],
+                (row[2], 'datetime'),
+                (row[3], 'phonenumber'),
+                row[4], row[5],row[6]
+            ))
             
         
         

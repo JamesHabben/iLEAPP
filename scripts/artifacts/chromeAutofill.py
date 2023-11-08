@@ -55,7 +55,13 @@ def get_chromeAutofill(files_found, report_folder, seeker, wrap_text, timezone_o
                 data_headers = ('Date Created','Field','Value','Date Last Used','Count')
                 data_list = []
                 for row in all_rows:
-                    data_list.append((row[0],row[1],row[2],row[3],row[4]))
+                    data_list.append((
+                        (row[0], 'datetime'),
+                        row[1],
+                        row[2],
+                        (row[3], 'datetime'),
+                        row[4]
+                    ))
 
                 report.write_artifact_data_table(data_headers, data_list, file_found)
                 report.end_artifact_report()
@@ -91,7 +97,12 @@ def get_chromeAutofill(files_found, report_folder, seeker, wrap_text, timezone_o
                 data_headers = ('Date Created','Field','Value','Count')
                 data_list = []
                 for row in all_rows:
-                    data_list.append((row[0],row[1],row[2],row[3]))
+                    data_list.append((
+                        (row[0], 'datetime'),
+                        row[1],
+                        row[2],
+                        row[3]
+                    ))
 
                 report.write_artifact_data_table(data_headers, data_list, file_found)
                 report.end_artifact_report()
@@ -135,10 +146,19 @@ def get_chromeAutofill(files_found, report_folder, seeker, wrap_text, timezone_o
             report_path = get_next_unused_name(report_path)[:-9] # remove .temphtml
             report.start_artifact_report(report_folder, os.path.basename(report_path))
             report.add_script()
-            data_headers = ('Date Modified','GUID','First Name','Middle Name','Last Name','Email','Phone Number','Company Name','Address','City','State','Zip Code','Date Last Used','Use Count')
+            data_headers = ('Date Modified','GUID','First Name','Middle Name',
+                            'Last Name','Email','Phone Number','Company Name',
+                            'Address','City','State','Zip Code',
+                            'Date Last Used','Use Count')
             data_list = []
             for row in all_rows:
-                data_list.append((row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8],row[9],row[10],row[11],row[12],row[13]))
+                data_list.append((
+                    (row[0], 'datetime'),
+                    row[1],row[2],row[3],row[4],row[5],
+                    (row[6], 'phonenumber'),
+                    row[7],row[8],row[9],row[10],row[11],row[12],
+                    (row[13], 'datetime')
+                ))
 
             report.write_artifact_data_table(data_headers, data_list, file_found)
             report.end_artifact_report()

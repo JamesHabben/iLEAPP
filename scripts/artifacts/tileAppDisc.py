@@ -18,8 +18,8 @@ def get_tileAppDisc(files_found, report_folder, seeker, wrap_text, timezone_offs
     cursor = db.cursor()
     cursor.execute('''
     SELECT
-    datetime(ZLAST_MODIFIED_TIMESTAMP,'unixepoch','31 years'),
-    ZTILE_UUID
+        datetime(ZLAST_MODIFIED_TIMESTAMP,'unixepoch','31 years'),
+        ZTILE_UUID
     FROM
     ZTILENTITY_DISCOVEREDTILE
     ''')
@@ -29,7 +29,10 @@ def get_tileAppDisc(files_found, report_folder, seeker, wrap_text, timezone_offs
     data_list = []    
     if usageentries > 0:
         for row in all_rows:
-            data_list.append((row[0], row[1]))
+            data_list.append((
+                (row[0], 'datetime'),
+                row[1]
+            ))
             
             description = 'Tile IDs seen from other users'
             report = ArtifactHtmlReport('Tile App - Discovered Tiles')

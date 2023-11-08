@@ -21,15 +21,15 @@ def get_Gmail(files_found, report_folder, seeker, wrap_text, timezone_offset):
             cursor = db.cursor()
             cursor.execute('''
             select
-            datetime(c0/1000,'unixepoch'),
-            c3 as 'Sender',
-            c4 as 'Receiver',
-            c5 as 'CC',
-            c6 as 'BCC',
-            c7 as 'Subject',
-            c8 as 'Body',
-            c1 as 'Thread ID',
-            c2 as 'Message ID'
+                datetime(c0/1000,'unixepoch'),
+                c3 as 'Sender',
+                c4 as 'Receiver',
+                c5 as 'CC',
+                c6 as 'BCC',
+                c7 as 'Subject',
+                c8 as 'Body',
+                c1 as 'Thread ID',
+                c2 as 'Message ID'
             from offline_search_content
             ''')
             
@@ -50,14 +50,18 @@ def get_Gmail(files_found, report_folder, seeker, wrap_text, timezone_offset):
                         sender_title = sender_split[0]
                         sender_email = sender_split[1]
 
-                    data_list.append((row[0], sender_title, sender_email, row[2], row[3], row[4], row[5], row[6], row[7], row[8]))
+                    data_list.append((
+                        (row[0], 'datetime'),
+                        sender_title, sender_email, row[2], row[3], row[4], row[5], row[6], row[7], row[8]
+                    ))
                         
                 description = 'Gmail - Offline Search'
                 report = ArtifactHtmlReport('Gmail - Offline Search')
                 report.start_artifact_report(report_folder, 'Gmail - Offline Search')
                 report.add_script()
                 data_headers = (
-                    'Timestamp','Sender Name','Sender Email','Receiver','CC','BCC','Subject','Body','Thread ID','Message ID')  # Don't remove the comma, that is required to make this a tuple as there is only 1 element
+                    'Timestamp','Sender Name','Sender Email','Receiver',
+                    'CC','BCC','Subject','Body','Thread ID','Message ID')
                 
                 report.write_artifact_data_table(data_headers, data_list, file_found)
                 report.end_artifact_report()
@@ -78,10 +82,10 @@ def get_Gmail(files_found, report_folder, seeker, wrap_text, timezone_offset):
             cursor = db.cursor()
             cursor.execute('''
             select
-            label_server_perm_id,
-            unread_count,
-            total_count,
-            unseen_count
+                label_server_perm_id,
+                unread_count,
+                total_count,
+                unseen_count
             from label_counts
             order by label_server_perm_id
             ''')
@@ -100,7 +104,7 @@ def get_Gmail(files_found, report_folder, seeker, wrap_text, timezone_offset):
                 report.start_artifact_report(report_folder, 'Gmail - Label Details')
                 report.add_script()
                 data_headers = (
-                    'Label','Unread Count','Total Count','Unseen Count')  # Don't remove the comma, that is required to make this a tuple as there is only 1 element
+                    'Label','Unread Count','Total Count','Unseen Count')
                 
                 report.write_artifact_data_table(data_headers, data_list, file_found)
                 report.end_artifact_report()
@@ -119,6 +123,7 @@ def get_Gmail(files_found, report_folder, seeker, wrap_text, timezone_offset):
 __artifacts__ = {
     "gmail": (
         "gmail",
-        ('**/private/var/mobile/Containers/Data/Application/*/Library/Application Support/data/*/searchsqlitedb*','**/private/var/mobile/Containers/Data/Application/*/Library/Application Support/data/*/sqlitedb*'),
+        ('**/private/var/mobile/Containers/Data/Application/*/Library/Application Support/data/*/searchsqlitedb*',
+         '**/private/var/mobile/Containers/Data/Application/*/Library/Application Support/data/*/sqlitedb*'),
         get_Gmail)
 }

@@ -45,7 +45,14 @@ def get_appItunesmeta(files_found, report_folder, seeker, wrap_text, timezone_of
                 else:
                     install_date = ''
         
-                data_list.append((install_date, purchasedate, bundleid, itemname, artistname, versionnum, downloadedby, genre, factoryinstall, appreleasedate, sourceapp, sideloaded, variantid, parent))   
+                data_list.append((
+                    (install_date, 'datetime'),
+                    (purchasedate, 'datetime'),
+                    bundleid, itemname, artistname, versionnum, downloadedby,
+                    genre, factoryinstall,
+                    (appreleasedate, 'datetime'),
+                    sourceapp, sideloaded, variantid, parent
+                ))
 
     if len(data_list) > 0:
         fileloc = 'See source file location column'
@@ -72,4 +79,4 @@ __artifacts__ = {
         get_appItunesmeta)
 }
 
-    
+# TODO: datetime format and test

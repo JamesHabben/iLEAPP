@@ -18,9 +18,9 @@ def get_filesAppsm(files_found, report_folder, seeker, wrap_text, timezone_offse
     db = open_sqlite_db_readonly(file_found)
     cursor = db.cursor()
     cursor.execute('''
-    SELECT * 
-    FROM
-    FILENAMES
+        SELECT * 
+        FROM
+            FILENAMES
     ''')
 
     all_rows = cursor.fetchall()
@@ -51,13 +51,20 @@ def get_filesAppsm(files_found, report_folder, seeker, wrap_text, timezone_offse
                     childitemcount = y
             lasthitdate = datetime.datetime.fromtimestamp(row[3])
             
-            data_list.append((lasthitdate, row[0], row[2],row[4], creationdate, contentmodificationdate, userinfo, childitemcount, flags))
+            data_list.append((
+                (lasthitdate, 'datetime'),
+                row[0], row[2],row[4],
+                (creationdate, 'datetime'),
+                (contentmodificationdate, 'datetime'),
+                userinfo, childitemcount, flags
+            ))
             
             description = 'Files App - Files stored in the "On my iPad" area.'
             report = ArtifactHtmlReport('Files App - Filenames')
             report.start_artifact_report(report_folder, 'Files App - Filenames', description)
             report.add_script()
-            data_headers = ('Last Hit Date','Folder ID','Filename','Frequency at Las Hit Date','Creation Date','Modification Date','User Info','Child Item Count','Flags' )     
+            data_headers = ('Last Hit Date','Folder ID','Filename','Frequency at Las Hit Date',
+                            'Creation Date','Modification Date','User Info','Child Item Count','Flags' )
             report.write_artifact_data_table(data_headers, data_list, file_found)
             report.end_artifact_report()
             

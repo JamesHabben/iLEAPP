@@ -4,7 +4,8 @@ import textwrap
 import urllib.parse
 
 from scripts.artifact_report import ArtifactHtmlReport
-from scripts.ilapfuncs import logfunc, tsv, timeline, is_platform_windows, get_next_unused_name, open_sqlite_db_readonly, does_column_exist_in_db
+from scripts.ilapfuncs import (logfunc, tsv, timeline, is_platform_windows, get_next_unused_name,
+                               open_sqlite_db_readonly, does_column_exist_in_db, parse_datetime)
 
 def get_browser_name(file_name):
 
@@ -35,16 +36,16 @@ def get_chrome(files_found, report_folder, seeker, wrap_text, timezone_offset):
         #Web History
         cursor.execute('''
         SELECT
-        datetime(last_visit_time/1000000 + (strftime('%s','1601-01-01')),'unixepoch') AS LastVisitDate,
-        url AS URL,
-        title AS Title,
-        visit_count AS VisitCount,
-        typed_count AS TypedCount,
-        id AS ID,
-        CASE hidden
-            WHEN 0 THEN ''
-            WHEN 1 THEN 'Yes'
-        END as Hidden
+            datetime(last_visit_time/1000000 + (strftime('%s','1601-01-01')),'unixepoch') AS LastVisitDate,
+            url AS URL,
+            title AS Title,
+            visit_count AS VisitCount,
+            typed_count AS TypedCount,
+            id AS ID,
+            CASE hidden
+                WHEN 0 THEN ''
+                WHEN 1 THEN 'Yes'
+            END as Hidden
         FROM urls  
         ''')
 
@@ -61,9 +62,14 @@ def get_chrome(files_found, report_folder, seeker, wrap_text, timezone_offset):
             data_list = []
             for row in all_rows:
                 if wrap_text:
-                    data_list.append((row[0],textwrap.fill(row[1], width=100),row[2],row[3],row[4],row[5],row[6]))
+                    url_value = textwrap.fill(row[1], width=100)
                 else:
-                    data_list.append((row[0],row[1],row[2],row[3],row[4],row[5],row[6]))
+                    url_value = row[1]
+                data_list.append((
+                    (parse_datetime(row[0]), 'datetime'),
+                    url_value,
+                    row[2],row[3],row[4],row[5],row[6]
+                ))
             report.write_artifact_data_table(data_headers, data_list, file_found)
             report.end_artifact_report()
             
@@ -78,39 +84,39 @@ def get_chrome(files_found, report_folder, seeker, wrap_text, timezone_offset):
         #Web Visits
         cursor.execute('''
         SELECT
-        datetime(visits.visit_time/1000000 + (strftime('%s','1601-01-01')),'unixepoch'),
-        urls.url,
-        urls.title,
-        CASE visits.visit_duration
-            WHEN 0 THEN ''
-            ELSE strftime('%H:%M:%f', visits.visit_duration / 1000000.000,'unixepoch')
-        END as Duration,
-        CASE visits.transition & 0xff
-            WHEN 0 THEN 'LINK'
-            WHEN 1 THEN 'TYPED'
-            WHEN 2 THEN 'AUTO_BOOKMARK'
-            WHEN 3 THEN 'AUTO_SUBFRAME'
-            WHEN 4 THEN 'MANUAL_SUBFRAME'
-            WHEN 5 THEN 'GENERATED'
-            WHEN 6 THEN 'START_PAGE'
-            WHEN 7 THEN 'FORM_SUBMIT'
-            WHEN 8 THEN 'RELOAD'
-            WHEN 9 THEN 'KEYWORD'
-            WHEN 10 THEN 'KEYWORD_GENERATED'
-            ELSE NULL
-        END AS CoreTransitionType,
-        trim((CASE WHEN visits.transition & 0x00800000 THEN 'BLOCKED, ' ELSE '' END ||
-        CASE WHEN visits.transition & 0x01000000 THEN 'FORWARD_BACK, ' ELSE '' END ||
-        CASE WHEN visits.transition & 0x02000000 THEN 'FROM_ADDRESS_BAR, ' ELSE '' END ||
-        CASE WHEN visits.transition & 0x04000000 THEN 'HOME_PAGE, ' ELSE '' END ||
-        CASE WHEN visits.transition & 0x08000000 THEN 'FROM_API, ' ELSE '' END ||
-        CASE WHEN visits.transition & 0x10000000 THEN 'CHAIN_START, ' ELSE '' END ||
-        CASE WHEN visits.transition & 0x20000000 THEN 'CHAIN_END, ' ELSE '' END ||
-        CASE WHEN visits.transition & 0x40000000 THEN 'CLIENT_REDIRECT, ' ELSE '' END ||
-        CASE WHEN visits.transition & 0x80000000 THEN 'SERVER_REDIRECT, ' ELSE '' END ||
-        CASE WHEN visits.transition & 0xC0000000 THEN 'IS_REDIRECT_MASK, ' ELSE '' END),', ')
-        AS Qualifiers,
-        Query2.url AS FromURL
+            datetime(visits.visit_time/1000000 + (strftime('%s','1601-01-01')),'unixepoch'),
+            urls.url,
+            urls.title,
+            CASE visits.visit_duration
+                WHEN 0 THEN ''
+                ELSE strftime('%H:%M:%f', visits.visit_duration / 1000000.000,'unixepoch')
+            END as Duration,
+            CASE visits.transition & 0xff
+                WHEN 0 THEN 'LINK'
+                WHEN 1 THEN 'TYPED'
+                WHEN 2 THEN 'AUTO_BOOKMARK'
+                WHEN 3 THEN 'AUTO_SUBFRAME'
+                WHEN 4 THEN 'MANUAL_SUBFRAME'
+                WHEN 5 THEN 'GENERATED'
+                WHEN 6 THEN 'START_PAGE'
+                WHEN 7 THEN 'FORM_SUBMIT'
+                WHEN 8 THEN 'RELOAD'
+                WHEN 9 THEN 'KEYWORD'
+                WHEN 10 THEN 'KEYWORD_GENERATED'
+                ELSE NULL
+            END AS CoreTransitionType,
+            trim((CASE WHEN visits.transition & 0x00800000 THEN 'BLOCKED, ' ELSE '' END ||
+            CASE WHEN visits.transition & 0x01000000 THEN 'FORWARD_BACK, ' ELSE '' END ||
+            CASE WHEN visits.transition & 0x02000000 THEN 'FROM_ADDRESS_BAR, ' ELSE '' END ||
+            CASE WHEN visits.transition & 0x04000000 THEN 'HOME_PAGE, ' ELSE '' END ||
+            CASE WHEN visits.transition & 0x08000000 THEN 'FROM_API, ' ELSE '' END ||
+            CASE WHEN visits.transition & 0x10000000 THEN 'CHAIN_START, ' ELSE '' END ||
+            CASE WHEN visits.transition & 0x20000000 THEN 'CHAIN_END, ' ELSE '' END ||
+            CASE WHEN visits.transition & 0x40000000 THEN 'CLIENT_REDIRECT, ' ELSE '' END ||
+            CASE WHEN visits.transition & 0x80000000 THEN 'SERVER_REDIRECT, ' ELSE '' END ||
+            CASE WHEN visits.transition & 0xC0000000 THEN 'IS_REDIRECT_MASK, ' ELSE '' END),', ')
+            AS Qualifiers,
+            Query2.url AS FromURL
         FROM visits
         LEFT JOIN urls ON visits.url = urls.id
         LEFT JOIN (SELECT urls.url,urls.title,visits.visit_time,visits.id FROM visits LEFT JOIN urls ON visits.url = urls.id) Query2 ON visits.from_visit = Query2.id  
@@ -129,9 +135,14 @@ def get_chrome(files_found, report_folder, seeker, wrap_text, timezone_offset):
             data_list = []
             for row in all_rows:
                 if wrap_text:
-                    data_list.append((row[0],textwrap.fill(row[1], width=100),row[2],row[3],row[4],row[5],row[6]))
+                    url_value = textwrap.fill(row[1], width=100)
                 else:
-                    data_list.append((row[0],row[1],row[2],row[3],row[4],row[5],row[6]))
+                    url_value = row[1]
+                data_list.append((
+                    (parse_datetime(row[0]), 'datetime'),
+                    url_value,
+                    row[2],row[3],row[4],row[5],row[6]
+                ))
             report.write_artifact_data_table(data_headers, data_list, file_found)
             report.end_artifact_report()
             
@@ -169,9 +180,13 @@ def get_chrome(files_found, report_folder, seeker, wrap_text, timezone_offset):
                 search = row[0].split('search?q=')[1].split('&')[0]
                 search = urllib.parse.unquote(search).replace('+', ' ')
                 if wrap_text:
-                    data_list.append((row[3], search, (textwrap.fill(row[0], width=100)),row[1],row[2]))
+                    url_value = textwrap.fill(row[0], width=100)
                 else:
-                    data_list.append((row[3], search, row[0], row[1], row[2]))
+                    url_value = row[0]
+                data_list.append((
+                    (parse_datetime(row[3]), 'datetime'),
+                    search, url_value, row[1], row[2]
+                ))
 
             report.write_artifact_data_table(data_headers, data_list, file_found)
             report.end_artifact_report()
@@ -284,10 +299,17 @@ def get_chrome(files_found, report_folder, seeker, wrap_text, timezone_offset):
             report_path = get_next_unused_name(report_path)[:-9] # remove .temphtml
             report.start_artifact_report(report_folder, os.path.basename(report_path))
             report.add_script()
-            data_headers = ('Start Time','End Time','Last Access Time','URL','Target Path','State','Danger Type','Interrupt Reason','Opened?','Received Bytes','Total Bytes')
+            data_headers = ('Start Time','End Time','Last Access Time','URL',
+                            'Target Path','State','Danger Type','Interrupt Reason',
+                            'Opened?','Received Bytes','Total Bytes')
             data_list = []
             for row in all_rows:
-                data_list.append((row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8],row[9],row[10]))
+                data_list.append((
+                    (parse_datetime(row[0]), 'datetime'),
+                    (parse_datetime(row[1]), 'datetime'),
+                    (parse_datetime(row[2]), 'datetime'),
+                    row[3],row[4],row[5],row[6],row[7],row[8],row[9],row[10]
+                ))
 
             report.write_artifact_data_table(data_headers, data_list, file_found)
             report.end_artifact_report()
@@ -325,9 +347,13 @@ def get_chrome(files_found, report_folder, seeker, wrap_text, timezone_offset):
             data_list = []
             for row in all_rows:
                 if wrap_text:
-                    data_list.append((row[4], row[1],(textwrap.fill(row[3], width=100))))
+                    url_value = textwrap.fill(row[3], width=100)
                 else:
-                    data_list.append((row[4], row[1], row[3]))
+                    url_value = row[3]
+                data_list.append((
+                    (parse_datetime(row[4]), 'datetime'),
+                    row[1], row[3]
+                ))
 
             report.write_artifact_data_table(data_headers, data_list, file_found)
             report.end_artifact_report()

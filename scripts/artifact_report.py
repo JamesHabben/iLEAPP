@@ -88,13 +88,23 @@ class ArtifactHtmlReport:
             if isinstance(input_value, tuple) and len(input_value) == 2:
                 value, data_type = input_value
 
-                if data_type == 'datetime' and isinstance(value, datetime.datetime):
+                if data_type == 'datetime':
                     # Format as full date and time value
                     if isinstance(value, str):
-                        date_obj = datetime.datetime.strptime(value, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+                        formats = [
+                            '%Y-%m-%d %H:%M:%S.%f',  # With fractional seconds
+                            '%Y-%m-%d %H:%M:%S'  # Without fractional seconds
+                        ]
+                        for date_format in formats:
+                            try:
+                                value = datetime.datetime.strptime(value, date_format).replace(tzinfo=timezone.utc)
+                            except ValueError:
+                                continue
+
+                    if isinstance(value, datetime.datetime):
+                        return f'<td data-sort="{value.isoformat()}"><div data-datetime="{value.isoformat()}"></div></td>'
                     else:
-                        date_obj = value
-                    return f'<td data-sort="{value.isoformat()}"><div data-datetime="{value.isoformat()}"></div></td>'
+                        return f'<td>{value}</td>'
 
                 elif data_type == 'date':
                     # Format as only the date component
@@ -156,7 +166,9 @@ class ArtifactHtmlReport:
         for row in data_list:
             row_content = []
             for value, header in zip(row, data_headers):
-                if html_escape and header not in html_no_escape:
+                if isinstance(value, tuple):
+                    row_content.append(f'{format_value(value)}')
+                elif html_escape and header not in html_no_escape:
                     row_content.append(f'{format_value(value)}')
                 else:
                     row_content.append(f'<td>{value}</td>')

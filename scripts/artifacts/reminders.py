@@ -36,7 +36,12 @@ def get_reminders(files_found, report_folder, seeker, wrap_text, timezone_offset
                 if len(all_rows) > 0:
                     location_file_found = sqlite_file.split('Stores'+slash, 1)[1]
                     for row in all_rows:
-                        data_list.append((row[0], row[3], row[2], row[1], location_file_found))
+                        data_list.append((
+                            (row[0], 'datetime'),
+                            row[3], row[2],
+                            (row[1], 'datetime'),
+                            location_file_found
+                        ))
                         
                     dir_file_found = dirname(sqlite_file).split('Stores', 1)[0] + 'Stores'
                     

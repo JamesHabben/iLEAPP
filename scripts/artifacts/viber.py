@@ -218,14 +218,19 @@ def get_viber(files_found, report_folder, seeker, wrap_text, timezone_offset):
 				if usageentries > 0:
 					data_list =[]
 					for row in all_rows: 
-						data_list.append((row[0], row[1], row[2], row[3], row[4], row[5]))
+						data_list.append((
+							row[0], row[1], row[2],
+							(row[3], 'phonenumber'),
+							row[4], row[5]
+						))
 						
 
 				if usageentries > 0:
 					report = ArtifactHtmlReport('Viber - Contacts')
 					report.start_artifact_report(report_folder, 'Viber - Contacts')
 					report.add_script()
-					data_headers = ('Main Name','Prefix Name','Suffix Name','Phone Number','Canonized Phone Number','Contact ID')
+					data_headers = ('Main Name','Prefix Name','Suffix Name','Phone Number',
+									'Canonized Phone Number','Contact ID')
 					report.write_artifact_data_table(data_headers, data_list, file_found, html_escape=False)
 					report.end_artifact_report()
 
@@ -263,7 +268,10 @@ def get_viber(files_found, report_folder, seeker, wrap_text, timezone_offset):
 						except TypeError:
 							pass
 						row = tuple(temp_list)
-						data_list.append((row[0], row[1], row[2], row[3]))
+						data_list.append((
+							(row[0], 'datetime'),
+							row[1], row[2], row[3]
+						))
 
 
 
@@ -673,14 +681,33 @@ def get_viber(files_found, report_folder, seeker, wrap_text, timezone_offset):
 							thumb = ''
 						
 						row = tuple(temp_list)
-						data_list.append((row[6], row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[14], row[15], thumb, row[8], row[9], row[10], row[11], row[12], row[16], row[17], row[18],row[19], row[20], row[21], row[22], row[23], row[24], row[25], row[26], row[13]))
+						data_list.append((
+							(row[6], 'datetime'),
+							row[0], row[1], row[2], row[3], row[4],
+							row[5],
+							(row[6], 'datetime'),
+							(row[7], 'datetime'),
+							row[14], row[15], thumb,
+							(row[8], 'datetime'),
+							row[9], row[10], row[11], row[12], row[16],
+							row[17], row[18],row[19], row[20], row[21], row[22],
+							row[23], row[24], row[25], row[26], row[13]
+						))
 						
 
 				if usageentries > 0:
 					report = ArtifactHtmlReport('Viber - Chats')
 					report.start_artifact_report(report_folder, 'Viber - Chats')
 					report.add_script()
-					data_headers = ('Timestamp', 'Sender (Display Full Name)','Sender (Display Short Name)','Sender (Phone)','Chat Name','Chat Participant(s)','Chat Phone(s)', 'Message Creation Date - UTC','Message Change State Date - UTC','Message Content','Attachment Name', 'Attachment','Call Date - UTC','Call Type','State','Duration (Seconds)','System Type Description','Attachment Type','Attachment Size','Latitude','Longitude','Conversation Deleted','Message Deleted', 'Conversation Time Bomb Duration','Message Time Bomb Duration','Message Time Bomb Timestamp - UTC','Conversation Marked Favorite','Likes Count','Message Metadata Fragments')
+					data_headers = ('Timestamp', 'Sender (Display Full Name)','Sender (Display Short Name)',
+									'Sender (Phone)','Chat Name','Chat Participant(s)','Chat Phone(s)',
+									'Message Creation Date','Message Change State Date',
+									'Message Content','Attachment Name', 'Attachment','Call Date',
+									'Call Type','State','Duration (Seconds)','System Type Description',
+									'Attachment Type','Attachment Size','Latitude','Longitude',
+									'Conversation Deleted','Message Deleted', 'Conversation Time Bomb Duration',
+									'Message Time Bomb Duration','Message Time Bomb Timestamp - UTC',
+									'Conversation Marked Favorite','Likes Count','Message Metadata Fragments')
 					report.write_artifact_data_table(data_headers, data_list, file_found, html_no_escape=['Attachment']) #html_escape=False
 					report.end_artifact_report()
 					

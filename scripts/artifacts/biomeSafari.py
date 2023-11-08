@@ -138,7 +138,7 @@ def get_biomeSafari(files_found, report_folder, seeker, wrap_text, timezone_offs
                 
                 activity = (protostuff['1']['1'])
                 timestart = (timestampsconv(protostuff['2']))
-                timestart = convert_utc_human_to_timezone(timestart, timezone_offset)
+                #timestart = convert_utc_human_to_timezone(timestart, timezone_offset)
                 url = (protostuff['4']['3'])
                 guid = (protostuff['5'])
                 detail1 = (protostuff['6']['1'])
@@ -146,7 +146,10 @@ def get_biomeSafari(files_found, report_folder, seeker, wrap_text, timezone_offs
                 detail3 = (protostuff['6']['4'])
                 title = (protostuff['7']['2']['3'])
                 
-                data_list.append((timestart, activity, title, url, detail1, detail2, detail3, guid))
+                data_list.append((
+                    (timestart, 'datetime'),
+                    activity, title, url, detail1, detail2, detail3, guid
+                ))
         
             modresult = (sizeofnotificaton % 8)
             resultante =  8 - modresult

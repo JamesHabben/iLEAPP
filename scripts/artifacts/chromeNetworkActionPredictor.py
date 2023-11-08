@@ -30,12 +30,12 @@ def get_chromeNetworkActionPredictor(files_found, report_folder, seeker, wrap_te
         db = open_sqlite_db_readonly(file_found)
         cursor = db.cursor()
         cursor.execute('''
-        select
-        user_text,
-        url,
-        number_of_hits,
-        number_of_misses
-        from network_action_predictor
+            select
+                user_text,
+                url,
+                number_of_hits,
+                number_of_misses
+            from network_action_predictor
         ''')
 
         all_rows = cursor.fetchall()

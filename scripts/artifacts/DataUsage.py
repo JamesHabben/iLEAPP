@@ -26,18 +26,18 @@ def get_DataUsage(files_found, report_folder, seeker, wrap_text, timezone_offset
             db = open_sqlite_db_readonly(file_found)
             cursor = db.cursor()
             cursor.execute('''
-            select
-            datetime(zprocess.zfirsttimestamp + 978307200, 'unixepoch') as "First Used",
-            datetime(zprocess.ztimestamp + 978307200, 'unixepoch') as "Last Used",
-            datetime(zliveusage.ztimestamp + 978307200, 'unixepoch') as "Last Connected",
-            zprocess.zbundlename as "Bundle Name",
-            zprocess.zprocname as "Process Name",
-            zliveusage.zwifiin as "Wifi Data In (Bytes)",
-            zliveusage.zwifiout as "Wifi Data Out (Bytes)",
-            zliveusage.zwwanin as "Cellular Data In (Bytes)",
-            zliveusage.zwwanout as "Cellular Data Out (Bytes)"
-            from zliveusage, zprocess
-            where zprocess.z_pk = zliveusage.zhasprocess
+                select
+                    datetime(zprocess.zfirsttimestamp + 978307200, 'unixepoch') as "First Used",
+                    datetime(zprocess.ztimestamp + 978307200, 'unixepoch') as "Last Used",
+                    datetime(zliveusage.ztimestamp + 978307200, 'unixepoch') as "Last Connected",
+                    zprocess.zbundlename as "Bundle Name",
+                    zprocess.zprocname as "Process Name",
+                    zliveusage.zwifiin as "Wifi Data In (Bytes)",
+                    zliveusage.zwifiout as "Wifi Data Out (Bytes)",
+                    zliveusage.zwwanin as "Cellular Data In (Bytes)",
+                    zliveusage.zwwanout as "Cellular Data Out (Bytes)"
+                from zliveusage, zprocess
+                where zprocess.z_pk = zliveusage.zhasprocess
             ''')
 
             all_rows = cursor.fetchall()
@@ -46,12 +46,19 @@ def get_DataUsage(files_found, report_folder, seeker, wrap_text, timezone_offset
                 report = ArtifactHtmlReport('Data Usage')
                 report.start_artifact_report(report_folder, 'Data Usage')
                 report.add_script()
-                data_headers = ('Process First Used','Process Last Used','Process Last Connected','Bundle Name','Process Name','Wifi Data In (Bytes)','Wifi Data Out (Bytes)','Cellular Data In (Bytes)','Cellular Data Out (Bytes)')   
+                data_headers = ('Process First Used','Process Last Used','Process Last Connected',
+                                'Bundle Name','Process Name','Wifi Data In (Bytes)','Wifi Data Out (Bytes)',
+                                'Cellular Data In (Bytes)','Cellular Data Out (Bytes)')
                 
                 data_list = []
                 for row in all_rows:
                     process_split = row[4].split('/')
-                    data_list.append((row[0],row[1],row[2],row[3],process_split[0],row[5],row[6],row[7],row[8]))
+                    data_list.append((
+                        (row[0], 'datetime'),
+                        (row[1], 'datetime'),
+                        (row[2], 'datetime'),
+                        row[3],process_split[0],row[5],row[6],row[7],row[8]
+                    ))
                     
                 report.write_artifact_data_table(data_headers, data_list, file_found)
                 report.end_artifact_report()

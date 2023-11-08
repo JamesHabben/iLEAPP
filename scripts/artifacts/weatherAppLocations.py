@@ -30,21 +30,24 @@ def get_weatherAppLocations(files_found, report_folder, seeker, wrap_text, timez
                 timezone = x.get('TimeZone','')
                 cityupdate = x.get('CityTimeZoneUpdateDateKey','')
                 
-                data_list_two_one.append((lastupdated, name, country, timezone, cityupdate, lat, lon))
+                data_list_two_one.append((
+                    (lastupdated, 'datetime'),
+                    name, country, timezone, cityupdate, lat, lon
+                ))
             else:
               if plist_content.get('Cities', '0') == '0':
                 logfunc('No cities available')
                 return
               
               for city in plist_content['Cities']:
-                  update_time = city.get('UpateTime','')
+                  update_time = city.get('UpdateTime','')
                   update_time_formatted = update_time.strftime('%Y-%m-%d %H:%M:%S')
   
                   data_list.append((update_time_formatted, 'Added from User', '', city['Lat'],
                                     city['Lon'], city['Name'], city['Country'], city['SecondsFromGMT']))
   
               local_weather = plist_content['LocalWeather']
-              local_update_time = local_weather['UpateTime']
+              local_update_time = local_weather['UpdateTime']
               local_update_time_formatted = local_update_time.strftime('%Y-%m-%d %H:%M:%S')
               last_location_update = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(plist_content.get('LastLocationUpdateTime')))
   

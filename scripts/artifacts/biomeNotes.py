@@ -121,13 +121,19 @@ def get_biomeNotes(files_found, report_folder, seeker, wrap_text, timezone_offse
                 #print(protostuff)
                 recordcounter = recordcounter + 1
                 time = (timestampsconv(protostuff['3']))
-                time = convert_utc_human_to_timezone(time, timezone_offset)
+                #time = convert_utc_human_to_timezone(time, timezone_offset)
                 identifier1 = protostuff['1']
                 identifier2 = protostuff['2']
                 message = protostuff['5']
                 messagehtml = (message.replace('\n', '<br>'))
-                data_list.append((time,recordcounter,identifier1,identifier2,message))
-                data_list_html.append((time,recordcounter,identifier1,identifier2,messagehtml))
+                data_list.append((
+                    (time, 'datetime'),
+                    recordcounter,identifier1,identifier2,message
+                ))
+                data_list_html.append((
+                    (time, 'datetime'),
+                    recordcounter,identifier1,identifier2,messagehtml
+                ))
                 
                 #write notes to report_folder
                 

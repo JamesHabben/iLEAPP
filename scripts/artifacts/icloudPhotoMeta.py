@@ -146,14 +146,25 @@ def get_icloudPhotoMeta(files_found, report_folder, seeker, wrap_text, timezone_
                                     #with open(f'{outputpath}/{i}.moop', 'wb') as g:
                                     #    g.write(pl.get('moop'))
                                         
-                    data_list.append((created_timestamp, rowid, recordtype, decoded, title, org_filesize, latitude,longitude,altitude,datestamp,timestamp,added_date, timezoneoffse, decoded_tz ,is_deleted,is_expunged, import_date, rec_mod_date,res_org_filesize, id, tiff, exif))
+                    data_list.append((
+                        (created_timestamp, 'datetime'),
+                        rowid, recordtype, decoded, title, org_filesize, latitude, longitude,
+                        altitude,
+                        (datestamp, 'datetime'),
+                        (timestamp, 'datetime'),
+                        (added_date, 'datetime'),
+                        timezoneoffse, decoded_tz ,is_deleted,is_expunged, import_date,
+                        rec_mod_date,res_org_filesize, id, tiff, exif))
             
         
         if len(data_list) > 0:
             report = ArtifactHtmlReport('iCloud - Photos Metadata'+' '+str(counter))
             report.start_artifact_report(report_folder, 'iCloud - Photos Metadata'+' '+str(counter))
             report.add_script()
-            data_headers = ('Timestamp', 'Row ID','Record Type','Decoded', 'Title', 'Filesize', 'Latitude', 'Longitude', 'Altitude', 'GPS Datestamp','GPS Time', 'Added Date', 'Timezone Offset','Decoded TZ', 'Is Deleted?','Is Expunged?','Import Date', 'Modification Date', 'Filesize', 'ID', 'TIFF', 'EXIF')
+            data_headers = ('Timestamp', 'Row ID', 'Record Type', 'Decoded', 'Title', 'Filesize',
+                            'Latitude', 'Longitude', 'Altitude', 'GPS Datestamp', 'GPS Time',
+                            'Added Date', 'Timezone Offset', 'Decoded TZ', 'Is Deleted?', 'Is Expunged?',
+                            'Import Date', 'Modification Date', 'Filesize', 'ID', 'TIFF', 'EXIF')
             report.write_artifact_data_table(data_headers, data_list, file_found, html_escape=False)
             report.end_artifact_report()
             

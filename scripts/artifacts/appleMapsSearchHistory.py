@@ -163,7 +163,12 @@ def get_appleMapsSearchHistory(files_found, report_folder, seeker, wrap_text, ti
                                         pp = pprint.PrettyPrinter(indent = 0)
                                         items = pp.pformat(protostuff['7']['1']['1'][0]['2']['1']['4'])
                                         
-                                data_list.append((modificationdate,app,location,shortadd,pname,shortlat,shortlon,usersearchnotinproto,usersearch1, usersearch2,geo1,geo2,geo3,geo4,geo5,geo6,guid,currentlocation,items ))
+                                data_list.append((
+                                    (modificationdate, 'datetime'),
+                                    app,location,shortadd,pname,shortlat,shortlon,usersearchnotinproto,
+                                    usersearch1, usersearch2,geo1,geo2,geo3,geo4,
+                                    geo5,geo6,guid,currentlocation,items
+                                ))
                                 modificationdate = app = locatio = shortadd = pname = shortlat = shortlon = usersearch1 = usersearch2 = geo1 = geo2 = geo3 = geo4 = geo5 = geo6 = guid = items = currentlocation = '' 
         
         
@@ -172,7 +177,11 @@ def get_appleMapsSearchHistory(files_found, report_folder, seeker, wrap_text, ti
         report = ArtifactHtmlReport('Apple Maps Search History')
         report.start_artifact_report(report_folder, 'Apple Maps Search History')
         report.add_script()
-        data_headers = ('Timestamp','App','Location','Short Address','Place Name','Latitude','Longitude','Search Not in Protobuf','Search Term','Search Term','Lat1','Lon1','Lat2','Lon2','Lat2','Lon3','Record GUID','Current Location','Items' )
+        data_headers = ('Timestamp','App','Location','Short Address',
+                        'Place Name','Latitude','Longitude','Search Not in Protobuf',
+                        'Search Term','Search Term','Lat1','Lon1',
+                        'Lat2','Lon2','Lat2','Lon3',
+                        'Record GUID','Current Location','Items' )
         report.write_artifact_data_table(data_headers, data_list, file_found)
         report.end_artifact_report()
 

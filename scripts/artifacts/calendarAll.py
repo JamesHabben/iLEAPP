@@ -8,7 +8,7 @@ import sqlite3
 import json
 
 from scripts.artifact_report import ArtifactHtmlReport
-from scripts.ilapfuncs import logfunc, tsv, timeline, is_platform_windows, open_sqlite_file_readonly, convert_sqlite_epoch
+from scripts.ilapfuncs import logfunc, tsv, timeline, is_platform_windows, open_sqlite_file_readonly, convert_apple_epoch
 
 
 def get_calendarAll(files_found, report_folder, seeker, wrap_text, timezone_offset):
@@ -91,11 +91,11 @@ def get_calendarAll(files_found, report_folder, seeker, wrap_text, timezone_offs
 	if usageentries > 0:
 		for row in all_rows:
 			if row['all_day'] == 1:
-				start_value = (convert_sqlite_epoch(row['start_date']), 'date')
-				end_value = (convert_sqlite_epoch(row['end_date']), 'date')
+				start_value = (convert_apple_epoch(row['start_date']), 'date')
+				end_value = (convert_apple_epoch(row['end_date']), 'date')
 			else:
-				start_value = (convert_sqlite_epoch(row['start_date']), 'datetime')
-				end_value = (convert_sqlite_epoch(row['end_date']), 'datetime')
+				start_value = (convert_apple_epoch(row['start_date']), 'datetime')
+				end_value = (convert_apple_epoch(row['end_date']), 'datetime')
 			data_list.append((
 				start_value,
 				row['start_tz'],
@@ -105,7 +105,7 @@ def get_calendarAll(files_found, report_folder, seeker, wrap_text, timezone_offs
 				row['summary'],
 				row['calendar_id'],
 				row['title'],
-				(convert_sqlite_epoch(row['last_modified']), 'datetime')
+				(convert_apple_epoch(row['last_modified']), 'datetime')
 			))
 	
 		description = ''

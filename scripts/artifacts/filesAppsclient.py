@@ -18,12 +18,12 @@ def get_filesAppsclient(files_found, report_folder, seeker, wrap_text, timezone_
     db = open_sqlite_db_readonly(file_found)
     cursor = db.cursor()
     cursor.execute('''
-    SELECT
-    item_birthtime,
-    item_filename,
-    version_mtime
-    FROM
-    client_items
+        SELECT
+            item_birthtime,
+            item_filename,
+            version_mtime
+        FROM
+            client_items
     ''')
     
     all_rows = cursor.fetchall()
@@ -33,7 +33,11 @@ def get_filesAppsclient(files_found, report_folder, seeker, wrap_text, timezone_
         for row in all_rows:
             birthtime = datetime.datetime.fromtimestamp(row[0])
             versionmtime = datetime.datetime.fromtimestamp(row[2])
-            data_list.append((birthtime, row[1], versionmtime))
+            data_list.append((
+                (birthtime, 'datetime'),
+                row[1],
+                (versionmtime, 'datetime')
+            ))
             
         description = '	Items stored in iCloud Drive with metadata about files. '
         report = ArtifactHtmlReport('Files App - iCloud Client Items')

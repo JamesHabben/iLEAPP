@@ -17,7 +17,10 @@ def get_AWESearch(files_found, report_folder, seeker, wrap_text, timezone_offset
             cocoatime = (x['time'])
             unix_timestamp = cocoatime + 978307200
             converted = datetime.utcfromtimestamp(unix_timestamp)
-            data_list.append((converted, kword))
+            data_list.append((
+                (converted, 'datetime'),
+                kword
+            ))
 
     if len(data_list) > 0:
         report = ArtifactHtmlReport('TikTok Search')

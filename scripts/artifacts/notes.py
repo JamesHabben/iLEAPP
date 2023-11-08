@@ -25,32 +25,32 @@ def get_notes(files_found, report_folder, seeker, wrap_text, timezone_offset):
                         
                 cursor.execute('''
                     SELECT 
-                    DATETIME(TabA.ZCREATIONDATE3+978307200,'UNIXEPOCH'), 
-                    TabA.ZTITLE1,
-                    TabA.ZSNIPPET,
-                    TabB.ZTITLE2,
-                    TabC.ZNAME,
-                    DATETIME(TabA.ZMODIFICATIONDATE1+978307200,'UNIXEPOCH'),
-                    case TabA.ZISPASSWORDPROTECTED
-                    when 0 then "No"
-                    when 1 then "Yes"
-                    end,
-                    TabA.ZPASSWORDHINT,
-                    case TabA.ZMARKEDFORDELETION
-                    when 0 then "No"
-                    when 1 then "Yes"
-                    end,
-                    case TabA.ZISPINNED
-                    when 0 then "No"
-                    when 1 then "Yes"
-                    end,
-                    TabE.ZFILENAME,
-                    TabE.ZIDENTIFIER,
-                    TabD.ZFILESIZE,
-                    TabD.ZTYPEUTI,
-                    DATETIME(TabD.ZCREATIONDATE+978307200,'UNIXEPOCH') as "Attachment Created",
-                    DATETIME(TabD.ZMODIFICATIONDATE+978307200,'UNIXEPOCH') as "Attachment Modified",
-                    TabF.ZDATA
+                        DATETIME(TabA.ZCREATIONDATE3+978307200,'UNIXEPOCH'), 
+                        TabA.ZTITLE1,
+                        TabA.ZSNIPPET,
+                        TabB.ZTITLE2,
+                        TabC.ZNAME,
+                        DATETIME(TabA.ZMODIFICATIONDATE1+978307200,'UNIXEPOCH'),
+                        case TabA.ZISPASSWORDPROTECTED
+                            when 0 then "No"
+                            when 1 then "Yes"
+                        end,
+                        TabA.ZPASSWORDHINT,
+                        case TabA.ZMARKEDFORDELETION
+                            when 0 then "No"
+                            when 1 then "Yes"
+                        end,
+                        case TabA.ZISPINNED
+                            when 0 then "No"
+                            when 1 then "Yes"
+                        end,
+                        TabE.ZFILENAME,
+                        TabE.ZIDENTIFIER,
+                        TabD.ZFILESIZE,
+                        TabD.ZTYPEUTI,
+                        DATETIME(TabD.ZCREATIONDATE+978307200,'UNIXEPOCH') as "Attachment Created",
+                        DATETIME(TabD.ZMODIFICATIONDATE+978307200,'UNIXEPOCH') as "Attachment Modified",
+                        TabF.ZDATA
                     FROM ZICCLOUDSYNCINGOBJECT TabA
                     INNER JOIN ZICCLOUDSYNCINGOBJECT TabB on TabA.ZFOLDER = TabB.Z_PK
                     INNER JOIN ZICCLOUDSYNCINGOBJECT TabC on TabA.ZACCOUNT4 = TabC.Z_PK
@@ -62,32 +62,32 @@ def get_notes(files_found, report_folder, seeker, wrap_text, timezone_offset):
             else:
                 cursor.execute('''
                     SELECT 
-                    DATETIME(TabA.ZCREATIONDATE1+978307200,'UNIXEPOCH'), 
-                    TabA.ZTITLE1,
-                    TabA.ZSNIPPET,
-                    TabB.ZTITLE2,
-                    TabC.ZNAME,
-                    DATETIME(TabA.ZMODIFICATIONDATE1+978307200,'UNIXEPOCH'),
-                    case TabA.ZISPASSWORDPROTECTED
-                    when 0 then "No"
-                    when 1 then "Yes"
-                    end,
-                    TabA.ZPASSWORDHINT,
-                    case TabA.ZMARKEDFORDELETION
-                    when 0 then "No"
-                    when 1 then "Yes"
-                    end,
-                    case TabA.ZISPINNED
-                    when 0 then "No"
-                    when 1 then "Yes"
-                    end,
-                    TabE.ZFILENAME,
-                    TabE.ZIDENTIFIER,
-                    TabD.ZFILESIZE,
-                    TabD.ZTYPEUTI,
-                    DATETIME(TabD.ZCREATIONDATE+978307200,'UNIXEPOCH') as "Attachment Created",
-                    DATETIME(TabD.ZMODIFICATIONDATE+978307200,'UNIXEPOCH') as "Attachment Modified",
-                    TabF.ZDATA
+                        DATETIME(TabA.ZCREATIONDATE1+978307200,'UNIXEPOCH'), 
+                        TabA.ZTITLE1,
+                        TabA.ZSNIPPET,
+                        TabB.ZTITLE2,
+                        TabC.ZNAME,
+                        DATETIME(TabA.ZMODIFICATIONDATE1+978307200,'UNIXEPOCH'),
+                        case TabA.ZISPASSWORDPROTECTED
+                            when 0 then "No"
+                            when 1 then "Yes"
+                        end,
+                        TabA.ZPASSWORDHINT,
+                        case TabA.ZMARKEDFORDELETION
+                            when 0 then "No"
+                            when 1 then "Yes"
+                        end,
+                        case TabA.ZISPINNED
+                            when 0 then "No"
+                            when 1 then "Yes"
+                        end,
+                        TabE.ZFILENAME,
+                        TabE.ZIDENTIFIER,
+                        TabD.ZFILESIZE,
+                        TabD.ZTYPEUTI,
+                        DATETIME(TabD.ZCREATIONDATE+978307200,'UNIXEPOCH') as "Attachment Created",
+                        DATETIME(TabD.ZMODIFICATIONDATE+978307200,'UNIXEPOCH') as "Attachment Modified",
+                        TabF.ZDATA
                     FROM ZICCLOUDSYNCINGOBJECT TabA
                     INNER JOIN ZICCLOUDSYNCINGOBJECT TabB on TabA.ZFOLDER = TabB.Z_PK
                     INNER JOIN ZICCLOUDSYNCINGOBJECT TabC on TabA.ZACCOUNT2 = TabC.Z_PK
@@ -126,7 +126,14 @@ def get_notes(files_found, report_folder, seeker, wrap_text, timezone_offset):
             else:
                 filesize = ''
 
-            data_list.append((row[0], row[1], row[2], text_content, row[3], row[4], row[5], row[6], row[7], row[8], row[9], thumbnail, row[10], attachment_storage_path, filesize, row[13], row[14], row[15]))
+            data_list.append((
+                (row[0], 'datetime'),
+                row[1], row[2], text_content, row[3], row[4],
+                (row[5], 'datetime'),
+                row[6], row[7], row[8], row[9], thumbnail, row[10], attachment_storage_path, filesize, row[13],
+                (row[14], 'datetime'),
+                (row[15], 'datetime')
+            ))
 
         report = ArtifactHtmlReport('Notes')
         report.start_artifact_report(report_folder, 'Notes')

@@ -125,7 +125,11 @@ def get_hikvision(files_found, report_folder, seeker, wrap_text, timezone_offset
                 data_headers = ('Timestamp (UTC)','Timestamp (Local)','Record Type','Activity') 
                 data_list = []
                 for row in all_rows:
-                    data_list.append((row[0],row[1],row[2],row[3]))
+                    data_list.append((
+                        (row[0], 'datetime'),
+                        (row[1], 'datetime'),
+                        row[2],row[3]
+                    ))
 
                 report.write_artifact_data_table(data_headers, data_list, file_found)
                 report.end_artifact_report()
@@ -170,7 +174,8 @@ def get_hikvision(files_found, report_folder, seeker, wrap_text, timezone_offset
             if mfile[2] is not None:
                 media = media_to_html(mfile[2], files_found, report_folder)
             data_list.append((mfile[0],mfile[1],media))
-        media_files_dir = "/private/var/mobile/Containers/Data/Application/[Application-GUID]/Documents/YYYY/MM/DD" #Generic path of the media files. Each file is stored within seperate dirs based on its creation date
+        media_files_dir = "/private/var/mobile/Containers/Data/Application/[Application-GUID]/Documents/YYYY/MM/DD"
+        #Generic path of the media files. Each file is stored within seperate dirs based on its creation date
         report.write_artifact_data_table(data_headers, data_list, media_files_dir, html_escape = False)
         report.end_artifact_report()
 
@@ -183,6 +188,10 @@ def get_hikvision(files_found, report_folder, seeker, wrap_text, timezone_offset
 __artifacts__ = {
         "hikvision": (
                 "Hikvision",
-                ('*/Documents/DCLOG/YSDCLogItem.sqlite*','*/Documents/database.hik*','*/Documents/*/*/*/*.jpg','*/Documents/*/*/*/*.mov','*/Documents/*/*/*/*.mp4'),
+                ('*/Documents/DCLOG/YSDCLogItem.sqlite*',
+                 '*/Documents/database.hik*',
+                 '*/Documents/*/*/*/*.jpg',
+                 '*/Documents/*/*/*/*.mov',
+                 '*/Documents/*/*/*/*.mp4'),
                 get_hikvision)
 }

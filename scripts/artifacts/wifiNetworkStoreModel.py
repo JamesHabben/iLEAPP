@@ -22,20 +22,20 @@ def get_wifiNetworkStoreModel(files_found, report_folder, seeker, wrap_text, tim
     cursor = db.cursor()
     cursor.execute('''
     SELECT
-    DATETIME(ZGEOTAG.ZDATE+978307200,'unixepoch') AS "Last Connection Timestamp",
-    ZNETWORK.Z_PK,
-    ZNETWORK.ZSSID,
-    ZGEOTAG.ZLATITUDE,
-    ZGEOTAG.ZLONGITUDE,
-    ZGEOTAG.ZBSSID,
-    CASE ZGEOTAG.ZHIGHERBANDNETWORK
-    WHEN 1 then 'Yes'
-    ELSE ''
-    END AS "5 GHz Network",
-    CASE ZGEOTAG.ZLOWERBANDNETWORK
-    WHEN 1 then 'Yes'
-    ELSE ''
-    END AS "2.4 GHz Network"
+        DATETIME(ZGEOTAG.ZDATE+978307200,'unixepoch') AS "Last Connection Timestamp",
+        ZNETWORK.Z_PK,
+        ZNETWORK.ZSSID,
+        ZGEOTAG.ZLATITUDE,
+        ZGEOTAG.ZLONGITUDE,
+        ZGEOTAG.ZBSSID,
+        CASE ZGEOTAG.ZHIGHERBANDNETWORK
+            WHEN 1 then 'Yes'
+            ELSE ''
+        END AS "5 GHz Network",
+        CASE ZGEOTAG.ZLOWERBANDNETWORK
+            WHEN 1 then 'Yes'
+            ELSE ''
+        END AS "2.4 GHz Network"
     FROM ZNETWORK
     LEFT JOIN ZGEOTAG ON ZGEOTAG.Z_PK = ZNETWORK.Z_PK
     ORDER BY "Last Connection Timestamp" DESC
@@ -48,12 +48,16 @@ def get_wifiNetworkStoreModel(files_found, report_folder, seeker, wrap_text, tim
     if usageentries > 0:
         
         for row in all_rows:
-            data_list.append((row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]))
+            data_list.append((
+                (row[0], 'datetime'),
+                row[1], row[2], row[3], row[4], row[5], row[6], row[7]
+            ))
 
         report = ArtifactHtmlReport('Wifi Network Store Model - Networks')
         report.start_artifact_report(report_folder, 'Wifi Network Store Model - Networks')
         report.add_script()
-        data_headers = ('Last Connected Timestamp', 'PK', 'SSID', 'Latitude', 'Longitude', 'BSSID', '5 GHz Network', '2.4 GHz Network')
+        data_headers = ('Last Connected Timestamp', 'PK', 'SSID', 'Latitude',
+                        'Longitude', 'BSSID', '5 GHz Network', '2.4 GHz Network')
         report.write_artifact_data_table(data_headers, data_list, file_found)
         report.end_artifact_report()
         

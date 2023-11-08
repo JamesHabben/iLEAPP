@@ -42,24 +42,24 @@ def get_whatsappMessages(files_found, report_folder, seeker, wrap_text, timezone
     cursor = db.cursor()
     cursor.execute('''
     select
-    datetime(ZMESSAGEDATE+978307200, 'UNIXEPOCH'),
-    ZISFROMME,
-    ZPARTNERNAME,
-    ZFROMJID,
-    ZTOJID,
-    ZWAMESSAGE.ZMEDIAITEM,
-    ZTEXT,
-    ZSTARRED,
-    ZMESSAGETYPE,
-    ZLONGITUDE,
-    ZLATITUDE,
-    ZMEDIALOCALPATH,
-    ZXMPPTHUMBPATH
+        datetime(ZMESSAGEDATE+978307200, 'UNIXEPOCH'),
+        ZISFROMME,
+        ZPARTNERNAME,
+        ZFROMJID,
+        ZTOJID,
+        ZWAMESSAGE.ZMEDIAITEM,
+        ZTEXT,
+        ZSTARRED,
+        ZMESSAGETYPE,
+        ZLONGITUDE,
+        ZLATITUDE,
+        ZMEDIALOCALPATH,
+        ZXMPPTHUMBPATH
     FROM ZWAMESSAGE
     left JOIN ZWAMEDIAITEM
-    on ZWAMESSAGE.Z_PK = ZWAMEDIAITEM.ZMESSAGE 
+        on ZWAMESSAGE.Z_PK = ZWAMEDIAITEM.ZMESSAGE 
     left JOIN ZWACHATSESSION
-    on ZWACHATSESSION.Z_PK = ZWAMESSAGE.ZCHATSESSION
+        on ZWACHATSESSION.Z_PK = ZWAMESSAGE.ZCHATSESSION
     ''')
     all_rows = cursor.fetchall()
     usageentries = len(all_rows)
@@ -106,7 +106,13 @@ def get_whatsappMessages(files_found, report_folder, seeker, wrap_text, timezone
             else:
                 attfile = ''
                     
-            data_list.append((row[0], sender, row[3], receiver, row[4], row[6], attfile, thumb, localpath,row[7], lat, lon,))
+            data_list.append((
+                (row[0], 'datetime'),
+                sender,
+                (row[3], 'phonenumber'),
+                receiver,
+                (row[4], 'phonenumber'),
+                row[6], attfile, thumb, localpath,row[7], lat, lon,))
             
         
         
@@ -116,7 +122,7 @@ def get_whatsappMessages(files_found, report_folder, seeker, wrap_text, timezone
         report.add_script()
         data_headers = (
             'Timestamp', 'Sender Name', 'From ID', 'Receiver', 'To ID', 'Message', 
-            'Attachment File', 'Thumb','Attachment Local Path','Starred?', 'Latitude', 'Longitude',)  # Don't remove the comma, that is required to make this a tuple as there is only 1 element
+            'Attachment File', 'Thumb','Attachment Local Path','Starred?', 'Latitude', 'Longitude',)
         
         report.write_artifact_data_table(data_headers, data_list, file_found, html_escape=False)
         report.end_artifact_report()    

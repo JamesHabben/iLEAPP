@@ -31,7 +31,11 @@ def get_geodApplications(files_found, report_folder, seeker, wrap_text, timezone
 	data_list = []
 	if usageentries > 0:
 		for row in all_rows:
-			data_list.append((row[2], row[0], row[1] ))
+			data_list.append((
+				(row[2], 'datetime'),
+				row[0],
+				row[1]
+			))
 			description = ''
 		report = ArtifactHtmlReport('Geolocation')
 		report.start_artifact_report(report_folder, 'Applications', description)

@@ -22,7 +22,11 @@ def get_offlinePages(files_found, report_folder, seeker, wrap_text, timezone_off
             dated = (message['Date'])
             media = media_to_html(file_found, files_found, report_folder)
 
-        data_list.append((utc_modified_date, media, sourced, subjectd, dated, file_found))
+        data_list.append((
+            (utc_modified_date, 'datetime'),
+            media, sourced, subjectd,
+            (dated, 'datetime'),
+            file_found))
         
     if len(data_list) > 0:
         note = 'Source location in extraction found in the report for each item.'

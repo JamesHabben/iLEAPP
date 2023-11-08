@@ -18,18 +18,18 @@ def get_tileAppDb(files_found, report_folder, seeker, wrap_text, timezone_offset
     cursor = db.cursor()
     cursor.execute('''
     SELECT
-    datetime(ZTIMESTAMP,'unixepoch','31 years'),
-    ZNAME,
-    datetime(ZACTIVATION_TIMESTAMP,'unixepoch','31 years'),
-    datetime(ZREGISTRATION_TIMESTAMP,'unixepoch','31 years'),
-    ZALTITUDE, 
-    ZLATITUDE, 
-    ZLONGITUDE,
-    ZID,
-    ZNODE_TYPE, 
-    ZSTATUS,
-    ZIS_LOST,
-    datetime(ZLAST_LOST_TILE_COMMUNITY_CONNECTION,'unixepoch','31 years')
+        datetime(ZTIMESTAMP,'unixepoch','31 years'),
+        ZNAME,
+        datetime(ZACTIVATION_TIMESTAMP,'unixepoch','31 years'),
+        datetime(ZREGISTRATION_TIMESTAMP,'unixepoch','31 years'),
+        ZALTITUDE, 
+        ZLATITUDE, 
+        ZLONGITUDE,
+        ZID,
+        ZNODE_TYPE, 
+        ZSTATUS,
+        ZIS_LOST,
+        datetime(ZLAST_LOST_TILE_COMMUNITY_CONNECTION,'unixepoch','31 years')
     FROM ZTILENTITY_NODE INNER JOIN ZTILENTITY_TILESTATE ON ZTILENTITY_NODE.ZTILE_STATE = ZTILENTITY_TILESTATE.Z_PK
     ''')
 
@@ -43,29 +43,38 @@ def get_tileAppDb(files_found, report_folder, seeker, wrap_text, timezone_offset
                 pass
             else:
                 timestamp = convert_ts_human_to_utc(timestamp)
-                timestamp = convert_utc_human_to_timezone(timestamp,timezone_offset)
+                #timestamp = convert_utc_human_to_timezone(timestamp,timezone_offset)
                 
             acttimestamp = row[2]
             if acttimestamp is None:
                 pass
             else:
                 acttimestamp = convert_ts_human_to_utc(acttimestamp)
-                acttimestamp= convert_utc_human_to_timezone(acttimestamp,timezone_offset)
+                #acttimestamp= convert_utc_human_to_timezone(acttimestamp,timezone_offset)
                 
             regtimestamp = row[3]
             if acttimestamp is None:
                 pass
             else:
                 regtimestamp = convert_ts_human_to_utc(regtimestamp)
-                regtimestamp = convert_utc_human_to_timezone(regtimestamp,timezone_offset)
+                #regtimestamp = convert_utc_human_to_timezone(regtimestamp,timezone_offset)
                 
-            data_list.append((timestamp, row[1], acttimestamp, regtimestamp, row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11]))
+            data_list.append((
+                (timestamp, 'datetime'),
+                row[1],
+                (acttimestamp, 'datetime'),
+                (regtimestamp, 'datetime'),
+                row[4], row[5], row[6], row[7], row[8], row[9], row[10],
+                (row[11], 'datetime')
+            ))
         
             description = ''
             report = ArtifactHtmlReport('Tile App - Tile Information & Geolocation')
             report.start_artifact_report(report_folder, 'Tile App DB Info & Geolocation', description)
             report.add_script()
-            data_headers = ('Timestamp','Tile Name','Activation Timestamp','Registration Timestamp','Altitude','Latitude','Longitude','Tile ID','Tile Type','Status','Is Lost?','Last Community Connection' )     
+            data_headers = ('Timestamp','Tile Name','Activation Timestamp','Registration Timestamp',
+                            'Altitude','Latitude','Longitude','Tile ID',
+                            'Tile Type','Status','Is Lost?','Last Community Connection' )
             report.write_artifact_data_table(data_headers, data_list, file_found)
             report.end_artifact_report()
             

@@ -7,7 +7,8 @@ import sqlite3
 import zlib
 
 from scripts.artifact_report import ArtifactHtmlReport
-from scripts.ilapfuncs import logfunc, tsv, timeline, is_platform_windows, generate_hexdump, open_sqlite_db_readonly, does_table_exist
+from scripts.ilapfuncs import (logfunc, tsv, timeline, is_platform_windows, generate_hexdump,
+                               open_sqlite_db_readonly, does_table_exist)
 
 def ReadVLOC(data):
     names = []
@@ -87,7 +88,16 @@ def get_geodMapTiles(files_found, report_folder, seeker, wrap_text, timezone_off
     if does_table_exist(db, 'data'):
         logfunc('Parsing Geolocation from data table.')        
         query = '''
-            SELECT datetime(access_times.timestamp, 'unixepoch') as timestamp, key_a, key_b, key_c, key_d, tileset, data, size, etag
+            SELECT 
+                datetime(access_times.timestamp, 'unixepoch') as timestamp, 
+                key_a, 
+                key_b, 
+                key_c, 
+                key_d, 
+                tileset, 
+                data, 
+                size, 
+                etag
             FROM data
             INNER JOIN access_times on data.rowid = access_times.data_pk
             '''
@@ -95,7 +105,16 @@ def get_geodMapTiles(files_found, report_folder, seeker, wrap_text, timezone_off
         logfunc('Parsing Geolocation from image table.')
         usesDataTable = False
         query = '''
-            SELECT datetime(retrieved, 'unixepoch') as timestamp, a, b, c, d, tileset, data, size, etag
+            SELECT 
+                datetime(retrieved, 'unixepoch') as timestamp, 
+                a, 
+                b, 
+                c, 
+                d, 
+                tileset, 
+                data, 
+                size, 
+                etag
             FROM image
             '''
     try:
@@ -131,19 +150,27 @@ def get_geodMapTiles(files_found, report_folder, seeker, wrap_text, timezone_off
                 #data_parsed = hexdump
 
             if usesDataTable:
-                data_list.append((row['timestamp'], tcol_places, vmp4_places, data_parsed, get_hex(row['tileset']), 
-                                    get_hex(row['key_a']), get_hex(row['key_b']), get_hex(row['key_c']), get_hex(row['key_d'])) )
+                data_list.append((
+                    (row['timestamp'], 'datetime'),
+                    tcol_places, vmp4_places, data_parsed, get_hex(row['tileset']),
+                    get_hex(row['key_a']), get_hex(row['key_b']),
+                    get_hex(row['key_c']), get_hex(row['key_d'])
+                ))
                                     # row['size']) , row['etag']))
             else:                                    
-                data_list.append((row['timestamp'], tcol_places, vmp4_places, data_parsed, get_hex(row['tileset']), 
-                                    get_hex(row['a']), get_hex(row['b']), get_hex(row['c']), get_hex(row['d'])) )
+                data_list.append((
+                    (row['timestamp'], 'datetime'),
+                    tcol_places, vmp4_places, data_parsed, get_hex(row['tileset']),
+                    get_hex(row['a']), get_hex(row['b']), get_hex(row['c']), get_hex(row['d'])
+                ))
                                     # row['size']) , row['etag']))
 
         description = ''
         report = ArtifactHtmlReport('Geolocation')
         report.start_artifact_report(report_folder, 'Map Tile Cache', description)
         report.add_script()
-        data_headers = ("Timestamp", "Places_from_VLOC", "Labels_in_tile", "Image", "Tileset", "Key A", "Key B", "Key C", "Key D")#, "Size", "ETAG")
+        data_headers = ("Timestamp", "Places_from_VLOC", "Labels_in_tile", "Image",
+                        "Tileset", "Key A", "Key B", "Key C", "Key D") #, "Size", "ETAG")
         report.write_artifact_data_table(data_headers, data_list, file_found, html_escape = False)
         report.end_artifact_report()
 

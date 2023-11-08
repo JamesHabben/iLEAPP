@@ -5,7 +5,7 @@
 
 import sqlite3
 from scripts.artifact_report import ArtifactHtmlReport
-from scripts.ilapfuncs import logfunc, tsv, timeline, is_platform_windows, open_sqlite_db_readonly
+from scripts.ilapfuncs import logfunc, tsv, timeline, is_platform_windows, open_sqlite_db_readonly, parse_datetime
 
 def get_callHistory(files_found, report_folder, seeker, wrap_text, timezone_offset):
     
@@ -58,12 +58,21 @@ def get_callHistory(files_found, report_folder, seeker, wrap_text, timezone_offs
             an = str(row[3])
             an = an.replace("b'", "")
             an = an.replace("'", "")
-            data_list.append((row[0], row[1], row[2], an, row[4], row[5], row[6], row[7], row[8], row[9], row[10]))
+            data_list.append((
+                (parse_datetime(row[0]), 'datetime'),
+                (parse_datetime(row[1]), 'datetime'),
+                row[2],
+                (an, 'phonenumber'),
+                row[4], row[5], row[6], row[7], row[8], row[9], row[10]
+            ))
 
         report = ArtifactHtmlReport('Call History')
         report.start_artifact_report(report_folder, 'Call History')
         report.add_script()
-        data_headers = ('Starting Timestamp', 'Ending Timestamp', 'Name', 'Phone Number', 'Call Direction', 'Answered', 'Call Duration', 'Call Type', 'Service Provider', 'ISO Country Code', 'Location')
+        data_headers = ('Starting Timestamp', 'Ending Timestamp', 'Name',
+                        'Phone Number', 'Call Direction', 'Answered',
+                        'Call Duration', 'Call Type', 'Service Provider',
+                        'ISO Country Code', 'Location')
         report.write_artifact_data_table(data_headers, data_list, file_found)
         report.end_artifact_report()
         

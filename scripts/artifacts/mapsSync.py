@@ -3,7 +3,8 @@ import textwrap
 import blackboxprotobuf
 
 from scripts.artifact_report import ArtifactHtmlReport
-from scripts.ilapfuncs import logfunc, tsv, kmlgen, timeline, is_platform_windows, get_next_unused_name, open_sqlite_db_readonly
+from scripts.ilapfuncs import (logfunc, tsv, kmlgen, timeline, is_platform_windows,
+                               get_next_unused_name, open_sqlite_db_readonly)
 
 def get_recursively(search_dict, field):
     """
@@ -43,20 +44,20 @@ def get_mapsSync(files_found, report_folder, seeker, wrap_text, timezone_offset)
         cursor = db.cursor()
         cursor.execute('''
         SELECT
-        datetime(ZHISTORYITEM.ZCREATETIME+978307200,'UNIXEPOCH','localtime') AS 'Time Created',
-        datetime(ZHISTORYITEM.ZMODIFICATIONTIME+978307200,'UNIXEPOCH','localtime') AS 'Time Modified',
-        ZHISTORYITEM.z_pk AS 'Item Number',
-        CASE
-        when ZHISTORYITEM.z_ent = 14 then 'coordinates of search'
-        when ZHISTORYITEM.z_ent = 16 then 'location search'
-        when ZHISTORYITEM.z_ent = 12 then 'navigation journey'
-        end AS 'Type',
-        ZHISTORYITEM.ZQUERY AS 'Location Search',
-        ZHISTORYITEM.ZLOCATIONDISPLAY AS 'Location City',
-        ZHISTORYITEM.ZLATITUDE AS 'Latitude',
-        ZHISTORYITEM.ZLONGITUDE AS 'Longitude',
-        ZHISTORYITEM.ZROUTEREQUESTSTORAGE AS 'Journey BLOB',
-        ZMIXINMAPITEM.ZMAPITEMSTORAGE as 'Map Item Storage BLOB'
+            datetime(ZHISTORYITEM.ZCREATETIME+978307200,'UNIXEPOCH','localtime') AS 'Time Created',
+            datetime(ZHISTORYITEM.ZMODIFICATIONTIME+978307200,'UNIXEPOCH','localtime') AS 'Time Modified',
+            ZHISTORYITEM.z_pk AS 'Item Number',
+            CASE
+                when ZHISTORYITEM.z_ent = 14 then 'coordinates of search'
+                when ZHISTORYITEM.z_ent = 16 then 'location search'
+                when ZHISTORYITEM.z_ent = 12 then 'navigation journey'
+            end AS 'Type',
+            ZHISTORYITEM.ZQUERY AS 'Location Search',
+            ZHISTORYITEM.ZLOCATIONDISPLAY AS 'Location City',
+            ZHISTORYITEM.ZLATITUDE AS 'Latitude',
+            ZHISTORYITEM.ZLONGITUDE AS 'Longitude',
+            ZHISTORYITEM.ZROUTEREQUESTSTORAGE AS 'Journey BLOB',
+            ZMIXINMAPITEM.ZMAPITEMSTORAGE as 'Map Item Storage BLOB'
         from ZHISTORYITEM
         left join ZMIXINMAPITEM on ZMIXINMAPITEM.Z_PK=ZHISTORYITEM.ZMAPITEM
         ''')
@@ -156,16 +157,23 @@ def get_mapsSync(files_found, report_folder, seeker, wrap_text, timezone_offset)
                         for address in (get101[0]['2']):
                             mapitem = mapitem + ' ' + (str(address))
                             
-                data_list.append((row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], agg1, mapitem))
+                data_list.append((
+                    (row[0], 'datetime'),
+                    (row[1], 'datetime'),
+                    row[2], row[3], row[4], row[5], row[6], row[7], agg1, mapitem
+                ))
                 agg1 = ''
             
 
         if usageentries > 0:
-            description = 'Disclaimer: Entries should be corroborated. Locations and searches from other linked devices might show up here. Travel should be confirmed. Medium confidence.'
+            description = ('Disclaimer: Entries should be corroborated. Locations and searches from other '
+                           'linked devices might show up here. Travel should be confirmed. Medium confidence.')
             report = ArtifactHtmlReport('MapsSync')
             report.start_artifact_report(report_folder, 'MapsSync', description)
             report.add_script()
-            data_headers = ('Timestamp','Modified Time','Item Number','Type','Location Search','Location City','Latitude','Longitude','Journey BLOB Item', 'Map Item Storage BLOB item')
+            data_headers = ('Timestamp','Modified Time','Item Number','Type',
+                            'Location Search','Location City','Latitude','Longitude',
+                            'Journey BLOB Item', 'Map Item Storage BLOB item')
             
             report.write_artifact_data_table(data_headers, data_list, file_found)
             report.end_artifact_report()

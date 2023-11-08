@@ -18,10 +18,15 @@ def get_geodPDPlaceCache(files_found, report_folder, seeker, wrap_text, timezone
 	db = open_sqlite_db_readonly(file_found)
 	if does_table_exist(db, 'pdplacelookup'):
 		query = ("""
-	SELECT requestkey, pdplacelookup.pdplacehash, datetime('2001-01-01', "lastaccesstime" || ' seconds') as lastaccesstime, datetime('2001-01-01', "expiretime" || ' seconds') as expiretime, pdplace
-	FROM pdplacelookup
-	INNER JOIN pdplaces on pdplacelookup.pdplacehash = pdplaces.pdplacehash
-	""")
+			SELECT 
+				requestkey, 
+				pdplacelookup.pdplacehash, 
+				datetime('2001-01-01', "lastaccesstime" || ' seconds') as lastaccesstime, 
+				datetime('2001-01-01', "expiretime" || ' seconds') as expiretime, 
+				pdplace
+			FROM pdplacelookup
+			INNER JOIN pdplaces on pdplacelookup.pdplacehash = pdplaces.pdplacehash
+		""")
 	else:
 		logfunc()
 	cursor = db.cursor()
@@ -34,7 +39,12 @@ def get_geodPDPlaceCache(files_found, report_folder, seeker, wrap_text, timezone
 	if usageentries > 0:
 		for row in all_rows:
 			pd_place = ''.join(f'{row}<br>' for row in set(strings(row[4])))
-			data_list.append((row[2], row[0], row[1], row[3], pd_place))
+			data_list.append((
+				(row[2], 'datetime'),
+				row[0], row[1],
+				(row[3], 'datetime'),
+				pd_place
+			))
 		description = ''
 		report = ArtifactHtmlReport('Geolocation')
 		report.start_artifact_report(report_folder, 'PD Place Cache', description)

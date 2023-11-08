@@ -9,7 +9,8 @@ import scripts.artifacts.artGlobals
  
 from packaging import version
 from scripts.artifact_report import ArtifactHtmlReport
-from scripts.ilapfuncs import logfunc, tsv, timeline, is_platform_windows, convert_ts_human_to_utc, convert_utc_human_to_timezone
+from scripts.ilapfuncs import (logfunc, tsv, timeline, is_platform_windows,
+							   convert_ts_human_to_utc, convert_utc_human_to_timezone, convert_unix_epoch)
 from scripts.parse3 import ParseProto
 
 def get_mailprotect(files_found, report_folder, seeker, wrap_text, timezone_offset):
@@ -118,21 +119,21 @@ def get_mailprotect(files_found, report_folder, seeker, wrap_text, timezone_offs
 
 		cursor.execute(
 			"""
-		select 
-		email1.rowid,
-		datetime(email1.ds, 'unixepoch') as ds,
-		datetime(email1.dr, 'unixepoch') as dr,
-		email1.sender, 
-		email1.messid, 
-		email1.subject, 
-		email1.receipt, 
-		email1.cc,
-		email1.bcc,
-		email2.data 
-		from email1
-		left outer join email2
-		on email2.rowid = email1.rowid
-		"""
+			select 
+				email1.rowid,
+				email1.ds,
+				email1.dr,
+				email1.sender, 
+				email1.messid, 
+				email1.subject, 
+				email1.receipt, 
+				email1.cc,
+				email1.bcc,
+				email2.data 
+			from email1
+			left outer join email2
+				on email2.rowid = email1.rowid
+			"""
 		)
 
 		all_rows = cursor.fetchall()
@@ -140,20 +141,33 @@ def get_mailprotect(files_found, report_folder, seeker, wrap_text, timezone_offs
 		if usageentries > 0:
 			data_list = [] 
 			for row in all_rows:
-				timestampds = convert_ts_human_to_utc(row[1])
-				timestampds = convert_utc_human_to_timezone(timestampds,timezone_offset)
+				timestampds = convert_unix_epoch(row[1])
+				#timestampds = convert_utc_human_to_timezone(timestampds,timezone_offset)
 				
-				timestampdr = convert_ts_human_to_utc(row[2])
-				timestampdr = convert_utc_human_to_timezone(timestampdr,timezone_offset)
+				timestampdr = convert_unix_epoch(row[2])
+				#timestampdr = convert_utc_human_to_timezone(timestampdr,timezone_offset)
 				
-				data_list.append((timestampds,timestampdr,row[3],row[4],row[5],row[6],row[9],row[7],row[8],row[0]))
+				data_list.append((
+					(timestampds, 'datetime'),
+					(timestampdr, 'datetime'),
+					row[3],
+					row[4],
+					row[5],
+					row[6],
+					row[9],
+					row[7],
+					row[8],
+					row[0]
+				))
 			
 			file_found = head
 			description = ''
 			report = ArtifactHtmlReport('iOS Mail')
 			report.start_artifact_report(report_folder, 'Emails', description)
 			report.add_script()
-			data_headers = ('Date Sent','Date Received','Sender','Message ID', 'Subject', 'Recipient', 'Message', 'CC', 'BCC','Row ID')     
+			data_headers = ('Date Sent','Date Received','Sender',
+							'Message ID', 'Subject', 'Recipient',
+							'Message', 'CC', 'BCC','Row ID')
 			report.write_artifact_data_table(data_headers, data_list, file_found)
 			report.end_artifact_report()
 			
@@ -174,23 +188,23 @@ def get_mailprotect(files_found, report_folder, seeker, wrap_text, timezone_offs
 		cursor = db.cursor()
 		cursor.execute(
 			"""
-		SELECT
-		datetime(main.messages.date_sent, 'UNIXEPOCH') as datesent,
-		datetime(main.messages.date_received, 'UNIXEPOCH') as datereceived,
-		PI.addresses.address,
-		PI.addresses.comment,
-		PI.subjects.subject,
-		PI.summaries.summary,
-		main.messages.read,
-		main.messages.flagged,
-		main.messages.deleted,
-		main.mailboxes.url
-		from main.mailboxes, main.messages, PI.subjects, PI.addresses, PI.summaries
-		where main.messages.subject = PI.subjects.ROWID 
-		and main.messages.sender = PI.addresses.ROWID 
-		and main.messages.summary = PI.summaries.ROWID
-		and main.mailboxes.ROWID = main.messages.mailbox
-		"""
+			SELECT
+				main.messages.date_sent,
+				main.messages.date_received,
+				PI.addresses.address,
+				PI.addresses.comment,
+				PI.subjects.subject,
+				PI.summaries.summary,
+				main.messages.read,
+				main.messages.flagged,
+				main.messages.deleted,
+				main.mailboxes.url
+			from main.mailboxes, main.messages, PI.subjects, PI.addresses, PI.summaries
+			where main.messages.subject = PI.subjects.ROWID 
+				and main.messages.sender = PI.addresses.ROWID 
+				and main.messages.summary = PI.summaries.ROWID
+				and main.mailboxes.ROWID = main.messages.mailbox
+			"""
 		)
 
 		all_rows = cursor.fetchall()
@@ -198,20 +212,32 @@ def get_mailprotect(files_found, report_folder, seeker, wrap_text, timezone_offs
 		if usageentries > 0:
 			data_list = [] 
 			for row in all_rows:
-				timestampds = convert_ts_human_to_utc(row[0])
-				timestampds = convert_utc_human_to_timezone(timestampds,timezone_offset)
+				timestampds = convert_unix_epoch(row[0])
+				#timestampds = convert_utc_human_to_timezone(timestampds,timezone_offset)
 				
-				timestampdr = convert_ts_human_to_utc(row[1])
-				timestampdr = convert_utc_human_to_timezone(timestampdr,timezone_offset)
+				timestampdr = convert_unix_epoch(row[1])
+				#timestampdr = convert_utc_human_to_timezone(timestampdr,timezone_offset)
 				
-				data_list.append((timestampds,timestampdr,row[2],row[3],row[4],row[5],row[6],row[7],row[8],row[9]))
+				data_list.append((
+					(timestampds, 'datetime'),
+					(timestampdr, 'datetime'),
+					row[2],
+					row[3],
+					row[4],
+					row[5],
+					row[6],
+					row[7],
+					row[8],
+					row[9]
+				))
 			
 			file_found = head
 			description = ''
 			report = ArtifactHtmlReport('Apple Mail')
 			report.start_artifact_report(report_folder, 'Emails', description)
 			report.add_script()
-			data_headers = ('Date Sent','Date Received','Address','Comment','Subject', 'Summary', 'Read?', 'Flagged?', 'Deleted', 'Mailbox')     
+			data_headers = ('Date Sent','Date Received','Address','Comment',
+							'Subject', 'Summary', 'Read?', 'Flagged?', 'Deleted', 'Mailbox')
 			report.write_artifact_data_table(data_headers, data_list, file_found)
 			report.end_artifact_report()
 			

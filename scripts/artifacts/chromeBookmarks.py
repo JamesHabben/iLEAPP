@@ -49,7 +49,10 @@ def get_chromeBookmarks(files_found, report_folder, seeker, wrap_text, timezone_
                             if keyb == 'name' and flag == 1:
                                 flag = 0
                                 parent = valueb
-                                data_list.append((dateaddconv, url, name, parent, typed))
+                                data_list.append((
+                                    (dateaddconv, 'datetime'),
+                                    url, name, parent, typed
+                                ))
         num_entries = len(data_list)
         if num_entries > 0:
             report = ArtifactHtmlReport(f'{browser_name} - Bookmarks')

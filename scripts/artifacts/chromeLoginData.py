@@ -99,7 +99,10 @@ def get_chromeLoginData(files_found, report_folder, seeker, wrap_text, timezone_
                 if password_enc:
                     password = decrypt(password_enc).decode("utf-8", 'replace')
                 valid_date = get_valid_date(row[2], row[3])
-                data_list.append( (valid_date, row[0], password, row[4], row[5], browser_name) )
+                data_list.append((
+                    (valid_date, 'datetime'),
+                    row[0], password, row[4], row[5], browser_name
+                ))
 
             report.write_artifact_data_table(data_headers, data_list, file_found)
             report.end_artifact_report()

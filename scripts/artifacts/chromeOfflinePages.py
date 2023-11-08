@@ -31,15 +31,15 @@ def get_chromeOfflinePages(files_found, report_folder, seeker, wrap_text, timezo
         db = open_sqlite_db_readonly(file_found)
         cursor = db.cursor()
         cursor.execute('''
-        SELECT
-        datetime(creation_time / 1000000 + (strftime('%s', '1601-01-01')), "unixepoch") as creation_time,
-        datetime(last_access_time / 1000000 + (strftime('%s', '1601-01-01')), "unixepoch") as last_access_time,
-        online_url,
-        file_path,
-        title,
-        access_count,
-        file_size
-        from offlinepages_v1
+            SELECT
+                datetime(creation_time / 1000000 + (strftime('%s', '1601-01-01')), "unixepoch") as creation_time,
+                datetime(last_access_time / 1000000 + (strftime('%s', '1601-01-01')), "unixepoch") as last_access_time,
+                online_url,
+                file_path,
+                title,
+                access_count,
+                file_size
+            from offlinepages_v1
         ''')
 
         all_rows = cursor.fetchall()
@@ -51,11 +51,16 @@ def get_chromeOfflinePages(files_found, report_folder, seeker, wrap_text, timezo
             report_path = get_next_unused_name(report_path)[:-9] # remove .temphtml
             report.start_artifact_report(report_folder, os.path.basename(report_path))
             report.add_script()
-            data_headers = ('Creation Time','Last Access Time', 'Online URL', 'File Path', 'Title', 'Access Count', 'File Size' ) # Don't remove the comma, that is required to make this a tuple as there is only 1 element
+            data_headers = ('Creation Time','Last Access Time', 'Online URL',
+                            'File Path', 'Title', 'Access Count', 'File Size' )
             data_list = []
             for row in all_rows:
                 if wrap_text:
-                    data_list.append((row[0],row[1],(textwrap.fill(row[2], width=75)),row[3],row[4],row[5],row[6]))
+                    data_list.append((
+                        row[0],
+                        row[1],
+                        (textwrap.fill(row[2], width=75)),row[3],row[4],row[5],row[6]
+                    ))
                 else:
                     data_list.append((row[0],row[1],row[2],row[3],row[4],row[5],row[6]))
             report.write_artifact_data_table(data_headers, data_list, file_found)

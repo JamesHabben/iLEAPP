@@ -33,7 +33,10 @@ def get_appleWalletCards(files_found, report_folder, seeker, wrap_text, timezone
                 expiration_date = re.findall(r'\d{2}/\d{2}', card_info)
                 card_type = get_card_type(card_number, len(card_number))
 
-                data_list.append((row[0], card_number, expiration_date[0], card_type))
+                data_list.append((
+                    (row[0], 'datetime'),
+                    card_number, expiration_date[0], card_type
+                ))
                 
     if len(data_list) > 0:
         report = ArtifactHtmlReport('Cards')

@@ -3,7 +3,7 @@ import textwrap
 from datetime import datetime, timezone
 from scripts.artifact_report import ArtifactHtmlReport
 from scripts.ilapfuncs import (logfunc, tsv, timeline, is_platform_windows, get_next_unused_name,
-                               open_sqlite_file_readonly, convert_sqlite_epoch)
+                               open_sqlite_file_readonly, convert_apple_epoch)
 
 def get_AllTrails(files_found, report_folder, seeker, wrap_text, timezone_offset):
     
@@ -115,7 +115,7 @@ def get_AllTrails(files_found, report_folder, seeker, wrap_text, timezone_offset
             data_list = []
             for row in all_rows:
                 data_list.append((
-                    (convert_sqlite_epoch(row['ZCREATIONTIME']), 'datetime'),
+                    (convert_apple_epoch(row['ZCREATIONTIME']), 'datetime'),
                     row['ZFIRSTNAME'],
                     row['ZLASTNAME'],
                     row['ZUSERNAME'],

@@ -123,10 +123,13 @@ def get_biomeBacklight(files_found, report_folder, seeker, wrap_text, timezone_o
                 #print(protostuff)
                 
                 timestart = (timestampsconv(protostuff['1']))
-                timestart = convert_utc_human_to_timezone(timestart, timezone_offset)
+                #timestart = convert_utc_human_to_timezone(timestart, timezone_offset)
                 state = (protostuff['2'])
                 
-                data_list.append((timestart, state))
+                data_list.append((
+                    (timestart, 'datetime'),
+                    state
+                ))
                 
             modresult = (sizeofnotificaton % 8)
             resultante =  8 - modresult

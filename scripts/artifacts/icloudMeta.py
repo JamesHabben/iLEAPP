@@ -47,14 +47,20 @@ def get_icloudMeta(files_found, report_folder, seeker, wrap_text, timezone_offse
                     else:
                         lasteditorname = ''
                     basehash = (jsonconv[i].get('basehash', ''))
-                    data_list.append((btime, ctime, mtime, name, lasteditorname, docid, parid, typee, deleted, size, zone, exe, hid))	
+                    data_list.append((
+                        (btime, 'datetime'),
+                        (ctime, 'datetime'),
+                        (mtime, 'datetime'),
+                        name, lasteditorname, docid, parid, typee, deleted, size, zone, exe, hid
+                    ))
             
         
             if len(data_list) > 0:
                 report = ArtifactHtmlReport('iCloud - File Metadata'+' '+str(counter))
                 report.start_artifact_report(report_folder, 'iCloud - File Metadata'+' '+str(counter))
                 report.add_script()
-                data_headers = ('Btime','Ctime','Mtime', 'Name', 'Last Editor Name', 'Doc ID', 'Parent ID', 'Type', 'Deleted?','Size', 'Zone', 'Executable?','Hidden?')   
+                data_headers = ('Btime','Ctime','Mtime', 'Name', 'Last Editor Name', 'Doc ID', 'Parent ID',
+                                'Type', 'Deleted?','Size', 'Zone', 'Executable?', 'Hidden?')
                 report.write_artifact_data_table(data_headers, data_list, file_found, html_escape=False)
                 report.end_artifact_report()
                 

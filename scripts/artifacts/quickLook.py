@@ -30,7 +30,10 @@ def get_quickLook(files_found, report_folder, seeker, wrap_text, timezone_offset
         data_list = []    
         if usageentries > 0:
             for row in all_rows:
-                data_list.append((row[0], row[1], row[2]))
+                data_list.append((
+                    (row[0], 'datetime'),
+                    row[1], row[2]
+                ))
             
                 description = 'Listing of iCloud files accessed by the Quick Look function.'
                 report = ArtifactHtmlReport('iCloud Quick Look')

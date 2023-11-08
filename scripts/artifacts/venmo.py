@@ -13,8 +13,9 @@ def output_users(report_folder, transactions, filename):
         report.start_artifact_report(report_folder, 'Venmo - Users')
         report.add_script()
         data_headers = (
-            'User ID', 'Date Joined', 'Display Name', 'First Name', 'Last Name', 'Friend Status', 'Is Blocked', 'Is Active', 'Is Payable',
-            'Identity Type', 'Profile Pic URL')  # Don't remove the comma, that is required to make this a tuple as there is only 1 element
+            'User ID', 'Date Joined', 'Display Name', 'First Name',
+            'Last Name', 'Friend Status', 'Is Blocked', 'Is Active', 'Is Payable',
+            'Identity Type', 'Profile Pic URL')
         data_list = []
         users = {}
         for row in transactions:
@@ -57,8 +58,12 @@ def output_users(report_folder, transactions, filename):
                 users[target_id] = dict_to_add
 
         for user in users:
-            data_list.append((user, users[user][0], users[user][1], users[user][2], users[user][3], users[user][4],
-                              users[user][5], users[user][6], users[user][7], users[user][8], users[user][9]))
+            data_list.append((
+                user,
+                (users[user][0], 'datetime'),
+                users[user][1], users[user][2], users[user][3], users[user][4],
+                users[user][5], users[user][6], users[user][7], users[user][8], users[user][9]
+            ))
 
         report.write_artifact_data_table(data_headers, data_list, filename)
         report.end_artifact_report()
@@ -81,7 +86,9 @@ def output_transactions(report_folder, transactions, filename):
         report.start_artifact_report(report_folder, 'Venmo - Transactions')
         report.add_script()
         data_headers = (
-        'Date Created', 'Date Completed', 'Action', 'Payer', 'Payer ID', 'Receiver', 'Receiver ID', 'Note', 'Amount', 'Status', 'Audience', 'Type', 'Context')  # Don't remove the comma, that is required to make this a tuple as there is only 1 element
+            'Date Created', 'Date Completed', 'Action', 'Payer',
+            'Payer ID', 'Receiver', 'Receiver ID', 'Note',
+            'Amount', 'Status', 'Audience', 'Type', 'Context')
         data_list = []
         for row in transactions:
 
@@ -123,7 +130,12 @@ def output_transactions(report_folder, transactions, filename):
 
             elif row['type'] != 'payment' and row['type'] != 'disbursement':
                 logfunc(f'Unknown transaction type of \"{row["type"]}\" found!!')
-            data_list.append((t_created, t_completed, action, payer, payer_id, receiver, receiver_id, note, amount, status, audience, ptype, context))
+            data_list.append((
+                (t_created, 'datetime'),
+                (t_completed, 'datetime'),
+                action, payer, payer_id, receiver, receiver_id,
+                note, amount, status, audience, ptype, context
+            ))
 
 
         report.write_artifact_data_table(data_headers, data_list, filename)

@@ -191,11 +191,11 @@ def get_biomeIntents(files_found, report_folder, seeker, wrap_text, timezone_off
                     #print(deserialized_plist)
                     startdate = (deserialized_plist['dateInterval']['NS.startDate'])
                     startdate = convert_time_obj_to_utc(startdate)
-                    startdate = convert_utc_human_to_timezone(startdate, timezone_offset)
+                    #startdate = convert_utc_human_to_timezone(startdate, timezone_offset)
                     
                     enddate = (deserialized_plist['dateInterval']['NS.endDate'])
                     enddate = convert_time_obj_to_utc(enddate)
-                    enddate = convert_utc_human_to_timezone(enddate, timezone_offset)
+                    #enddate = convert_utc_human_to_timezone(enddate, timezone_offset)
                     
                     durationinterval = (deserialized_plist['dateInterval']['NS.duration'])
                     #print(deserialized_plist['intent'])
@@ -328,7 +328,12 @@ def get_biomeIntents(files_found, report_folder, seeker, wrap_text, timezone_off
                         datos = ''
                         datoshtml = 'Unsupported intent.'
                         
-                    data_list.append((startdate, enddate, durationinterval, donatedbysiri, appid, classname, action, direction,groupid, datoshtml, filename, offset))
+                    data_list.append((
+                        (startdate, 'datetime'),
+                        (enddate, 'datetime'),
+                        durationinterval, donatedbysiri, appid, classname,
+                        action, direction,groupid, datoshtml, filename, offset
+                    ))
                     data_list_tsv.append((startdate, enddate, durationinterval, donatedbysiri, appid, classname, action, direction, groupid, datos, filename, offset))
                     
                 modresult = (datalenght % 8)

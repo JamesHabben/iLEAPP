@@ -76,7 +76,10 @@ def get_vipps(files_found, report_folder, seeker, wrap_text, timezone_offset):
                 transcaid = (jsonitems['data'].get('transactionId', ''))
                 dtype = (jsonitems['data']['type'])
             
-            data_list.append((timestamp, telephone, name, message, amount, statustext, statuscat, direction, transcaid, dtype))
+            data_list.append((
+                (timestamp, 'datetime'),
+                (telephone, 'phonenumber'),
+                name, message, amount, statustext, statuscat, direction, transcaid, dtype))
 
         report = ArtifactHtmlReport('Vipps - Transactions')
         report.start_artifact_report(report_folder, 'Vipps - Transactions')

@@ -200,17 +200,18 @@ def get_Health(files_found, report_folder, seeker, wrap_text, timezone_offset):
 
     if version.parse(iOS_version) < version.parse("16"):
         query = '''
-        SELECT datetime('2001-01-01', samples.start_date || ' seconds') AS 'Start timestamp (UTC)',
-        datetime('2001-01-01', samples.end_date || ' seconds') AS 'End timestamp (UTC)',
-        CASE workouts.activity_type''' + activity_types + '''
-        ELSE "Unknown" || "-" || workouts.activity_type
-        END AS 'Type',
-        strftime('%H:%M:%S', samples.end_date - samples.start_date, 'unixepoch') AS 'Total Time Duration',
-        strftime('%H:%M:%S', workouts.duration, 'unixepoch') AS 'Duration',
-        ''' + distance_and_goals + '''
-        round(workouts.total_energy_burned, 2) AS 'Total Active Energy (kcal)',
-        round(workouts.total_basal_energy_burned, 2) AS 'Total Resting Energy (kcal)',
-        ''' + metadata + source + '''
+        SELECT 
+            datetime('2001-01-01', samples.start_date || ' seconds') AS 'Start timestamp (UTC)',
+            datetime('2001-01-01', samples.end_date || ' seconds') AS 'End timestamp (UTC)',
+            CASE workouts.activity_type''' + activity_types + '''
+            ELSE "Unknown" || "-" || workouts.activity_type
+            END AS 'Type',
+            strftime('%H:%M:%S', samples.end_date - samples.start_date, 'unixepoch') AS 'Total Time Duration',
+            strftime('%H:%M:%S', workouts.duration, 'unixepoch') AS 'Duration',
+            ''' + distance_and_goals + '''
+            round(workouts.total_energy_burned, 2) AS 'Total Active Energy (kcal)',
+            round(workouts.total_basal_energy_burned, 2) AS 'Total Resting Energy (kcal)',
+            ''' + metadata + source + '''
         FROM workouts
         LEFT OUTER JOIN samples ON samples.data_id = workouts.data_id
         LEFT OUTER JOIN metadata_values ON metadata_values.object_id = workouts.data_id
@@ -224,21 +225,22 @@ def get_Health(files_found, report_folder, seeker, wrap_text, timezone_offset):
         '''   
     else:
         query = '''
-        SELECT datetime('2001-01-01', workout_activities.start_date || ' seconds') AS 'Start Timestamp (UTC)',
-        datetime('2001-01-01', workout_activities.end_date || ' seconds') AS 'End Timestamp (UTC)',
-        CASE workout_activities.activity_type''' + activity_types + '''
-        ELSE "Unknown" || "-" || workout_activities.activity_type
-        END AS 'Type',
-        strftime('%H:%M:%S', samples.end_date - samples.start_date, 'unixepoch') AS 'Total Time Duration',
-        strftime('%H:%M:%S', workout_activities.duration, 'unixepoch') AS 'Duration',
-        ''' + distance_and_goals + '''
-        MAX(
-        CASE WHEN workout_statistics.data_type = 10 THEN round(workout_statistics.quantity, 2) ELSE NULL
-        END) AS 'Total Active Energy (kcal)',
-        MAX(
-        CASE WHEN workout_statistics.data_type = 9 THEN round(workout_statistics.quantity, 2)  ELSE NULL
-        END) AS 'Total Resting Energy (kcal)',
-        ''' + metadata + source + '''
+        SELECT 
+            datetime('2001-01-01', workout_activities.start_date || ' seconds') AS 'Start Timestamp (UTC)',
+            datetime('2001-01-01', workout_activities.end_date || ' seconds') AS 'End Timestamp (UTC)',
+            CASE workout_activities.activity_type''' + activity_types + '''
+                ELSE "Unknown" || "-" || workout_activities.activity_type
+            END AS 'Type',
+            strftime('%H:%M:%S', samples.end_date - samples.start_date, 'unixepoch') AS 'Total Time Duration',
+            strftime('%H:%M:%S', workout_activities.duration, 'unixepoch') AS 'Duration',
+            ''' + distance_and_goals + '''
+            MAX(
+            CASE WHEN workout_statistics.data_type = 10 THEN round(workout_statistics.quantity, 2) ELSE NULL
+            END) AS 'Total Active Energy (kcal)',
+            MAX(
+            CASE WHEN workout_statistics.data_type = 9 THEN round(workout_statistics.quantity, 2)  ELSE NULL
+            END) AS 'Total Resting Energy (kcal)',
+            ''' + metadata + source + '''
         FROM workout_activities
         LEFT OUTER JOIN workouts ON workouts.data_id = workout_activities.owner_id
         LEFT OUTER JOIN workout_statistics ON workout_statistics.workout_activity_id = workout_activities.ROWID
@@ -276,20 +278,25 @@ def get_Health(files_found, report_folder, seeker, wrap_text, timezone_offset):
             if row[15]:
                 celcius_temp = round(((row[15] - 32) * (5 / 9)), 2)  
             
-            data_list.append(
-                (row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], 
+            data_list.append((
+                (row[0], 'datetime'),
+                (row[1], 'datetime'),
+                row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9],
                 row[10], row[11], row[12], row[13], row[14], celcius_temp, row[15], row[16], row[17], row[18], 
-                row[19], row[20], hardware, row[22], software_version, row[24], row[25])
-                )
+                row[19], row[20], hardware, row[22], software_version, row[24],
+                (row[25], 'datetime')
+            ))
 
         report = ArtifactHtmlReport('Health - Workouts')
         report.start_artifact_report(report_folder, 'Health - Workouts')
         report.add_script()
         data_headers = (
-            'Start Timestamp', 'End Timestamp', 'Type', 'Total Time Duration', 'Duration', 'Distance (in KM)', 'Distance (in Miles)', 
+            'Start Timestamp', 'End Timestamp', 'Type', 'Total Time Duration',
+            'Duration', 'Distance (in KM)', 'Distance (in Miles)',
             'Goal Type', 'Goal', 'Total Active Energy (kcal)', 'Total Resting Energy (kcal)', 'Average METs', 
-            'Min. Heart Rate (BPM)', 'Max. Heart Rate (BPM)', 'Average Heart Rate (BPM)', 'Temperature (°C)', 'Temperature (°F)', 
-            'Humidity (%)', 'Latitude', 'Longitude', 'Min. ground elevation (in Meters)', 'Max. ground elevation (in Meters)',
+            'Min. Heart Rate (BPM)', 'Max. Heart Rate (BPM)', 'Average Heart Rate (BPM)',
+            'Temperature (°C)', 'Temperature (°F)', 'Humidity (%)', 'Latitude',
+            'Longitude', 'Min. ground elevation (in Meters)', 'Max. ground elevation (in Meters)',
             'Hardware', 'Source', 'Software Version', 'Timezone', 'Timestamp added to Health'
             )
         report.write_artifact_data_table(data_headers, data_list, healthdb_secure)
@@ -306,23 +313,24 @@ def get_Health(files_found, report_folder, seeker, wrap_text, timezone_offset):
     # Provenances
 
     cursor.execute('''
-    SELECT data_provenances.ROWID AS 'Row ID', 
-    data_provenances.origin_product_type AS 'Origin Product Type',
-    data_provenances.origin_build AS 'Origin OS Build',
-    data_provenances.local_product_type AS 'Local Product Type',
-    data_provenances.local_build AS 'Local OS Build',
-    data_provenances.source_id AS 'Source ID',
-    healthdb.sources.name AS ' Source Name',
-    data_provenances.source_version AS 'Source Version',
-    data_provenances.device_id AS 'Device ID',
-    CASE
-    WHEN healthdb.source_devices.name = '__NONE__' THEN '' ELSE healthdb.source_devices.name
-    END AS 'Device',
-    data_provenances.tz_name AS 'Timezone'
-    FROM data_provenances
-    LEFT OUTER JOIN healthdb.sources ON healthdb.sources.ROWID = data_provenances.source_id
-    LEFT OUTER JOIN healthdb.source_devices ON healthdb.source_devices.ROWID = data_provenances.device_id
-    ORDER BY data_provenances.ROWID
+        SELECT 
+            data_provenances.ROWID AS 'Row ID', 
+            data_provenances.origin_product_type AS 'Origin Product Type',
+            data_provenances.origin_build AS 'Origin OS Build',
+            data_provenances.local_product_type AS 'Local Product Type',
+            data_provenances.local_build AS 'Local OS Build',
+            data_provenances.source_id AS 'Source ID',
+            healthdb.sources.name AS ' Source Name',
+            data_provenances.source_version AS 'Source Version',
+            data_provenances.device_id AS 'Device ID',
+            CASE
+                WHEN healthdb.source_devices.name = '__NONE__' THEN '' ELSE healthdb.source_devices.name
+            END AS 'Device',
+            data_provenances.tz_name AS 'Timezone'
+        FROM data_provenances
+        LEFT OUTER JOIN healthdb.sources ON healthdb.sources.ROWID = data_provenances.source_id
+        LEFT OUTER JOIN healthdb.source_devices ON healthdb.source_devices.ROWID = data_provenances.device_id
+        ORDER BY data_provenances.ROWID
     ''')
     
     all_rows = cursor.fetchall()
@@ -337,10 +345,11 @@ def get_Health(files_found, report_folder, seeker, wrap_text, timezone_offset):
             local_product_type = device_id.get(row[3], row[3])
             local_build = OS_build.get(row[4], row[4])
 
-            data_list.append(
-                (row[0], origin_product_type, origin_build, local_product_type, local_build, row[5], row[6], 
-                 row[7], row[8], row[9], row[10])
-                )
+            data_list.append((
+                row[0], origin_product_type, origin_build, local_product_type,
+                local_build, row[5], row[6],
+                row[7], row[8], row[9], row[10]
+            ))
 
         report = ArtifactHtmlReport('Health - Provenances')
         report.start_artifact_report(report_folder, 'Health - Provenances')
@@ -361,25 +370,25 @@ def get_Health(files_found, report_folder, seeker, wrap_text, timezone_offset):
     # Headphone Audio Levels
      
     cursor.execute('''
-    Select
-    datetime(samples.start_date+978307200,'unixepoch') as "Start Date",
-    datetime(samples.end_date+978307200,'unixepoch') as "End Date",
-    quantity_samples.quantity as "Decibels",
-    metadata_values.string_value as "Bundle Name",
-    healthdb.source_devices.name as "Device Name",
-    healthdb.source_devices.manufacturer as "Device Manufacturer",
-    healthdb.source_devices.model as "Device Model",
-    healthdb.source_devices.localIdentifier as "Local Identifier",
-    metadata_keys.key as "Key",
-    samples.data_id as "Data ID"
-    from samples
-    left outer join quantity_samples on samples.data_id = quantity_samples.data_id
-    left outer join metadata_values on metadata_values.object_id = samples.data_id
-    left outer join metadata_keys on metadata_keys.ROWID = metadata_values.key_id
-    left outer join objects on samples.data_id = objects.data_id
-    left outer join data_provenances on objects.provenance = data_provenances.ROWID
-    left outer join healthdb.source_devices on healthdb.source_devices.ROWID = data_provenances.device_id
-    WHERE samples.data_type = 173 AND metadata_keys.key != "_HKPrivateMetadataKeyHeadphoneAudioDataIsTransient"
+        Select
+            datetime(samples.start_date+978307200,'unixepoch') as "Start Date",
+            datetime(samples.end_date+978307200,'unixepoch') as "End Date",
+            quantity_samples.quantity as "Decibels",
+            metadata_values.string_value as "Bundle Name",
+            healthdb.source_devices.name as "Device Name",
+            healthdb.source_devices.manufacturer as "Device Manufacturer",
+            healthdb.source_devices.model as "Device Model",
+            healthdb.source_devices.localIdentifier as "Local Identifier",
+            metadata_keys.key as "Key",
+            samples.data_id as "Data ID"
+        from samples
+        left outer join quantity_samples on samples.data_id = quantity_samples.data_id
+        left outer join metadata_values on metadata_values.object_id = samples.data_id
+        left outer join metadata_keys on metadata_keys.ROWID = metadata_values.key_id
+        left outer join objects on samples.data_id = objects.data_id
+        left outer join data_provenances on objects.provenance = data_provenances.ROWID
+        left outer join healthdb.source_devices on healthdb.source_devices.ROWID = data_provenances.device_id
+        WHERE samples.data_type = 173 AND metadata_keys.key != "_HKPrivateMetadataKeyHeadphoneAudioDataIsTransient"
     ''')
     
     all_rows = cursor.fetchall()
@@ -387,14 +396,19 @@ def get_Health(files_found, report_folder, seeker, wrap_text, timezone_offset):
     if usageentries > 0:
         data_list = []
         for row in all_rows:
-            data_list.append(
-                (row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9]))
+            data_list.append((
+                (row[0], 'datetime'),
+                (row[1], 'datetime'),
+                row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9]
+            ))
 
         report = ArtifactHtmlReport('Health - Headphone Audio Levels')
         report.start_artifact_report(report_folder, 'Health - Headphone Audio Levels')
         report.add_script()
         data_headers = (
-            'Start Timestamp', 'End Timestamp', 'Decibels', 'Bundle Name', 'Device Name', 'Device Manufacturer', 'Device Model', 'Local Identifier', 'Key', 'Data ID')
+            'Start Timestamp', 'End Timestamp', 'Decibels', 'Bundle Name',
+            'Device Name', 'Device Manufacturer', 'Device Model', 'Local Identifier',
+            'Key', 'Data ID')
         report.write_artifact_data_table(data_headers, data_list, healthdb_secure)
         report.end_artifact_report()
 
@@ -409,39 +423,45 @@ def get_Health(files_found, report_folder, seeker, wrap_text, timezone_offset):
     # Heart Rate
         
     cursor.execute('''
-    SELECT datetime('2001-01-01', samples.start_date || ' seconds') AS 'Start Date (UTC)',
-    datetime('2001-01-01', samples.end_date || ' seconds') AS 'End Date (UTC)',
-    CAST(round(quantity_samples.quantity * 60) AS INT) AS 'Heart Rate',
-    CASE metadata_values.numerical_value
-    WHEN 1.0 THEN 'Background'
-    WHEN 2.0 THEN 'Streaming'
-    WHEN 3.0 THEN 'Sedentary'
-    WHEN 4.0 THEN 'Walking'
-    WHEN 5.0 THEN 'Breathe'
-    WHEN 6.0 THEN 'Workout'
-    WHEN 8.0 THEN 'Background'
-    WHEN 9.0 THEN 'ECG'
-    WHEN 10.0 THEN 'Blood Oxygen Saturation'
-    ELSE metadata_values.numerical_value
-    END AS 'Heart Rate Context',
-    datetime('2001-01-01', objects.creation_date || ' seconds') AS 'Date added to Health (UTC)',
-    CASE healthdb.source_devices.name
-    WHEN '__NONE__' THEN ''
-    ELSE healthdb.source_devices.name
-    END AS 'Device', 
-    healthdb.source_devices.manufacturer, healthdb.source_devices.hardware, healthdb.sources.name AS 'Source',
-    data_provenances.source_version AS 'Software version', data_provenances.tz_name,
-    quantity_sample_series.hfd_key, quantity_sample_series.count, healthdb.sources.source_options
-    FROM samples
-    LEFT JOIN quantity_samples on samples.data_id = quantity_samples.data_id
-    LEFT JOIN metadata_values ON samples.data_id = metadata_values.object_id
-    LEFT JOIN objects ON samples.data_id = objects.data_id
-    LEFT JOIN data_provenances ON objects.provenance = data_provenances.ROWID
-    LEFT JOIN healthdb.sources ON data_provenances.source_id = healthdb.sources.ROWID
-    LEFT JOIN healthdb.source_devices ON data_provenances.device_id = healthdb.source_devices.ROWID
-    LEFT JOIN quantity_sample_series ON samples.data_id = quantity_sample_series.data_id
-    WHERE samples.data_type = 5 AND objects.type != 2
-    ORDER BY samples.start_date DESC
+        SELECT 
+            datetime('2001-01-01', samples.start_date || ' seconds') AS 'Start Date (UTC)',
+            datetime('2001-01-01', samples.end_date || ' seconds') AS 'End Date (UTC)',
+            CAST(round(quantity_samples.quantity * 60) AS INT) AS 'Heart Rate',
+            CASE metadata_values.numerical_value
+                WHEN 1.0 THEN 'Background'
+                WHEN 2.0 THEN 'Streaming'
+                WHEN 3.0 THEN 'Sedentary'
+                WHEN 4.0 THEN 'Walking'
+                WHEN 5.0 THEN 'Breathe'
+                WHEN 6.0 THEN 'Workout'
+                WHEN 8.0 THEN 'Background'
+                WHEN 9.0 THEN 'ECG'
+                WHEN 10.0 THEN 'Blood Oxygen Saturation'
+                ELSE metadata_values.numerical_value
+            END AS 'Heart Rate Context',
+            datetime('2001-01-01', objects.creation_date || ' seconds') AS 'Date added to Health (UTC)',
+            CASE healthdb.source_devices.name
+                WHEN '__NONE__' THEN ''
+                ELSE healthdb.source_devices.name
+            END AS 'Device', 
+            healthdb.source_devices.manufacturer, 
+            healthdb.source_devices.hardware, 
+            healthdb.sources.name AS 'Source',
+            data_provenances.source_version AS 'Software version', 
+            data_provenances.tz_name,
+            quantity_sample_series.hfd_key, 
+            quantity_sample_series.count, 
+            healthdb.sources.source_options
+        FROM samples
+        LEFT JOIN quantity_samples on samples.data_id = quantity_samples.data_id
+        LEFT JOIN metadata_values ON samples.data_id = metadata_values.object_id
+        LEFT JOIN objects ON samples.data_id = objects.data_id
+        LEFT JOIN data_provenances ON objects.provenance = data_provenances.ROWID
+        LEFT JOIN healthdb.sources ON data_provenances.source_id = healthdb.sources.ROWID
+        LEFT JOIN healthdb.source_devices ON data_provenances.device_id = healthdb.source_devices.ROWID
+        LEFT JOIN quantity_sample_series ON samples.data_id = quantity_sample_series.data_id
+        WHERE samples.data_type = 5 AND objects.type != 2
+        ORDER BY samples.start_date DESC
     ''')
     
     all_rows = cursor.fetchall()
@@ -460,8 +480,9 @@ def get_Health(files_found, report_folder, seeker, wrap_text, timezone_offset):
             if version.parse(iOS_version) >= version.parse("15"):
                 if row[11] and row[12] > 0:
                     cursor.execute('''
-                    SELECT datetime('2001-01-01', quantity_series_data.timestamp || ' seconds') AS 'Date (UTC)',
-                    CAST(round(quantity_series_data.value *60) AS INT)
+                    SELECT 
+                        datetime('2001-01-01', quantity_series_data.timestamp || ' seconds') AS 'Date (UTC)',
+                        CAST(round(quantity_series_data.value *60) AS INT)
                     FROM quantity_series_data
                     WHERE quantity_series_data.series_identifier = ''' + str(row[11]) + '''
                     ORDER BY quantity_series_data.timestamp DESC
@@ -483,10 +504,10 @@ def get_Health(files_found, report_folder, seeker, wrap_text, timezone_offset):
                             ))
                 else:
                     data_list.append((
-                        row[0],
+                        (row[0], 'datetime'),
                         row[2],
                         row[3],
-                        row[4],
+                        (row[4], 'datetime'),
                         row[5],
                         row[6],
                         hardware,
@@ -496,11 +517,11 @@ def get_Health(files_found, report_folder, seeker, wrap_text, timezone_offset):
                     ))
             else:
                 data_list.append((
-                    row[0],
-                    row[1],
+                    (row[0], 'datetime'),
+                    (row[1], 'datetime'),
                     row[2],
                     row[3],
-                    row[4],
+                    (row[4], 'datetime'),
                     row[5],
                     row[6],
                     hardware,
@@ -515,10 +536,10 @@ def get_Health(files_found, report_folder, seeker, wrap_text, timezone_offset):
 
         if version.parse(iOS_version) >= version.parse("15"):
             data_headers = (
-                'Date (UTC)',
+                'Date',
                 'Heart Rate (BPM)',
                 'Heart Rate Context',
-                'Date added to Health (UTC)',
+                'Date added to Health',
                 'Device',
                 'Manufacturer',
                 'Hardware',
@@ -528,11 +549,11 @@ def get_Health(files_found, report_folder, seeker, wrap_text, timezone_offset):
             )
         else:
             data_headers = (
-                'Start Date (UTC)',
-                'End Date (UTC)',
+                'Start Date',
+                'End Date',
                 'Heart Rate (BPM)',
                 'Heart Rate Context',
-                'Date added to Health (UTC)',
+                'Date added to Health',
                 'Device',
                 'Manufacturer',
                 'Hardware',
@@ -555,11 +576,12 @@ def get_Health(files_found, report_folder, seeker, wrap_text, timezone_offset):
     # Resting Heart Rate
     
     cursor.execute('''
-    SELECT datetime('2001-01-01', samples.start_date || ' seconds') AS 'Start Date (UTC)',
-    datetime('2001-01-01', samples.end_date || ' seconds') AS 'End Date (UTC)',
-    CAST(quantity_samples.quantity AS INT) AS 'Resting Heart Rate',
-    datetime('2001-01-01', objects.creation_date || ' seconds') AS 'Date added to Health (UTC)',
-    healthdb.sources.product_type, healthdb.sources.name
+    SELECT 
+        datetime('2001-01-01', samples.start_date || ' seconds') AS 'Start Date (UTC)',
+        datetime('2001-01-01', samples.end_date || ' seconds') AS 'End Date (UTC)',
+        CAST(quantity_samples.quantity AS INT) AS 'Resting Heart Rate',
+        datetime('2001-01-01', objects.creation_date || ' seconds') AS 'Date added to Health (UTC)',
+        healthdb.sources.product_type, healthdb.sources.name
     FROM samples
     LEFT JOIN quantity_samples ON samples.data_id = quantity_samples.data_id
     LEFT JOIN objects ON samples.data_id = objects.data_id
@@ -575,14 +597,20 @@ def get_Health(files_found, report_folder, seeker, wrap_text, timezone_offset):
         data_list = []
         for row in all_rows:
             hardware = device_id.get(row[4], row[4])
-            data_list.append(
-                (row[0], row[1], row[2], row[3], hardware, row[5]))
+            data_list.append((
+                (row[0], 'datetime'),
+                (row[1], 'datetime'),
+                row[2],
+                (row[3], 'datetime'),
+                hardware, row[5]
+            ))
         
         report = ArtifactHtmlReport('Health - Resting Heart Rate')
         report.start_artifact_report(report_folder, 'Health - Resting Heart Rate')
         report.add_script()
         data_headers = (
-            'Start Date (UTC)', 'End Date (UTC)', 'Resting Heart Rate (BPM)', 'Date added to Health (UTC)', 'Hardware', 'Source')
+            'Start Date', 'End Date', 'Resting Heart Rate (BPM)',
+            'Date added to Health', 'Hardware', 'Source')
         report.write_artifact_data_table(data_headers, data_list, healthdb_secure)
         report.end_artifact_report()
 
@@ -597,14 +625,14 @@ def get_Health(files_found, report_folder, seeker, wrap_text, timezone_offset):
     # Achievements
 
     cursor.execute('''
-    select
-    datetime(created_date+978307200,'unixepoch') as "Created Timestamp",
-    earned_date,
-    template_unique_name,
-    value_in_canonical_unit,
-    value_canonical_unit,
-    creator_device
-    from ACHAchievementsPlugin_earned_instances
+        select
+            datetime(created_date+978307200,'unixepoch') as "Created Timestamp",
+            earned_date,
+            template_unique_name,
+            value_in_canonical_unit,
+            value_canonical_unit,
+            creator_device
+        from ACHAchievementsPlugin_earned_instances
     ''')
     
     all_rows = cursor.fetchall()
@@ -613,13 +641,18 @@ def get_Health(files_found, report_folder, seeker, wrap_text, timezone_offset):
         data_list = []
         for row in all_rows:
         
-            data_list.append((row[0], row[1], row[2], row[3], row[4], row[5]))
+            data_list.append((
+                (row[0], 'datetime'),
+                (row[1], 'datetime'),
+                row[2], row[3], row[4], row[5]
+            ))
 
         report = ArtifactHtmlReport('Health - Achievements')
         report.start_artifact_report(report_folder, 'Health - Achievements')
         report.add_script()
         data_headers = (
-            'Created Timestamp', 'Earned Date', 'Achievement', 'Value', 'Unit', 'Creator Device')
+            'Created Timestamp', 'Earned Date', 'Achievement',
+            'Value', 'Unit', 'Creator Device')
         report.write_artifact_data_table(data_headers, data_list, healthdb_secure)
         report.end_artifact_report()
 
@@ -634,16 +667,16 @@ def get_Health(files_found, report_folder, seeker, wrap_text, timezone_offset):
     # Height
 
     cursor.execute('''
-    select
-    datetime(samples.start_date+978307200,'unixepoch') as "Height Value Timestamp",
-    quantity_samples.quantity as "Height (in Meters)",
-    CAST((quantity_samples.quantity * 100) as INT) as "Height (in Centimeters)",
-    replace(quantity_samples.quantity * '3.281', substr((quantity_samples.quantity * '3.281'),2,8),"'" ||
-    rtrim((substr((substr((quantity_samples.quantity * '3.281'),2,8) * '12'),1,2)), '.') || '"') as "Height (Feet and Inches)"
-    FROM samples
-    LEFT OUTER JOIN quantity_samples ON samples.data_id = quantity_samples.data_id
-    WHERE samples.data_type = '2'
-    ORDER BY samples.start_date DESC
+        select
+            datetime(samples.start_date+978307200,'unixepoch') as "Height Value Timestamp",
+            quantity_samples.quantity as "Height (in Meters)",
+            CAST((quantity_samples.quantity * 100) as INT) as "Height (in Centimeters)",
+            replace(quantity_samples.quantity * '3.281', substr((quantity_samples.quantity * '3.281'),2,8),"'" ||
+            rtrim((substr((substr((quantity_samples.quantity * '3.281'),2,8) * '12'),1,2)), '.') || '"') as "Height (Feet and Inches)"
+        FROM samples
+        LEFT OUTER JOIN quantity_samples ON samples.data_id = quantity_samples.data_id
+        WHERE samples.data_type = '2'
+        ORDER BY samples.start_date DESC
     ''')
     
     all_rows = cursor.fetchall()
@@ -652,7 +685,10 @@ def get_Health(files_found, report_folder, seeker, wrap_text, timezone_offset):
         data_list = []
         for row in all_rows:
         
-            data_list.append((row[0], row[1], row[2], row[3]))
+            data_list.append((
+                (row[0], 'datetime'),
+                row[1], row[2], row[3]
+            ))
 
         report = ArtifactHtmlReport('Health - User Entered Data - Height')
         report.start_artifact_report(report_folder, 'Health - User Entered Data - Height')
@@ -674,14 +710,14 @@ def get_Health(files_found, report_folder, seeker, wrap_text, timezone_offset):
 
     cursor.execute('''
     select
-    datetime(samples.start_date+978307200,'unixepoch') as "Weight Value Timestamp",
-    substr(quantity_samples.quantity,1,5) as "Weight (in Kilograms)",
-    CASE 
-        WHEN SUBSTR(CAST(ROUND(((quantity_samples.quantity / 6.35029317) - CAST(quantity_samples.quantity / 6.35029317 AS INT)) * 14) AS VARCHAR), 1, INSTR(CAST(ROUND(((quantity_samples.quantity / 6.35029317) - CAST(quantity_samples.quantity / 6.35029317 AS INT)) * 14) AS VARCHAR), '.') - 1) = '14'
-        THEN ((CAST(quantity_samples.quantity / 6.35029317 AS INT) + 1) || ' Stone 0 Pounds')
-        ELSE ((CAST(quantity_samples.quantity / 6.35029317 AS INT) || ' Stone ' || SUBSTR(CAST(ROUND(((quantity_samples.quantity / 6.35029317) - CAST(quantity_samples.quantity / 6.35029317 AS INT)) * 14) AS VARCHAR), 1, INSTR(CAST(ROUND(((quantity_samples.quantity / 6.35029317) - CAST(quantity_samples.quantity / 6.35029317 AS INT)) * 14) AS VARCHAR), '.') - 1) || ' Pounds')) 
+        datetime(samples.start_date+978307200,'unixepoch') as "Weight Value Timestamp",
+        substr(quantity_samples.quantity,1,5) as "Weight (in Kilograms)",
+        CASE 
+            WHEN SUBSTR(CAST(ROUND(((quantity_samples.quantity / 6.35029317) - CAST(quantity_samples.quantity / 6.35029317 AS INT)) * 14) AS VARCHAR), 1, INSTR(CAST(ROUND(((quantity_samples.quantity / 6.35029317) - CAST(quantity_samples.quantity / 6.35029317 AS INT)) * 14) AS VARCHAR), '.') - 1) = '14'
+            THEN ((CAST(quantity_samples.quantity / 6.35029317 AS INT) + 1) || ' Stone 0 Pounds')
+            ELSE ((CAST(quantity_samples.quantity / 6.35029317 AS INT) || ' Stone ' || SUBSTR(CAST(ROUND(((quantity_samples.quantity / 6.35029317) - CAST(quantity_samples.quantity / 6.35029317 AS INT)) * 14) AS VARCHAR), 1, INSTR(CAST(ROUND(((quantity_samples.quantity / 6.35029317) - CAST(quantity_samples.quantity / 6.35029317 AS INT)) * 14) AS VARCHAR), '.') - 1) || ' Pounds')) 
         END as "Weight (in Stones and Pounds)",
-    substr((quantity_samples.quantity * '2.20462262'),1,6) as "Weight (Approximate in Pounds)"
+        substr((quantity_samples.quantity * '2.20462262'),1,6) as "Weight (Approximate in Pounds)"
     FROM samples
     LEFT OUTER JOIN quantity_samples ON samples.data_id = quantity_samples.data_id
     WHERE samples.data_type = '3'
@@ -694,7 +730,10 @@ def get_Health(files_found, report_folder, seeker, wrap_text, timezone_offset):
         data_list = []
         for row in all_rows:
         
-            data_list.append((row[0], row[1], row[2], row[3]))
+            data_list.append((
+                (row[0], 'datetime'),
+                row[1], row[2], row[3]
+            ))
 
         report = ArtifactHtmlReport('Health - User Entered Data - Weight')
         report.start_artifact_report(report_folder, 'Health - User Entered Data - Weight')
@@ -715,17 +754,21 @@ def get_Health(files_found, report_folder, seeker, wrap_text, timezone_offset):
     # Steps
     
     cursor.execute('''
-    select
-    datetime(samples.start_date + 978307200, 'unixepoch') as "Start Date",
-    datetime(samples.end_date + 978307200, 'unixepoch') as "End Date",
-    quantity_samples.quantity as "Steps",
-    (samples.end_date - samples.start_date) as "Duration (Seconds)",
-    data_provenances.origin_product_type as "Device"
-    from samples, quantity_samples, data_provenances, objects
-    where samples.data_type = 7 
-    and samples.data_id = quantity_samples.data_id
-    and samples.data_id = objects.data_id
-    and objects.provenance = data_provenances.rowid
+        select
+            datetime(samples.start_date + 978307200, 'unixepoch') as "Start Date",
+            datetime(samples.end_date + 978307200, 'unixepoch') as "End Date",
+            quantity_samples.quantity as "Steps",
+            (samples.end_date - samples.start_date) as "Duration (Seconds)",
+            data_provenances.origin_product_type as "Device"
+        from 
+            samples, 
+            quantity_samples, 
+            data_provenances, 
+            objects
+        where samples.data_type = 7 
+            and samples.data_id = quantity_samples.data_id
+            and samples.data_id = objects.data_id
+            and objects.provenance = data_provenances.rowid
     ''')
     
     all_rows = cursor.fetchall()
@@ -734,7 +777,11 @@ def get_Health(files_found, report_folder, seeker, wrap_text, timezone_offset):
         data_list = []
         for row in all_rows:
             hardware = device_id.get(row[4], row[4])
-            data_list.append((row[0], row[1], row[2], row[3], hardware))
+            data_list.append((
+                (row[0], 'datetime'),
+                (row[1], 'datetime'),
+                row[2], row[3], hardware
+            ))
 
         report = ArtifactHtmlReport('Health - Steps')
         report.start_artifact_report(report_folder, 'Health - Steps')

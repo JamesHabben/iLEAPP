@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 from scripts.artifact_report import ArtifactHtmlReport
 from scripts.ilapfuncs import (logfunc, tsv, timeline, is_platform_windows, open_sqlite_db_readonly,
                                convert_ts_human_to_utc, convert_utc_human_to_timezone,
-                               convert_sqlite_epoch, get_report_date_div, open_sqlite_file_readonly)
+                               convert_apple_epoch, get_report_date_div, open_sqlite_file_readonly)
 
 
 def get_addressBook(files_found, report_folder, seeker, wrap_text, timezone_offset):
@@ -62,14 +62,14 @@ def get_addressBook(files_found, report_folder, seeker, wrap_text, timezone_offs
                 phone_number = ''
             
             data_list.append((
-                (convert_sqlite_epoch(row['CREATIONDATE']), 'datetime'),
+                (convert_apple_epoch(row['CREATIONDATE']), 'datetime'),
                 row['ROWID'],
                 (phone_number, 'phonenumber'),
                 row['FIRST'],
                 row['MIDDLE'],
                 row['LAST'],
                 row['c17Email'],
-                (convert_sqlite_epoch(row['CREATIONDATE']), 'datetime'),
+                (convert_apple_epoch(row['CREATIONDATE']), 'datetime'),
                 row['NAME']
             ))
 

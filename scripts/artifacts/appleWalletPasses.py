@@ -50,11 +50,20 @@ def get_appleWalletPasses(files_found, report_folder, seeker, wrap_text, timezon
         if file_found.endswith('.sqlite3'):
             db = open_sqlite_db_readonly(file_found)
             cursor = db.cursor()
-            cursor.execute('''SELECT UNIQUE_ID, ORGANIZATION_NAME, TYPE_ID, LOCALIZED_DESCRIPTION, 
-                            DATETIME(INGESTED_DATE + 978307200,'UNIXEPOCH'), DELETE_PENDING, ENCODED_PASS, 
-                            FRONT_FIELD_BUCKETS, BACK_FIELD_BUCKETS
-                            FROM PASS
-                            ''')
+            cursor.execute(
+                '''
+                SELECT 
+                    UNIQUE_ID, 
+                    ORGANIZATION_NAME, 
+                    TYPE_ID, 
+                    LOCALIZED_DESCRIPTION, 
+                    DATETIME(INGESTED_DATE + 978307200,'UNIXEPOCH'), 
+                    DELETE_PENDING, 
+                    ENCODED_PASS, 
+                    FRONT_FIELD_BUCKETS, 
+                    BACK_FIELD_BUCKETS
+                FROM PASS
+                ''')
 
             all_rows = cursor.fetchall()
             all_rowsc = len(all_rows)
@@ -105,16 +114,20 @@ def get_appleWalletPasses(files_found, report_folder, seeker, wrap_text, timezon
                     back_field = agg
                     
                     timestamp = convert_ts_human_to_utc(row[4])
-                    timestamp = convert_utc_human_to_timezone(timestamp,timezone_offset)
+                    #timestamp = convert_utc_human_to_timezone(timestamp,timezone_offset)
                     
-                    data_list.append((timestamp, row[0], row[1], row[2], row[3], row[5], front_field, back_field, encoded_pass))
+                    data_list.append((
+                        (timestamp, 'datetime'),
+                        row[0], row[1], row[2], row[3], row[5], front_field, back_field, encoded_pass))
         
                 report = ArtifactHtmlReport('Nano Passes')
                 report.start_artifact_report(report_folder, f'Nano Pass - {typeID}')
                 report.add_script()
                 data_headers = ('Pass Added','Unique ID', 'Organization Name', 'Type', 'Localized Description',
                                 'Pending Delete', 'Front Fields Content', 'Back Fields Content', 'Encoded Pass')
-                report.write_artifact_data_table(data_headers, data_list, file_found, html_no_escape=['Front Fields Content', 'Back Fields Content', 'Encoded Pass'])
+                report.write_artifact_data_table(data_headers, data_list, file_found,
+                                                 html_no_escape=['Front Fields Content', 'Back Fields Content',
+                                                                 'Encoded Pass'])
                 report.end_artifact_report()
         
                 tsvname = 'Nano Passes'

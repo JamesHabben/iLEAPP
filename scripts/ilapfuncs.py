@@ -86,6 +86,22 @@ def convert_ts_int_to_utc(ts): #This int timestamp to human format & utc
     timestamp = datetime.fromtimestamp(ts, tz=timezone.utc)
     return timestamp
 
+
+def parse_datetime(date_string):
+    formats = [
+        '%Y-%m-%d %H:%M:%S.%f',  # With fractional seconds
+        '%Y-%m-%d %H:%M:%S'      # Without fractional seconds
+    ]
+
+    # Try to parse the date string with each format
+    for date_format in formats:
+        try:
+            return datetime.strptime(date_string, date_format)
+        except ValueError:
+            pass
+    return date_string
+
+
 def is_platform_windows():
     '''Returns True if running on Windows'''
     return os.name == 'nt'
@@ -186,7 +202,7 @@ def open_sqlite_file_readonly(file_path):
     return conn.cursor()
 
 
-def convert_sqlite_epoch(epoch_date, timezone_offset=0):
+def convert_apple_epoch(epoch_date, timezone_offset=0):
     try:
         if epoch_date is not None:
             epoch_start = datetime(2001, 1, 1, tzinfo=timezone.utc)
@@ -195,7 +211,7 @@ def convert_sqlite_epoch(epoch_date, timezone_offset=0):
                 date_obj = date_obj + timedelta(hours=timezone_offset)
             return date_obj
         else:
-            logfunc("Epoch date is None, cannot convert.")
+            # logfunc("Epoch date is None, cannot convert.")
             return None
     except ValueError:
         logfunc("Date conversion error")

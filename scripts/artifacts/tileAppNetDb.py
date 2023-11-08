@@ -20,10 +20,10 @@ def get_tileAppNetDb(files_found, report_folder, seeker, wrap_text, timezone_off
     cursor = db.cursor()
     cursor.execute('''
     SELECT
-    datetime(ZREGISTRATION_TIMESTAMP,'unixepoch','31 years'),
-    ZEMAIL,
-    ZFULL_NAME,
-    ZMOBILE_PHONE
+        datetime(ZREGISTRATION_TIMESTAMP,'unixepoch','31 years'),
+        ZEMAIL,
+        ZFULL_NAME,
+        ZMOBILE_PHONE
     FROM
     ZTILENTITY_USER
     ''')
@@ -38,9 +38,12 @@ def get_tileAppNetDb(files_found, report_folder, seeker, wrap_text, timezone_off
                 pass
             else:
                 timestamp = convert_ts_human_to_utc(timestamp)
-                timestamp = convert_utc_human_to_timezone(timestamp,timezone_offset)
+                #timestamp = convert_utc_human_to_timezone(timestamp,timezone_offset)
                 
-            data_list.append((timestamp, row[1], row[2], row[3]))
+            data_list.append((
+                (timestamp, 'datetime'),
+                row[1], row[2], row[3]
+            ))
             
             description = ''
             report = ArtifactHtmlReport('Tile App - Account Information')

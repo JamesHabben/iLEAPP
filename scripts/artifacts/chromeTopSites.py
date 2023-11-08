@@ -31,13 +31,13 @@ def get_chromeTopSites(files_found, report_folder, seeker, wrap_text, timezone_o
         cursor = db.cursor()
         try:
             cursor.execute('''
-            select
-            url,
-            url_rank,
-            title,
-            redirects
-            FROM
-            top_sites ORDER by url_rank asc
+                select
+                    url,
+                    url_rank,
+                    title,
+                    redirects
+                FROM
+                top_sites ORDER by url_rank asc
             ''')
 
             all_rows = cursor.fetchall()

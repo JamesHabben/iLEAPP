@@ -17,8 +17,10 @@ def save_ktx_to_png_if_valid(ktx_path, save_to_path):
         try:
             if ktx.validate_header(f):
                 data = ktx.get_uncompressed_texture_data(f)
-                dec_img = Image.frombytes('RGBA', (ktx.pixelWidth, ktx.pixelHeight), data, 'astc', (4, 4, False))
-                # either all black or all white https://stackoverflow.com/questions/14041562/python-pil-detect-if-an-image-is-completely-black-or-white
+                dec_img = Image.frombytes('RGBA', (ktx.pixelWidth, ktx.pixelHeight),
+                                          data, 'astc', (4, 4, False))
+                # either all black or all
+                # white https://stackoverflow.com/questions/14041562/python-pil-detect-if-an-image-is-completely-black-or-white
                 # if sum(dec_img.convert("L").getextrema()) in (0, 2):
                 #     logfunc('Skipping image as it is blank')
                 #     return False
@@ -76,7 +78,8 @@ def get_applicationSnapshots(files_found, report_folder, seeker, wrap_text, time
                 data_list.append([last_modified_date, app_name, file_found, jpg_path])
     
     if len(data_list):
-        description = "Snapshots saved by iOS for individual apps appear here. Blank screenshots are excluded here. Dates and times shown are from file modified timestamps"
+        description = ("Snapshots saved by iOS for individual apps appear here. Blank screenshots are "
+                       "excluded here. Dates and times shown are from file modified timestamps")
         report = ArtifactHtmlReport('App Snapshots (screenshots)')
         report.start_artifact_report(report_folder, 'App Snapshots', description)
         report.add_script()
@@ -84,9 +87,15 @@ def get_applicationSnapshots(files_found, report_folder, seeker, wrap_text, time
         data_list_for_report = []
         for mod_date, app_name, ktx_path, png_path in data_list:
             dir_path, base_name = os.path.split(png_path)
-            img_html = '<a href="{1}/{0}"><img src="{1}/{0}" class="img-fluid" style="max-height:300px; max-width:400px"></a>'.format(quote(base_name), quote(report_folder_name))
-            data_list_for_report.append(( mod_date, escape(app_name), escape(ktx_path), img_html) )
-        report.write_artifact_data_table(data_headers, data_list_for_report, '', html_escape=False, write_location=False)
+            img_html = ('<a href="{1}/{0}"><img src="{1}/{0}" class="img-fluid" '
+                        'style="max-height:300px; max-width:400px"></a>').format(quote(base_name),
+                                                                                 quote(report_folder_name))
+            data_list_for_report.append((
+                (mod_date, 'datetime'),
+                escape(app_name), escape(ktx_path), img_html
+            ))
+        report.write_artifact_data_table(data_headers, data_list_for_report, '',
+                                         html_escape=False, write_location=False)
         report.end_artifact_report()
 
         tsvname = 'App Snapshots'

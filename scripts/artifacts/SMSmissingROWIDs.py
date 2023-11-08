@@ -56,8 +56,11 @@ def get_SMS(files_found, report_folder, seeker, wrap_text, timezone_offset):
     if usageentries > 0:
         data_list = []
         for row in all_rows:
-            data_list.append(
-            (row[0], row[1], row[2], row[3], row[4]))
+            data_list.append((
+                (row[0], 'datetime'),
+                (row[1], 'datetime'),
+                row[2], row[3], row[4]
+            ))
             
         report = ArtifactHtmlReport('SMS - Missing ROWIDs')
         report.start_artifact_report(report_folder, 'SMS - Missing ROWIDs')

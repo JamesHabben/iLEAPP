@@ -86,7 +86,11 @@ def get_icloudSharedalbums(files_found, report_folder, seeker, wrap_text, timezo
 						if x == 'cloudOwnerHashedPersonID':
 							cloudownerhashedpersonid = y
 						
-				data_list_sharedinfos.append((albumtitle, albumid, clowdoenweremail, cloudownerfirstname, cloudownerlastname, cloudpublicurlenabled, cloudsubscriptiondate, cloudrelationshipstate, cloudownerhashedpersonid, albumpath))
+				data_list_sharedinfos.append((
+					albumtitle, albumid, clowdoenweremail, cloudownerfirstname,
+					cloudownerlastname, cloudpublicurlenabled,
+					(cloudsubscriptiondate, 'datetime'),
+					cloudrelationshipstate, cloudownerhashedpersonid, albumpath))
 
 			elif pathedtail == 'DCIM_CLOUD.plist':
 				albumid = (os.path.basename(os.path.dirname(file_found)))
@@ -109,7 +113,9 @@ def get_icloudSharedalbums(files_found, report_folder, seeker, wrap_text, timezo
 		report = ArtifactHtmlReport('iCloud Shared Owner Info')
 		report.start_artifact_report(report_folder, 'iCloud Shared Owner Info')
 		report.add_script()
-		data_headers = ('Album Title','Album ID','Clowd Owner Email','Cloud Owner First Name','Clowd Owner Lastname','Cloud Public URL Enabled?','Cloud Subscription Date','Cloud Relationship State','Cloud Ownewr Hashed Person ID', 'File location' )     
+		data_headers = ('Album Title','Album ID','Clowd Owner Email','Cloud Owner First Name',
+						'Clowd Owner Lastname','Cloud Public URL Enabled?','Cloud Subscription Date',
+						'Cloud Relationship State','Cloud Ownewr Hashed Person ID', 'File location' )
 		report.write_artifact_data_table(data_headers, data_list_sharedinfos, location)
 		report.end_artifact_report()
 		

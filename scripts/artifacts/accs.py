@@ -4,7 +4,7 @@ import sqlite3
 from datetime import datetime, timezone
 from scripts.artifact_report import ArtifactHtmlReport
 from scripts.ilapfuncs import (logfunc, tsv, timeline, is_platform_windows, open_sqlite_db_readonly,
-                               open_sqlite_file_readonly, convert_sqlite_epoch)
+                               open_sqlite_file_readonly, convert_apple_epoch)
 
 
 def get_accs(files_found, report_folder, seeker, wrap_text, timezone_offset):
@@ -29,7 +29,7 @@ def get_accs(files_found, report_folder, seeker, wrap_text, timezone_offset):
         data_list = []
         for row in all_rows:
             data_list.append((
-                (convert_sqlite_epoch(row['zdate']), 'datetime'),
+                (convert_apple_epoch(row['zdate']), 'datetime'),
                 row['zaccounttypedescription'],
                 row['zusername'],
                 row['zaccountdescription'],

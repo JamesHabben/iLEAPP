@@ -27,7 +27,10 @@ def get_queryPredictions(files_found, report_folder, seeker, wrap_text, timezone
     if usageentries > 0:
         data_list = []
         for row in all_rows:    
-            data_list.append((row[0],row[1],row[2],row[3],row[4],row[5]))
+            data_list.append((
+                (row[0], 'datetime'),
+                row[1],row[2],row[3],row[4],row[5]
+            ))
 
         report = ArtifactHtmlReport('Query Predictions')
         report.start_artifact_report(report_folder, 'Query Predictions')

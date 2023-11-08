@@ -38,7 +38,10 @@ def get_tileApp(files_found, report_folder, seeker, wrap_text, timezone_offset):
                         latlong = latlong.strip('>')
                         lat, longi = latlong.split(',')
                         head_tail = os.path.split(file_found) 
-                        data_list.append((datestamp, lat.lstrip(), longi.lstrip(), counter, head_tail[1]))
+                        data_list.append((
+                            (datestamp, 'datetime'),
+                            lat.lstrip(), longi.lstrip(), counter, head_tail[1]
+                        ))
 
     if len(data_list) > 0:
         description = 'Tile app log recorded latitude and longitude coordinates.'

@@ -51,12 +51,18 @@ def get_tikTok(files_found, report_folder, seeker, wrap_text, timezone_offset):
     if len(all_rows) > 0:
         for row in all_rows:
 
-            data_list.append((row[0], row[1], row[2], row[3], row[4], row[5], row[6],row[7], row[8], row[9]))
+            data_list.append((
+                (row[0], 'datetime'),
+                row[1], row[2], row[3], row[4], row[5], row[6],row[7],
+                (row[8], 'datetime'),
+                row[9]))
 
         report = ArtifactHtmlReport('TikTok Messages')
         report.start_artifact_report(report_folder, 'TikTok Messages')
         report.add_script()
-        data_headers = ('Timestamp','Sender','Custom ID','Nickname','Message', 'Local Response','Link GIF Name','Link GIF URL','Server Create Timestamps','Profile Pic URL')
+        data_headers = ('Timestamp','Sender','Custom ID','Nickname',
+                        'Message', 'Local Response','Link GIF Name','Link GIF URL',
+                        'Server Create Timestamps','Profile Pic URL')
         report.write_artifact_data_table(data_headers, data_list, file_found)
         report.end_artifact_report()
 
@@ -74,11 +80,11 @@ def get_tikTok(files_found, report_folder, seeker, wrap_text, timezone_offset):
                 when latestchattimestamp > 1 then datetime(latestchattimestamp, 'unixepoch')
                 else latestchattimestamp
             end
-        latestchattimestamp,
-        nickname,
-        uid,
-        customID,
-        url1
+            latestchattimestamp,
+            nickname,
+            uid,
+            customID,
+            url1
         from {tname}
         ''')
     
@@ -88,7 +94,9 @@ def get_tikTok(files_found, report_folder, seeker, wrap_text, timezone_offset):
         description = 'Timestamp corresponds to latest chat if available'
         for row in all_rows1:
             
-            data_list1.append((row[0], row[1], row[2], row[3], row[4]))
+            data_list1.append((
+                (row[0], 'datetime'),
+                row[1], row[2], row[3], row[4]))
             
         report = ArtifactHtmlReport('TikTok Contacts')
         report.start_artifact_report(report_folder, 'TikTok Contacts', description)

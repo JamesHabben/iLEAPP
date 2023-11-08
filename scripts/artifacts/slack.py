@@ -26,13 +26,13 @@ def get_slack(files_found, report_folder, seeker, wrap_text, timezone_offset):
     if 'ModelDatabase' in file_found:
         squery = ('''
         select
-        datetime(ZCOREDATAMESSAGE.ZTIMESTAMP,'unixepoch'),
-        ZCOREDATAMESSAGE.ZUSERID as "Sender User ID",
-        ZCOREDATAUSER.ZREALNAME as "Sender Display Name",
-        ZCOREDATACONVERSATION.ZNAME as "Channel Name",
-        ZCOREDATAMESSAGE.ZTEXT as "Message",
-        ZCOREDATAMESSAGE.ZCONVERSATIONID as "Conversation ID",
-        ZCOREDATACONVERSATION.ZCONTEXTTEAMID as "Group ID"
+            datetime(ZCOREDATAMESSAGE.ZTIMESTAMP,'unixepoch'),
+            ZCOREDATAMESSAGE.ZUSERID as "Sender User ID",
+            ZCOREDATAUSER.ZREALNAME as "Sender Display Name",
+            ZCOREDATACONVERSATION.ZNAME as "Channel Name",
+            ZCOREDATAMESSAGE.ZTEXT as "Message",
+            ZCOREDATAMESSAGE.ZCONVERSATIONID as "Conversation ID",
+            ZCOREDATACONVERSATION.ZCONTEXTTEAMID as "Group ID"
         from ZCOREDATAMESSAGE
         left outer join ZCOREDATAUSER on ZCOREDATAMESSAGE.ZUSERID = ZCOREDATAUSER.ZTSID
         left outer join ZCOREDATACONVERSATION ON ZCOREDATAMESSAGE.ZCONVERSATIONID = ZCOREDATACONVERSATION.ZTSID
@@ -45,7 +45,11 @@ def get_slack(files_found, report_folder, seeker, wrap_text, timezone_offset):
         
         if usageentries > 0:
             for row in all_rows:
-                data_list.append((row[0], row[1], row[2], row[3], row[4], row[5], row[6]))
+                data_list.append((
+                    (row[1], 'datetime'),
+                    (row[0]),
+                    row[1], row[2], row[3], row[4], row[5], row[6]
+                ))
                 
             description = 'Slack Messages'
             report = ArtifactHtmlReport('Slack Messages')
@@ -65,37 +69,37 @@ def get_slack(files_found, report_folder, seeker, wrap_text, timezone_offset):
     
         squery = ('''
         select
-        datetime(ZSERVERVERSION,'unixepoch'),
-        ZREALNAME,
-        ZFIRSTNAME,
-        ZLASTNAME,
-        ZNAME,
-        ZEMAIL,
-        ZPHONE,
-        ZTEAMID,
-        ZWORKSPACEORENTERPRISEID,
-        ZTSID,
-        CASE ZISME
+            datetime(ZSERVERVERSION,'unixepoch'),
+            ZREALNAME,
+            ZFIRSTNAME,
+            ZLASTNAME,
+            ZNAME,
+            ZEMAIL,
+            ZPHONE,
+            ZTEAMID,
+            ZWORKSPACEORENTERPRISEID,
+            ZTSID,
+            CASE ZISME
+                WHEN 0 THEN ''
+                WHEN 1 THEN 'Yes'
+            END as "Local User",
+            CASE ZISOWNER
+                WHEN 0 THEN ''
+                WHEN 1 THEN 'Yes'
+            END as "Owner",
+            CASE ZISADMIN
+                WHEN 0 THEN ''
+                WHEN 1 THEN 'Yes'
+            END as "Admin",
+            CASE ZISBOT
             WHEN 0 THEN ''
-            WHEN 1 THEN 'Yes'
-        END as "Local User",
-        CASE ZISOWNER
-            WHEN 0 THEN ''
-            WHEN 1 THEN 'Yes'
-        END as "Owner",
-        CASE ZISADMIN
-            WHEN 0 THEN ''
-            WHEN 1 THEN 'Yes'
-        END as "Admin",
-        CASE ZISBOT
-        WHEN 0 THEN ''
-            WHEN 1 THEN 'Yes'
-        END as "Bot",
-        ZTIMEZONE,
-        ZTIMEZONETITLE,
-        ZTIMEZONEOFFSET/3600 as "Timezone Offset (Hours)",
-        ZAVATARHASH,
-        ZCOLORSTRING
+                WHEN 1 THEN 'Yes'
+            END as "Bot",
+            ZTIMEZONE,
+            ZTIMEZONETITLE,
+            ZTIMEZONEOFFSET/3600 as "Timezone Offset (Hours)",
+            ZAVATARHASH,
+            ZCOLORSTRING
         from ZCOREDATAUSER
         ''')
         
@@ -106,13 +110,24 @@ def get_slack(files_found, report_folder, seeker, wrap_text, timezone_offset):
         
         if usageentries > 0:
             for row in all_rows:
-                data_list.append((row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12], row[13], row[14] , row[15] , row[16] , row[17], row[18] ))
+                data_list.append((
+                    (row[1], 'datetime'),
+                    (row[0]),
+                    row[1], row[2], row[3], row[4], row[5],
+                    row[6], row[7], row[8], row[9], row[10],
+                    row[11], row[12], row[13], row[14],
+                    row[15] , row[16] , row[17], row[18]
+                ))
 
             description = 'Slack User Data'
             report = ArtifactHtmlReport('Slack User Data')
             report.start_artifact_report(report_folder, 'Slack User Data', description)
             report.add_script()
-            data_headers = ('User Sync Timestamp','Real Name','First Name','Last Name','User Name','Email','Phone','Team ID','Workspace ID','User ID','Local User','Owner','Admin','Bot','Timezone','Timezone Title','Timezone Offset (Hours)','Avatar Hash','Color String')
+            data_headers = ('User Sync Timestamp','Real Name','First Name','Last Name',
+                            'User Name','Email','Phone','Team ID',
+                            'Workspace ID','User ID','Local User','Owner',
+                            'Admin','Bot','Timezone','Timezone Title',
+                            'Timezone Offset (Hours)','Avatar Hash','Color String')
             report.write_artifact_data_table(data_headers, data_list, file_found)
             report.end_artifact_report()
             
@@ -124,18 +139,18 @@ def get_slack(files_found, report_folder, seeker, wrap_text, timezone_offset):
         
         squery = ('''
         select
-        datetime(ZCOREDATACONVERSATION.ZCREATED,'unixepoch') as "Created Timestamp",
-        datetime(ZCOREDATACONVERSATION.ZFIRSTMESSAGETIMESTAMP,'unixepoch') as "First Message Timestamp",
-        ZCOREDATACONVERSATION.ZCREATORID as "Creator ID",
-        ZCOREDATAUSER.ZREALNAME as "Creator Name",
-        ZCOREDATACONVERSATION.ZNAME as "Channel Name",
-        ZCOREDATACONVERSATION.ZTSID as "Channel ID",
-        ZCOREDATACONVERSATION.ZIMUSERID as "DM User ID",
-        ZCOREDATACONVERSATION.ZPURPOSETEXT as "Channel Description",
-        case ZCOREDATACONVERSATION.ZTYPE
-            when 0 then 'Channel'
-            when 2 then 'Direct Message'
-        end
+            datetime(ZCOREDATACONVERSATION.ZCREATED,'unixepoch') as "Created Timestamp",
+            datetime(ZCOREDATACONVERSATION.ZFIRSTMESSAGETIMESTAMP,'unixepoch') as "First Message Timestamp",
+            ZCOREDATACONVERSATION.ZCREATORID as "Creator ID",
+            ZCOREDATAUSER.ZREALNAME as "Creator Name",
+            ZCOREDATACONVERSATION.ZNAME as "Channel Name",
+            ZCOREDATACONVERSATION.ZTSID as "Channel ID",
+            ZCOREDATACONVERSATION.ZIMUSERID as "DM User ID",
+            ZCOREDATACONVERSATION.ZPURPOSETEXT as "Channel Description",
+            case ZCOREDATACONVERSATION.ZTYPE
+                when 0 then 'Channel'
+                when 2 then 'Direct Message'
+            end
         from ZCOREDATACONVERSATION
         left outer join ZCOREDATAUSER on ZCOREDATACONVERSATION.ZCREATORID = ZCOREDATAUSER.ZTSID
         ''')
@@ -147,7 +162,11 @@ def get_slack(files_found, report_folder, seeker, wrap_text, timezone_offset):
         
         if usageentries > 0:
             for row in all_rows:
-                data_list.append((row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8]))
+                data_list.append((
+                    (row[0], 'datetime'),
+                    (row[1], 'datetime'),
+                    row[2], row[3], row[4], row[5], row[6], row[7], row[8]
+                ))
 
             description = 'Slack Channel Data'
             report = ArtifactHtmlReport('Slack Channel Data')
@@ -171,37 +190,37 @@ def get_slack(files_found, report_folder, seeker, wrap_text, timezone_offset):
         if deprecated == 1:
             squery = ('''
             select distinct
-            datetime(ZSLKDEPRECATEDMESSAGE.ZTIMESTAMP, 'unixepoch') as MessageTimeStamp,
-            ZSLKDEPRECATEDMESSAGE.ZUSERID as MessageGeneratedFrom,
-            ZSLKDEPRECATEDCOREDATAUSER.ZREALNAME as MessageGeneratedFromName,
-            ZSLKDEPRECATEDBASECHANNEL.ZNAME as MessageSentToChannelName,
-            ZSLKDEPRECATEDMESSAGE.ZTEXT,
-            json_extract(ZFILEIDS, '$[0]') as HasSharedFile,
-            ZSLKDEPRECATEDMESSAGE.ZCHANNELID,
-            ZSLKDEPRECATEDBASECHANNEL.ZTSID,
-            ZSLKDEPRECATEDBASECHANNEL.ZTSID1,
-            ZSLKDEPRECATEDCOREDATAUSER.ZTSID
+                datetime(ZSLKDEPRECATEDMESSAGE.ZTIMESTAMP, 'unixepoch') as MessageTimeStamp,
+                ZSLKDEPRECATEDMESSAGE.ZUSERID as MessageGeneratedFrom,
+                ZSLKDEPRECATEDCOREDATAUSER.ZREALNAME as MessageGeneratedFromName,
+                ZSLKDEPRECATEDBASECHANNEL.ZNAME as MessageSentToChannelName,
+                ZSLKDEPRECATEDMESSAGE.ZTEXT,
+                json_extract(ZFILEIDS, '$[0]') as HasSharedFile,
+                ZSLKDEPRECATEDMESSAGE.ZCHANNELID,
+                ZSLKDEPRECATEDBASECHANNEL.ZTSID,
+                ZSLKDEPRECATEDBASECHANNEL.ZTSID1,
+                ZSLKDEPRECATEDCOREDATAUSER.ZTSID
             from ZSLKDEPRECATEDMESSAGE, ZSLKDEPRECATEDBASECHANNEL,ZSLKDEPRECATEDCOREDATAUSER
             where  ZSLKDEPRECATEDCOREDATAUSER.ZTSID = ZSLKDEPRECATEDMESSAGE.ZUSERID and 
-            (ZSLKDEPRECATEDBASECHANNEL.ZTSID = ZSLKDEPRECATEDMESSAGE.ZCHANNELID or ZSLKDEPRECATEDBASECHANNEL.ZTSID1 = ZSLKDEPRECATEDMESSAGE.ZCHANNELID)
+                (ZSLKDEPRECATEDBASECHANNEL.ZTSID = ZSLKDEPRECATEDMESSAGE.ZCHANNELID or ZSLKDEPRECATEDBASECHANNEL.ZTSID1 = ZSLKDEPRECATEDMESSAGE.ZCHANNELID)
             order by ZSLKDEPRECATEDMESSAGE.ZTIMESTAMP
             ''')
         else:
             squery = ('''
             select distinct 
-            datetime(ZSLKMESSAGE.ZTIMESTAMP, 'unixepoch') as MessageTimeStamp,
-            ZSLKMESSAGE.ZUSERID as MessageGeneratedFrom,
-            ZSLKCOREDATAUSER.ZREALNAME as MessageGeneratedFromName,
-            ZSLKBASECHANNEL.ZNAME as MessageSentToChannelName,
-            ZSLKMESSAGE.ZTEXT,
-            json_extract(ZFILEIDS, '$[0]') as HasSharedFile,
-            ZSLKMESSAGE.ZCHANNELID,
-            ZSLKBASECHANNEL.ZTSID,
-            ZSLKBASECHANNEL.ZTSID1,
-            ZSLKCOREDATAUSER.ZTSID
+                datetime(ZSLKMESSAGE.ZTIMESTAMP, 'unixepoch') as MessageTimeStamp,
+                ZSLKMESSAGE.ZUSERID as MessageGeneratedFrom,
+                ZSLKCOREDATAUSER.ZREALNAME as MessageGeneratedFromName,
+                ZSLKBASECHANNEL.ZNAME as MessageSentToChannelName,
+                ZSLKMESSAGE.ZTEXT,
+                json_extract(ZFILEIDS, '$[0]') as HasSharedFile,
+                ZSLKMESSAGE.ZCHANNELID,
+                ZSLKBASECHANNEL.ZTSID,
+                ZSLKBASECHANNEL.ZTSID1,
+                ZSLKCOREDATAUSER.ZTSID
             from ZSLKMESSAGE, ZSLKBASECHANNEL,ZSLKCOREDATAUSER
             where  ZSLKCOREDATAUSER.ZTSID = ZSLKMESSAGE.ZUSERID and 
-            (ZSLKBASECHANNEL.ZTSID = ZSLKMESSAGE.ZCHANNELID or ZSLKBASECHANNEL.ZTSID1 = ZSLKMESSAGE.ZCHANNELID)
+                (ZSLKBASECHANNEL.ZTSID = ZSLKMESSAGE.ZCHANNELID or ZSLKBASECHANNEL.ZTSID1 = ZSLKMESSAGE.ZCHANNELID)
             order by ZSLKMESSAGE.ZTIMESTAMP
             ''')
             
@@ -212,7 +231,10 @@ def get_slack(files_found, report_folder, seeker, wrap_text, timezone_offset):
         
         if usageentries > 0:
             for row in all_rows:
-                data_list.append((row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9] ))
+                data_list.append((
+                    (row[0], 'datetime'),
+                    row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9]
+                ))
                 
             description = 'Slack Messages'
             report = ArtifactHtmlReport('Slack Messages')
@@ -233,39 +255,39 @@ def get_slack(files_found, report_folder, seeker, wrap_text, timezone_offset):
         if deprecated == 1:
             squery = ('''
             select 
-            ZSLKDEPRECATEDCOREDATAUSER.ZADMIN,
-            ZSLKDEPRECATEDCOREDATAUSER.ZOWNER,
-            ZSLKDEPRECATEDCOREDATAUSER.ZREALNAME,
-            ZSLKDEPRECATEDCOREDATAUSER.ZFIRSTNAME,
-            ZSLKDEPRECATEDCOREDATAUSER.ZLASTNAME,
-            ZSLKDEPRECATEDCOREDATAUSER.ZDISPLAYNAME,
-            ZSLKDEPRECATEDCOREDATAUSER.ZNAME,
-            ZSLKDEPRECATEDCOREDATAUSER.ZPHONE,
-            ZSLKDEPRECATEDCOREDATAUSER.ZTIMEZONE,
-            ZSLKDEPRECATEDCOREDATAUSER.ZTIMEZONEOFFSET,
-            ZSLKDEPRECATEDCOREDATAUSER.ZTIMEZONETITLE,
-            ZSLKDEPRECATEDCOREDATAUSER.ZTITLE,
-            ZSLKDEPRECATEDCOREDATAUSER.ZTSID,
-            ZSLKDEPRECATEDCOREDATAUSER.ZTEAMID
+                ZSLKDEPRECATEDCOREDATAUSER.ZADMIN,
+                ZSLKDEPRECATEDCOREDATAUSER.ZOWNER,
+                ZSLKDEPRECATEDCOREDATAUSER.ZREALNAME,
+                ZSLKDEPRECATEDCOREDATAUSER.ZFIRSTNAME,
+                ZSLKDEPRECATEDCOREDATAUSER.ZLASTNAME,
+                ZSLKDEPRECATEDCOREDATAUSER.ZDISPLAYNAME,
+                ZSLKDEPRECATEDCOREDATAUSER.ZNAME,
+                ZSLKDEPRECATEDCOREDATAUSER.ZPHONE,
+                ZSLKDEPRECATEDCOREDATAUSER.ZTIMEZONE,
+                ZSLKDEPRECATEDCOREDATAUSER.ZTIMEZONEOFFSET,
+                ZSLKDEPRECATEDCOREDATAUSER.ZTIMEZONETITLE,
+                ZSLKDEPRECATEDCOREDATAUSER.ZTITLE,
+                ZSLKDEPRECATEDCOREDATAUSER.ZTSID,
+                ZSLKDEPRECATEDCOREDATAUSER.ZTEAMID
             from ZSLKDEPRECATEDCOREDATAUSER
             ''')
         else:
             squery = ('''
             select 
-            ZSLKCOREDATAUSER.ZADMIN,
-            ZSLKCOREDATAUSER.ZOWNER,
-            ZSLKCOREDATAUSER.ZREALNAME,
-            ZSLKCOREDATAUSER.ZFIRSTNAME,
-            ZSLKCOREDATAUSER.ZLASTNAME,
-            ZSLKCOREDATAUSER.ZDISPLAYNAME,
-            ZSLKCOREDATAUSER.ZNAME,
-            ZSLKCOREDATAUSER.ZPHONE,
-            ZSLKCOREDATAUSER.ZTIMEZONE,
-            ZSLKCOREDATAUSER.ZTIMEZONEOFFSET,
-            ZSLKCOREDATAUSER.ZTIMEZONETITLE,
-            ZSLKCOREDATAUSER.ZTITLE,
-            ZSLKCOREDATAUSER.ZTSID,
-            ZSLKCOREDATAUSER.ZTEAMID
+                ZSLKCOREDATAUSER.ZADMIN,
+                ZSLKCOREDATAUSER.ZOWNER,
+                ZSLKCOREDATAUSER.ZREALNAME,
+                ZSLKCOREDATAUSER.ZFIRSTNAME,
+                ZSLKCOREDATAUSER.ZLASTNAME,
+                ZSLKCOREDATAUSER.ZDISPLAYNAME,
+                ZSLKCOREDATAUSER.ZNAME,
+                ZSLKCOREDATAUSER.ZPHONE,
+                ZSLKCOREDATAUSER.ZTIMEZONE,
+                ZSLKCOREDATAUSER.ZTIMEZONEOFFSET,
+                ZSLKCOREDATAUSER.ZTIMEZONETITLE,
+                ZSLKCOREDATAUSER.ZTITLE,
+                ZSLKCOREDATAUSER.ZTSID,
+                ZSLKCOREDATAUSER.ZTEAMID
             from ZSLKCOREDATAUSER
             ''')
             
@@ -276,13 +298,20 @@ def get_slack(files_found, report_folder, seeker, wrap_text, timezone_offset):
         
         if usageentries > 0:
             for row in all_rows:
-                data_list.append((row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12], row[13] ))
+                data_list.append((
+                    row[0], row[1], row[2], row[3], row[4],
+                    row[5], row[6], row[7], row[8], row[9],
+                    row[10], row[11], row[12], row[13]
+                ))
 
             description = 'Slack User Data'
             report = ArtifactHtmlReport('Slack User Data')
             report.start_artifact_report(report_folder, 'Slack User Data', description)
             report.add_script()
-            data_headers = ('Admin', 'Owner', 'Real Name', 'First Name', 'Last Name', 'Display Name', 'Name','Phone', 'Timezone','Timezone Offset', 'Timezone Title', 'Title', 'SID', 'Team ID' )
+            data_headers = ('Admin', 'Owner', 'Real Name', 'First Name',
+                            'Last Name', 'Display Name', 'Name','Phone',
+                            'Timezone','Timezone Offset', 'Timezone Title', 'Title',
+                            'SID', 'Team ID' )
             report.write_artifact_data_table(data_headers, data_list, file_found)
             report.end_artifact_report()
             
@@ -295,55 +324,55 @@ def get_slack(files_found, report_folder, seeker, wrap_text, timezone_offset):
         if deprecated == 1:
             squery = ('''
             select distinct
-            datetime(ZSLKDEPRECATEDMESSAGE.ZTIMESTAMP, 'unixepoch') as MessageTimeStamp,   
-            ZSLKDEPRECATEDMESSAGE.ZUSERID as MessageGeneratedFrom,
-            ZSLKDEPRECATEDCOREDATAUSER.ZREALNAME as MessageGeneratedFromName,
-            ZSLKDEPRECATEDBASECHANNEL.ZNAME as MessageSentToChannelName,
-            ZSLKDEPRECATEDMESSAGE.ZTEXT,
-            json_extract(ZFILEIDS, '$[0]') as HasSharedFile,
-            ZSLKDEPRECATEDFILE.ZMODESTRING,
-            ZSLKDEPRECATEDFILE.ZTITLE,
-            ZSLKDEPRECATEDFILE.ZTYPESTRING,
-            datetime(ZSLKDEPRECATEDFILE.ZTIMESTAMPNUMBER, 'unixepoch') as FileTimeStamp,
-            ZSLKDEPRECATEDFILE.ZPREVIEW,
-            ZSLKDEPRECATEDFILE.ZSIZE, 
-            ZSLKDEPRECATEDFILE.ZPRIVATEDOWNLOADURL,
-            ZSLKDEPRECATEDFILE.ZPERMALINKURL,  
-            ZSLKDEPRECATEDMESSAGE.ZCHANNELID,
-            ZSLKDEPRECATEDBASECHANNEL.ZTSID,
-            ZSLKDEPRECATEDBASECHANNEL.ZTSID1,
-            ZSLKDEPRECATEDCOREDATAUSER.ZTSID
+                datetime(ZSLKDEPRECATEDMESSAGE.ZTIMESTAMP, 'unixepoch') as MessageTimeStamp,   
+                ZSLKDEPRECATEDMESSAGE.ZUSERID as MessageGeneratedFrom,
+                ZSLKDEPRECATEDCOREDATAUSER.ZREALNAME as MessageGeneratedFromName,
+                ZSLKDEPRECATEDBASECHANNEL.ZNAME as MessageSentToChannelName,
+                ZSLKDEPRECATEDMESSAGE.ZTEXT,
+                json_extract(ZFILEIDS, '$[0]') as HasSharedFile,
+                ZSLKDEPRECATEDFILE.ZMODESTRING,
+                ZSLKDEPRECATEDFILE.ZTITLE,
+                ZSLKDEPRECATEDFILE.ZTYPESTRING,
+                datetime(ZSLKDEPRECATEDFILE.ZTIMESTAMPNUMBER, 'unixepoch') as FileTimeStamp,
+                ZSLKDEPRECATEDFILE.ZPREVIEW,
+                ZSLKDEPRECATEDFILE.ZSIZE, 
+                ZSLKDEPRECATEDFILE.ZPRIVATEDOWNLOADURL,
+                ZSLKDEPRECATEDFILE.ZPERMALINKURL,  
+                ZSLKDEPRECATEDMESSAGE.ZCHANNELID,
+                ZSLKDEPRECATEDBASECHANNEL.ZTSID,
+                ZSLKDEPRECATEDBASECHANNEL.ZTSID1,
+                ZSLKDEPRECATEDCOREDATAUSER.ZTSID
             from ZSLKDEPRECATEDMESSAGE, ZSLKDEPRECATEDBASECHANNEL,ZSLKDEPRECATEDCOREDATAUSER, ZSLKDEPRECATEDFILE
             where  ZSLKDEPRECATEDCOREDATAUSER.ZTSID = ZSLKDEPRECATEDMESSAGE.ZUSERID and
-            (ZSLKDEPRECATEDBASECHANNEL.ZTSID = ZSLKDEPRECATEDMESSAGE.ZCHANNELID or ZSLKDEPRECATEDBASECHANNEL.ZTSID1 = ZSLKDEPRECATEDMESSAGE.ZCHANNELID) and
-            HasSharedFile = ZSLKDEPRECATEDFILE.ZTSID 
+                (ZSLKDEPRECATEDBASECHANNEL.ZTSID = ZSLKDEPRECATEDMESSAGE.ZCHANNELID or ZSLKDEPRECATEDBASECHANNEL.ZTSID1 = ZSLKDEPRECATEDMESSAGE.ZCHANNELID) and
+                HasSharedFile = ZSLKDEPRECATEDFILE.ZTSID 
             order by ZSLKDEPRECATEDMESSAGE.ZTIMESTAMP
             ''')
         else:
             squery = ('''
             select distinct 
-            datetime(ZSLKMESSAGE.ZTIMESTAMP, 'unixepoch') as MessageTimeStamp, 
-            ZSLKMESSAGE.ZUSERID as MessageGeneratedFrom,
-            ZSLKCOREDATAUSER.ZREALNAME as MessageGeneratedFromName,
-            ZSLKBASECHANNEL.ZNAME as MessageSentToChannelName,
-            ZSLKMESSAGE.ZTEXT,
-            json_extract(ZFILEIDS, '$[0]') as HasSharedFile,
-            ZSLKFILE.ZMODESTRING,
-            ZSLKFILE.ZTITLE,
-            ZSLKFILE.ZTYPESTRING,
-            datetime(ZSLKFILE.ZTIMESTAMP, 'unixepoch') as FileTimeStamp,
-            ZSLKFILE.ZPREVIEW,
-            ZSLKFILE.ZSIZE, 
-            ZSLKFILE.ZPRIVATEDOWNLOADURL,
-            ZSLKFILE.ZPERMALINKURL,  
-            ZSLKMESSAGE.ZCHANNELID,
-            ZSLKBASECHANNEL.ZTSID,
-            ZSLKBASECHANNEL.ZTSID1,
-            ZSLKCOREDATAUSER.ZTSID
+                datetime(ZSLKMESSAGE.ZTIMESTAMP, 'unixepoch') as MessageTimeStamp, 
+                ZSLKMESSAGE.ZUSERID as MessageGeneratedFrom,
+                ZSLKCOREDATAUSER.ZREALNAME as MessageGeneratedFromName,
+                ZSLKBASECHANNEL.ZNAME as MessageSentToChannelName,
+                ZSLKMESSAGE.ZTEXT,
+                json_extract(ZFILEIDS, '$[0]') as HasSharedFile,
+                ZSLKFILE.ZMODESTRING,
+                ZSLKFILE.ZTITLE,
+                ZSLKFILE.ZTYPESTRING,
+                datetime(ZSLKFILE.ZTIMESTAMP, 'unixepoch') as FileTimeStamp,
+                ZSLKFILE.ZPREVIEW,
+                ZSLKFILE.ZSIZE, 
+                ZSLKFILE.ZPRIVATEDOWNLOADURL,
+                ZSLKFILE.ZPERMALINKURL,  
+                ZSLKMESSAGE.ZCHANNELID,
+                ZSLKBASECHANNEL.ZTSID,
+                ZSLKBASECHANNEL.ZTSID1,
+                ZSLKCOREDATAUSER.ZTSID
             from ZSLKMESSAGE, ZSLKBASECHANNEL,ZSLKCOREDATAUSER, ZSLKFILE
             where  ZSLKCOREDATAUSER.ZTSID = ZSLKMESSAGE.ZUSERID and
-            (ZSLKBASECHANNEL.ZTSID = ZSLKMESSAGE.ZCHANNELID or ZSLKBASECHANNEL.ZTSID1 = ZSLKMESSAGE.ZCHANNELID) and
-            HasSharedFile = ZSLKFILE.ZTSID 
+                (ZSLKBASECHANNEL.ZTSID = ZSLKMESSAGE.ZCHANNELID or ZSLKBASECHANNEL.ZTSID1 = ZSLKMESSAGE.ZCHANNELID) and
+                HasSharedFile = ZSLKFILE.ZTSID 
             order by ZSLKMESSAGE.ZTIMESTAMP
             ''')
             
@@ -354,13 +383,22 @@ def get_slack(files_found, report_folder, seeker, wrap_text, timezone_offset):
         
         if usageentries > 0:
             for row in all_rows:
-                data_list.append((row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12], row[13], row[14], row[15], row[16], row[17] ))
+                data_list.append((
+                    (row[0], 'datetime'),
+                    row[1], row[2], row[3], row[4], row[5], row[6],
+                    row[7], row[8], row[9], row[10], row[11], row[12],
+                    row[13], row[14], row[15], row[16], row[17]
+                ))
                 
             description = 'Slack Attachments'
             report = ArtifactHtmlReport('Slack Attachments')
             report.start_artifact_report(report_folder, 'Slack Attachments', description)
             report.add_script()
-            data_headers = ('Timestamp', 'From', 'From Name', 'Channel Name', 'Message', 'Shared File', 'Mode', 'Title', 'Type', 'File Timestamp', 'Preview', 'Size', 'Private Download URL', 'Permalink URL', 'Channel ID','Channel SID', 'Channel SID1','User SID' )
+            data_headers = ('Timestamp', 'From', 'From Name', 'Channel Name',
+                            'Message', 'Shared File', 'Mode', 'Title',
+                            'Type', 'File Timestamp', 'Preview', 'Size',
+                            'Private Download URL', 'Permalink URL', 'Channel ID','Channel SID',
+                            'Channel SID1','User SID')
             report.write_artifact_data_table(data_headers, data_list, file_found)
             report.end_artifact_report()
             
@@ -376,37 +414,37 @@ def get_slack(files_found, report_folder, seeker, wrap_text, timezone_offset):
         if deprecated == 1:
             squery = ('''
             select
-            datetime(ZSLKDEPRECATEDBASECHANNEL.ZCREATED, 'unixepoch') as CreatedTime,
-            datetime(ZSLKDEPRECATEDBASECHANNEL.ZPURPOSELASTSET, 'unixepoch') as PurposeLastSet,
-            datetime(ZSLKDEPRECATEDBASECHANNEL.ZTOPICLASTSET, 'unixepoch') as TopicLastSet,
-            datetime(ZSLKDEPRECATEDBASECHANNEL.ZLATEST, 'unixepoch') as Latest,
-            ZSLKDEPRECATEDBASECHANNEL.ZNAME as ChannelNames,
-            ZSLKDEPRECATEDBASECHANNEL.ZTSID as DMChannels,
-            ZSLKDEPRECATEDBASECHANNEL.ZTSID1 as OtherChannels,
-            ZSLKDEPRECATEDBASECHANNEL.ZUSERID,
-            ZSLKDEPRECATEDBASECHANNEL.ZCREATORID,
-            ZSLKDEPRECATEDBASECHANNEL.ZPURPOSECREATORID,
-            ZSLKDEPRECATEDBASECHANNEL.ZPURPOSETEXT,
-            ZSLKDEPRECATEDBASECHANNEL.ZTOPICCREATORID,
-            ZSLKDEPRECATEDBASECHANNEL.ZTOPICTEXT
+                datetime(ZSLKDEPRECATEDBASECHANNEL.ZCREATED, 'unixepoch') as CreatedTime,
+                datetime(ZSLKDEPRECATEDBASECHANNEL.ZPURPOSELASTSET, 'unixepoch') as PurposeLastSet,
+                datetime(ZSLKDEPRECATEDBASECHANNEL.ZTOPICLASTSET, 'unixepoch') as TopicLastSet,
+                datetime(ZSLKDEPRECATEDBASECHANNEL.ZLATEST, 'unixepoch') as Latest,
+                ZSLKDEPRECATEDBASECHANNEL.ZNAME as ChannelNames,
+                ZSLKDEPRECATEDBASECHANNEL.ZTSID as DMChannels,
+                ZSLKDEPRECATEDBASECHANNEL.ZTSID1 as OtherChannels,
+                ZSLKDEPRECATEDBASECHANNEL.ZUSERID,
+                ZSLKDEPRECATEDBASECHANNEL.ZCREATORID,
+                ZSLKDEPRECATEDBASECHANNEL.ZPURPOSECREATORID,
+                ZSLKDEPRECATEDBASECHANNEL.ZPURPOSETEXT,
+                ZSLKDEPRECATEDBASECHANNEL.ZTOPICCREATORID,
+                ZSLKDEPRECATEDBASECHANNEL.ZTOPICTEXT
             from ZSLKDEPRECATEDBASECHANNEL
             ''')
         else:
             squery = ('''
             select
-            datetime(ZSLKBASECHANNEL.ZCREATED, 'unixepoch') as CreatedTime,
-            datetime(ZSLKBASECHANNEL.ZPURPOSELASTSET, 'unixepoch') as PurposeLastSet,
-            datetime(ZSLKBASECHANNEL.ZTOPICLASTSET, 'unixepoch') as TopicLastSet,
-            datetime(ZSLKBASECHANNEL.ZLATEST, 'unixepoch') as Latest,
-            ZSLKBASECHANNEL.ZNAME as ChannelNames,
-            ZSLKBASECHANNEL.ZTSID as DMChannels,
-            ZSLKBASECHANNEL.ZTSID1 as OtherChannels,
-            ZSLKBASECHANNEL.ZUSERID,
-            ZSLKBASECHANNEL.ZCREATORID,
-            ZSLKBASECHANNEL.ZPURPOSECREATORID,
-            ZSLKBASECHANNEL.ZPURPOSETEXT,
-            ZSLKBASECHANNEL.ZTOPICCREATORID,
-            ZSLKBASECHANNEL.ZTOPICTEXT
+                datetime(ZSLKBASECHANNEL.ZCREATED, 'unixepoch') as CreatedTime,
+                datetime(ZSLKBASECHANNEL.ZPURPOSELASTSET, 'unixepoch') as PurposeLastSet,
+                datetime(ZSLKBASECHANNEL.ZTOPICLASTSET, 'unixepoch') as TopicLastSet,
+                datetime(ZSLKBASECHANNEL.ZLATEST, 'unixepoch') as Latest,
+                ZSLKBASECHANNEL.ZNAME as ChannelNames,
+                ZSLKBASECHANNEL.ZTSID as DMChannels,
+                ZSLKBASECHANNEL.ZTSID1 as OtherChannels,
+                ZSLKBASECHANNEL.ZUSERID,
+                ZSLKBASECHANNEL.ZCREATORID,
+                ZSLKBASECHANNEL.ZPURPOSECREATORID,
+                ZSLKBASECHANNEL.ZPURPOSETEXT,
+                ZSLKBASECHANNEL.ZTOPICCREATORID,
+                ZSLKBASECHANNEL.ZTOPICTEXT
             from ZSLKBASECHANNEL
             ''')
             
@@ -417,13 +455,22 @@ def get_slack(files_found, report_folder, seeker, wrap_text, timezone_offset):
         
         if usageentries > 0:
             for row in all_rows:
-                data_list.append((row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12] ))
+                data_list.append((
+                    (row[0], 'datetime'),
+                    (row[1], 'datetime'),
+                    (row[2], 'datetime'),
+                    (row[3], 'datetime'),
+                    row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12]
+                ))
                 
             description = 'Slack Channel Data'
             report = ArtifactHtmlReport('Slack Channel Data')
             report.start_artifact_report(report_folder, 'Slack Channel Data', description)
             report.add_script()
-            data_headers = ('Timestamp Created', 'Purpose Last Set', 'Topic Last Set', 'Latest', 'Channel Names','DM Channels', 'Other Channels', 'User ID', 'Creator ID', 'Purpose Creator ID', 'Purpose Text', 'Topic Creator ID', 'Topic Text' )
+            data_headers = ('Timestamp Created', 'Purpose Last Set', 'Topic Last Set', 'Latest',
+                            'Channel Names','DM Channels', 'Other Channels', 'User ID',
+                            'Creator ID', 'Purpose Creator ID', 'Purpose Text', 'Topic Creator ID',
+                            'Topic Text' )
             report.write_artifact_data_table(data_headers, data_list, file_found)
             report.end_artifact_report()
             
@@ -440,19 +487,19 @@ def get_slack(files_found, report_folder, seeker, wrap_text, timezone_offset):
         if deprecated == 1:
             squery = ('''
             select
-            ZSLKDEPRECATEDTEAM.ZNAME,
-            ZSLKDEPRECATEDTEAM.ZDOMAIN,
-            ZSLKDEPRECATEDTEAM.ZAUTHUSERID,
-            ZSLKDEPRECATEDTEAM.ZTSID
+                ZSLKDEPRECATEDTEAM.ZNAME,
+                ZSLKDEPRECATEDTEAM.ZDOMAIN,
+                ZSLKDEPRECATEDTEAM.ZAUTHUSERID,
+                ZSLKDEPRECATEDTEAM.ZTSID
             from ZSLKDEPRECATEDTEAM
             ''')
         else:
             squery = ('''
             select
-            ZSLKTEAM.ZNAME,
-            ZSLKTEAM.ZDOMAIN,
-            ZSLKTEAM.ZAUTHUSERID,
-            ZSLKTEAM.ZTSID
+                ZSLKTEAM.ZNAME,
+                ZSLKTEAM.ZDOMAIN,
+                ZSLKTEAM.ZAUTHUSERID,
+                ZSLKTEAM.ZTSID
             from ZSLKTEAM
             ''')
             

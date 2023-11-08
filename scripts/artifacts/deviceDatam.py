@@ -25,7 +25,7 @@ def get_deviceDatam(files_found, report_folder, seeker, wrap_text, timezone_offs
                 logdevinfo(f"Reported Phone Number: {val}")
                 
             elif key in ('kLastUploadTimestamp', 'kNextCarrierBundleUpdateCheck'):
-                data_list.append(( key, (val, 'phonenumber') ))
+                data_list.append(( key, (val, 'datetime') ))
             else:
                 data_list.append((key, val ))
                 

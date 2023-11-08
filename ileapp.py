@@ -193,6 +193,7 @@ def crunch_artifacts(
                 files_found.extend(found)
         if files_found:
             logfunc('{} [{}] artifact started'.format(plugin.name, plugin.module_name))
+            logfunc('{} files found'.format(len(files_found)))
             category_folder = os.path.join(out_params.report_folder_base, plugin.category)
             if not os.path.exists(category_folder):
                 try:

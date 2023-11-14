@@ -1,4 +1,5 @@
 import html
+import json
 import os
 import datetime
 import inspect
@@ -164,17 +165,32 @@ class ArtifactHtmlReport:
         )
         self.report_file.write('</thead><tbody>')
 
-        for row in data_list:
-            row_content = []
-            for value, header in zip(row, data_headers):
-                if isinstance(value, tuple):
-                    row_content.append(f'{format_value(value)}')
-                elif html_escape and header not in html_no_escape:
-                    row_content.append(f'{format_value(value)}')
-                else:
-                    row_content.append(f'<td>{value}</td>')
-            row_html = '<tr>' + ''.join(row_content) + '</tr>'
-            self.report_file.write(row_html)
+        def format_value_for_json(input_value):
+            if isinstance(input_value, tuple) and len(input_value) == 2:
+                value, data_type = input_value
+                # Return an object with value and type
+                return {'value': str(value), 'type': data_type}
+            return str(input_value)  # Return the value directly for standard types
+
+        json_data_string = ''
+        if table_responsive:
+            json_data = []
+            for row in data_list:
+                json_row = [format_value_for_json(value) for value in row]
+                json_data.append(json_row)
+
+            json_data_string = json.dumps(json_data, ensure_ascii=False)
+            # self.report_file.write(f'<script>var jsonData = {json_data_string};</script>')
+        else:
+            for row in data_list:
+                row_content = []
+                for value, header in zip(row, data_headers):
+                    if html_escape or header in html_no_escape:
+                        row_content.append(f'<td>{html.escape(str(value))}</td>')
+                    else:
+                        row_content.append(f'<td>{value}</td>')
+                row_html = '<tr>' + ''.join(row_content) + '</tr>'
+                self.report_file.write(row_html)
 
         self.report_file.write('</tbody>')
         if cols_repeated_at_bottom:
@@ -182,6 +198,7 @@ class ArtifactHtmlReport:
                 ('<th>{}</th>'.format(html.escape(str(x))) for x in data_headers)) + '</tr></tfoot>')
         self.report_file.write('</table>')
         if table_responsive:
+            self.report_file.write(f'<script>var jsonData = {json_data_string};</script>')
             self.report_file.write("</div>")
 
     def add_section_heading(self, heading, size='h2'):

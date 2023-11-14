@@ -1,4 +1,38 @@
 // ========================================
+// table loading
+// ========================================
+
+$(document).ready(function() {
+    var table = $('#dtBasicExample').DataTable({
+        "deferRender": true,
+        "aLengthMenu": [[ 15, 50, 100, -1 ], [ 15, 50, 100, "All" ]],
+    });
+    $('.dataTables_length').addClass('bs-select');
+    //table.clear();
+    console.log('get table')
+
+    jsonData.forEach(function(rowData) {
+        var row = rowData.map(function(cellData) {
+            if (typeof cellData === 'object' && cellData !== null) {
+                // Special handling for objects (custom data types)
+                return formatCellData(cellData);
+            }
+            return cellData;
+        });
+
+        table.row.add(row);//.draw(false);
+    });
+    table.draw();
+});
+
+function formatCellData(cellData) {
+    // Format based on cellData.type
+    // Example: if (cellData.type === 'datetime') { ... }
+    return cellData.value; // Modify as needed
+}
+
+
+// ========================================
 // timezone and date format handler
 // ========================================
 $(document).ready(function() {

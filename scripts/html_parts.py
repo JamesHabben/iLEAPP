@@ -499,10 +499,10 @@ default_responsive_table_script = \
 """
     <script>
         $(document).ready(function() {
-            $('.table').DataTable({
-                "aLengthMenu": [[ 15, 50, 100, -1 ], [ 15, 50, 100, "All" ]],
-            });
-            $('.dataTables_length').addClass('bs-select');
+            //$('.table').DataTable({
+            //    "aLengthMenu": [[ 15, 50, 100, -1 ], [ 15, 50, 100, "All" ]],
+            //});
+            //$('.dataTables_length').addClass('bs-select');
             $('#mySpinner').remove();
             //$('#infiniteLoading').remove();
         });

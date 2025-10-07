@@ -440,7 +440,7 @@ class FileSeekerTar(FileSeekerBase):
         self.copied = {}
         self.file_infos = {}
 
-    def search(self, filepattern, return_on_first_hit=False, force=False):
+    def search(self, filepattern, return_on_first_hit=False, force=False, extract: bool = True):
         if filepattern in self.searched and not force:
             pathlist = self.searched[filepattern]
             return self.searched[filepattern][0] if return_on_first_hit and pathlist else pathlist
@@ -451,26 +451,28 @@ class FileSeekerTar(FileSeekerBase):
             if pat( root + normcase(member.name) ) is not None:
                 clean_name = sanitize_file_path(member.name)
                 full_path = os.path.join(self.data_folder, Path(clean_name))
-                if member.name not in self.copied or force:
-                    try:
-                        if member.isdir():
-                            os.makedirs(full_path, exist_ok=True)
-                        else:
-                            parent_dir = os.path.dirname(full_path)
-                            if not os.path.exists(parent_dir):
-                                os.makedirs(parent_dir)
-                            with open(full_path, "wb") as fout:
-                                fout.write(tarfile.ExFileObject(self.tar_file, member).read())
-                                fout.close()
-                                file_info = FileInfo(member.name, 0, member.mtime)
-                                self.file_infos[full_path] = file_info
-                                self.copied[member.name] = full_path
-                            os.utime(full_path, (member.mtime, member.mtime))
-                    except Exception as ex:
-                        logfunc(f'Could not write file to filesystem, path was {member.name} ' + str(ex))
-                else:
-                    full_path = self.copied[member.name]
-                pathlist.append(full_path)
+                if extract:
+                    if member.name not in self.copied or force:
+                        try:
+                            if member.isdir():
+                                os.makedirs(full_path, exist_ok=True)
+                            else:
+                                parent_dir = os.path.dirname(full_path)
+                                if not os.path.exists(parent_dir):
+                                    os.makedirs(parent_dir)
+                                with open(full_path, "wb") as fout:
+                                    fout.write(tarfile.ExFileObject(self.tar_file, member).read())
+                                    fout.close()
+                                    file_info = FileInfo(member.name, 0, member.mtime)
+                                    self.file_infos[full_path] = file_info
+                                    self.copied[member.name] = full_path
+                                os.utime(full_path, (member.mtime, member.mtime))
+                        except Exception as ex:
+                            logfunc(f'Could not write file to filesystem, path was {member.name} ' + str(ex))
+                    else:
+                        full_path = self.copied[member.name]
+                if not member.isdir():
+                    pathlist.append(full_path)
                 if return_on_first_hit:
                     self.searched[filepattern] = pathlist
                     return full_path

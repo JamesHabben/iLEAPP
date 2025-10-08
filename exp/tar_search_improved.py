@@ -33,6 +33,8 @@ import re
 import sys
 import tarfile
 import time
+import zipfile
+from abc import ABC, abstractmethod
 from collections import defaultdict, OrderedDict
 from pathlib import Path, PurePosixPath
 from typing import Iterable, List, Dict, Tuple, Optional
@@ -78,15 +80,107 @@ def safe_join(base: Path, rel: str) -> Path:
     out.parent.mkdir(parents=True, exist_ok=True)
     return out
 
+# --- Archive Abstraction ---
+
+class ArchiveMember:
+    """A unified representation of a file within an archive."""
+    def __init__(self, name: str, is_file: bool, original_obj):
+        self.name = name            # POSIX-style path within the archive
+        self.is_file = is_file
+        self.original_obj = original_obj # The raw tar/zip object for extraction
+
+class Archive(ABC):
+    """An abstract interface for reading members from an archive (TAR, ZIP, etc.)."""
+    @abstractmethod
+    def get_members(self) -> List[ArchiveMember]:
+        """Returns a list of all members in the archive."""
+        pass
+
+    @abstractmethod
+    def extract_member(self, member: ArchiveMember, out_root: Path):
+        """Extracts a single member to a file in the output root."""
+        pass
+
+    @abstractmethod
+    def close(self):
+        """Closes any open file handles."""
+        pass
+
+# --- Concrete Implementations ---
+
+class TarArchive(Archive):
+    def __init__(self, path: Path):
+        self._tar = tarfile.open(path, "r:*")
+
+    def get_members(self) -> List[ArchiveMember]:
+        members = []
+        for member_info in self._tar.getmembers():
+            members.append(
+                ArchiveMember(
+                    name=member_info.name,
+                    is_file=member_info.isfile(),
+                    original_obj=member_info
+                )
+            )
+        return members
+
+    def extract_member(self, member: ArchiveMember, out_root: Path):
+        target_path = safe_join(out_root, member.name)
+        try:
+            with self._tar.extractfile(member.original_obj) as fsrc:
+                if fsrc is None: return
+                with open(target_path, "wb") as fdst:
+                    while True:
+                        chunk = fsrc.read(1024 * 1024)
+                        if not chunk: break
+                        fdst.write(chunk)
+        except Exception:
+            pass # Skip special files that can't be extracted
+
+    def close(self):
+        self._tar.close()
+
+class ZipArchive(Archive):
+    def __init__(self, path: Path):
+        self._zip = zipfile.ZipFile(path, 'r')
+
+    def get_members(self) -> List[ArchiveMember]:
+        members = []
+        for member_info in self._zip.infolist():
+            is_file = not member_info.filename.endswith('/')
+            members.append(
+                ArchiveMember(
+                    name=member_info.filename,
+                    is_file=is_file,
+                    original_obj=member_info
+                )
+            )
+        return members
+
+    def extract_member(self, member: ArchiveMember, out_root: Path):
+        target_path = safe_join(out_root, member.name)
+        try:
+            with self._zip.open(member.original_obj) as fsrc:
+                with open(target_path, "wb") as fdst:
+                     while True:
+                        chunk = fsrc.read(1024 * 1024)
+                        if not chunk: break
+                        fdst.write(chunk)
+        except Exception:
+            pass
+
+    def close(self):
+        self._zip.close()
+
 # -------- indexer --------
 
-class TarIndex:
+class ArchiveIndex:
     """
-    Build one-pass indexes over tar member names to allow candidate pruning.
+    Build one-pass indexes over archive member names to allow candidate pruning.
     """
-    def __init__(self, tf: tarfile.TarFile):
-        self.tf = tf
-        self.members: List[tarfile.TarInfo] = []
+    def __init__(self, archive: Archive):
+        self.archive = archive
+        self.members: List[ArchiveMember] = []
         self.names: List[str] = []
         self.name_set: set[str] = set()
 
@@ -108,9 +202,9 @@ class TarIndex:
         self._build()
 
     def _build(self):
-        for m in self.tf.getmembers():
+        for m in self.archive.get_members():
             # Only regular files are extractable (skip dirs/links)
-            if not m.isfile():
+            if not m.is_file:
                 continue
             name = m.name  # posix path in tar
             self.members.append(m)
@@ -127,7 +221,6 @@ class TarIndex:
                 ext = "-wal"
             else:
                 _, ext = os.path.splitext(base)
-
             d = os.path.dirname(name)
 
             self.basename_map[base].append(idx)
@@ -220,32 +313,24 @@ def filter_by_fixed_dir(names: List[str], fixed_dir: str) -> List[str]:
     d = fixed_dir if fixed_dir.endswith("/") else fixed_dir + "/"
     return [n for n in names if n.startswith(d)]
 
-# -------- extraction --------
-
-def extract_member(tf: tarfile.TarFile, out_root: Path, member: tarfile.TarInfo):
-    # Write member bytes to out_root/member.name safely
-    target = safe_join(out_root, member.name)
-    with tf.extractfile(member) as fsrc:
-        if fsrc is None:
-            return
-        with open(target, "wb") as fdst:
-            while True:
-                chunk = fsrc.read(1024 * 1024)
-                if not chunk:
-                    break
-                fdst.write(chunk)
-
 # -------- main searcher --------
 
 class ImprovedSearcher:
-    def __init__(self, tar_path: Path, out_root: Path):
-        self.tar_path = tar_path
+    def __init__(self, archive_path: Path, out_root: Path):
+        self.archive_path = archive_path
         self.out_root = out_root
-        self.tf = tarfile.open(tar_path, "r:*")
-        
+
+        # Detect archive type and instantiate the correct reader
+        if str(archive_path).lower().endswith('.zip'):
+            self.archive: Archive = ZipArchive(archive_path)
+            print("Processing ZIP file...")
+        else:  # Default to TAR for .tar, .gz, etc.
+            self.archive: Archive = TarArchive(archive_path)
+            print("Processing TAR file...")
+
         # Time index building
         index_start = time.perf_counter()
-        self.index = TarIndex(self.tf)
+        self.index = ArchiveIndex(self.archive)
         self.index_build_time = time.perf_counter() - index_start
         
         # Cache pattern -> list[str] paths (like self.searched in framework)
@@ -253,7 +338,7 @@ class ImprovedSearcher:
 
     def close(self):
         try:
-            self.tf.close()
+            self.archive.close()
         except Exception:
             pass
 
@@ -364,12 +449,12 @@ class ImprovedSearcher:
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python exp/improved_tar_search.py /path/to/image.tar[.gz]")
+        print("Usage: python exp/improved_tar_search.py /path/to/image.[tar.gz|zip]")
         sys.exit(2)
 
-    tar_path = Path(sys.argv[1])
-    if not tar_path.exists():
-        print(f"Tar not found: {tar_path}")
+    archive_path = Path(sys.argv[1])
+    if not archive_path.exists():
+        print(f"Archive not found: {archive_path}")
         sys.exit(1)
 
     patterns_path = Path(__file__).with_name("path_list.txt")
@@ -385,7 +470,7 @@ def main():
     out_root.mkdir(parents=True, exist_ok=True)
     print(f"Extraction dir: {out_root}")
 
-    searcher = ImprovedSearcher(tar_path, out_root)
+    searcher = ImprovedSearcher(archive_path, out_root)
 
     totals = 0
     rows: List[Tuple[str, int, float]] = []
@@ -406,7 +491,7 @@ def main():
             for n in hits:
                 idx = searcher.index.names.index(n)  # O(N) but hits list is usually tiny
                 member = searcher.index.members[idx]
-                # extract_member(searcher.tf, out_root, member)
+                # searcher.archive.extract_member(member, out_root)
             dt = p1 - p0
             cnt = len(hits)
             totals += cnt
@@ -422,36 +507,14 @@ def main():
 
     # Collect detailed matches (including aux for DB patterns)
     detail_rows = []
-    aux_total = 0
     for pat in patterns:
         hits = searcher.memo.get(pat, [])  # Actual searched hits
         pat_id = pattern_to_id[pat]
         
         # Add actual hits
         for hit in hits:
-            detail_rows.append((pat_id, hit, False))  # is_aux=False
+            detail_rows.append((pat_id, hit))
         
-        # # If DB pattern, add related SHM/WAL if they exist
-        # lb = pat.lower()
-        # if lb.endswith('.db*') or lb.endswith('.sqlite*'):
-        #     # Reuse logic from count_db_related_aux_files to find main_dbs
-        #     base_pattern = pat[:-1]
-        #     regex = compile_glob("root/" + base_pattern)
-        #     main_dbs = [n for n in searcher.index.names if regex.match("root/" + n)]
-            
-        #     for main_db in main_dbs:
-        #         dir_path = os.path.dirname(main_db)
-        #         base_name = os.path.basename(main_db)
-        #         shm_path = os.path.join(dir_path, base_name + "-shm")
-        #         wal_path = os.path.join(dir_path, base_name + "-wal")
-                
-        #         if shm_path in searcher.index.name_set:
-        #             detail_rows.append((pat_id, shm_path, True))  # is_aux=True
-        #             aux_total += 1
-        #         if wal_path in searcher.index.name_set:
-        #             detail_rows.append((pat_id, wal_path, True))
-        #             aux_total += 1
-
     # Write improved_match_summary.csv (with ID)
     summary_csv_path = out_root / "improved_match_summary.csv"
     with summary_csv_path.open("w", newline="", encoding="utf-8") as f:
@@ -466,12 +529,12 @@ def main():
     with detail_csv_path.open("w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["pattern_id", "file_path"])
-        for pat_id, path, is_aux in sorted(detail_rows):
+        for pat_id, path in sorted(detail_rows):
             w.writerow([pat_id, path])
 
     print("\n=== Improved summary ===")
     print(f"Patterns searched : {len(patterns)}")
-    print(f"Total matches     : {totals} (actual) + {aux_total} (aux) = {totals + aux_total} (comparable to baseline)")
+    print(f"Total matches     : {totals}")
     print(f"Total time        : {elapsed:.3f}s")
     print(f"Index build time  : {searcher.index_build_time:.3f}s")
     print(f"Wrote summary CSV : {summary_csv_path}")
@@ -481,50 +544,6 @@ def main():
     for bucket_name, indices in searcher.index.bucket_indices.items():
         print(f"- {bucket_name:<12}: {len(indices):>8} files")
 
-    # Count SHM/WAL files related to actual matched database files from patterns
-    def count_db_related_aux_files(patterns: List[str], index) -> Tuple[int, int, int]:
-        """Count existing SHM and WAL files tied to main databases matched by patterns ending with '.db*' or '.sqlite*'"""
-        shm_count = 0
-        wal_count = 0
-        
-        for pattern in patterns:
-            lb = pattern.lower()
-            if not (lb.endswith('.db*') or lb.endswith('.sqlite*')):
-                continue
-            
-            # Get the base pattern without the trailing '*'
-            base_pattern = pattern[:-1]  # e.g., "*/PhotoData/Photos.sqlite*" -> "*/PhotoData/Photos.sqlite"
-            
-            # Compile glob for the main database file
-            regex = compile_glob("root/" + base_pattern)
-            
-            # Find actual main database matches in the index
-            main_dbs = [n for n in index.names if regex.match("root/" + n)]
-            
-            # For each main db, check for exact shm/wal siblings
-            for main_db in main_dbs:
-                dir_path = os.path.dirname(main_db)
-                base_name = os.path.basename(main_db)
-                
-                # Derive shm and wal paths (same dir, append -shm/-wal to the full basename)
-                shm_path = os.path.join(dir_path, base_name + "-shm")
-                wal_path = os.path.join(dir_path, base_name + "-wal")
-                
-                # Check existence in the index
-                if shm_path in index.name_set:
-                    shm_count += 1
-                if wal_path in index.name_set:
-                    wal_count += 1
-        
-        total_aux = shm_count + wal_count
-        return shm_count, wal_count, total_aux
-
-    shm_count, wal_count, shm_wal_total = count_db_related_aux_files(patterns, searcher.index)
-    
-    print("\n--- SHM/WAL files (related to matched database patterns) ---")
-    print(f"SHM files: {shm_count}")
-    print(f"WAL files: {wal_count}")
-    print(f"Total SHM+WAL: {shm_wal_total}")
 
 
 if __name__ == "__main__":

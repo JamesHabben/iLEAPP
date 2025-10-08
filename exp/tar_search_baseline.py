@@ -11,7 +11,7 @@ Baseline: replicate the current LEAPP search behavior over a TAR.
   * memoizes results per pattern in self.searched
 
 Usage:
-    python exp/baseline_tar_search.py /path/to/image.tar[.gz]
+    python exp/baseline_tar_search.py /path/to/image.tar[.gz] or .zip
 
 Outputs:
     - Extraction under exp/_out_baseline/<run_stamp>/
@@ -31,7 +31,7 @@ import csv
 repo_root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(repo_root))
 
-from scripts.search_files import FileSeekerTar  # uses the same search implementation as the framework
+from scripts.search_files import FileSeekerTar, FileSeekerZip  # uses the same search implementation as the framework
 
 def read_patterns(pattern_file: Path) -> list[str]:
     """
@@ -54,18 +54,20 @@ def read_patterns(pattern_file: Path) -> list[str]:
 
 def main() -> None:
     if len(sys.argv) < 2:
-        print("Usage: python exp/baseline_tar_search.py /path/to/image.tar[.gz]")
+        print("Usage: python exp/baseline_tar_search.py /path/to/image.tar[.gz] or .zip")
         sys.exit(2)
 
-    tar_path = Path(sys.argv[1])
-    if not tar_path.exists():
-        print(f"Tar not found: {tar_path}")
+    archive_path = Path(sys.argv[1])
+    if not archive_path.exists():
+        print(f"Archive not found: {archive_path}")
         sys.exit(1)
 
-    # Locate file_path.txt sitting next to this script
+    # Locate file_path.txt sitting next to this script or in root of repo
     patterns_path = Path(__file__).with_name("path_list.txt")
     if not patterns_path.exists():
-        print(f"Missing {patterns_path} (expected next to this script).")
+        patterns_path = Path(repo_root) / "path_list.txt"
+    if not patterns_path.exists():
+        print(f"Missing {patterns_path}. Run 'python ileapp.py -p' to generate it.")
         sys.exit(1)
 
     patterns = read_patterns(patterns_path)
@@ -78,7 +80,17 @@ def main() -> None:
     print(f"Extraction dir: {out_root}")
 
     # Create the seeker using the same class LEAPP uses today
-    seeker = FileSeekerTar(str(tar_path), str(out_root))
+    seeker = None
+    if str(archive_path).lower().endswith('.zip'):
+        seeker = FileSeekerZip(str(archive_path), str(out_root))
+        print("Processing ZIP file...")
+    elif str(archive_path).lower().endswith(('.tar', '.gz')):
+        seeker = FileSeekerTar(str(archive_path), str(out_root))
+        print("Processing TAR file...")
+    else:
+        print(f"Unsupported archive type: {archive_path.suffix}")
+        sys.exit(1)
+
 
     total_matches = 0
     per_pattern_counts: list[tuple[str,int,float]] = []

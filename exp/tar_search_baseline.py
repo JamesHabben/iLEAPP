@@ -99,7 +99,7 @@ def main() -> None:
 
     for pat in patterns:
         p_start = time.perf_counter()
-        # current behavior: the seeker’s .search handles the internal matching and extraction
+        # Set extract=False so we only get back path strings
         hits = seeker.search(pat, return_on_first_hit=False, force=False, extract=False)
         p_elapsed = time.perf_counter() - p_start
 
@@ -122,9 +122,8 @@ def main() -> None:
         hits = seeker.searched.get(pat, [])
         pat_id = pattern_to_id[pat]
         for hit in hits:
-            # Convert extracted path to relative tar path for consistency (strip out_root prefix)
-            rel_path = str(Path(hit).relative_to(out_root))
-            detail_rows.append((pat_id, rel_path))
+            # The 'hit' is now just the relative path string, so no conversion is needed.
+            detail_rows.append((pat_id, hit))
 
     # Write baseline_match_summary.csv (with ID)
     summary_csv_path = out_root / "baseline_match_summary.csv"

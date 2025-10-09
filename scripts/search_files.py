@@ -514,7 +514,7 @@ class FileSeekerZip(FileSeekerBase):
                 offset += data_size
         return None, None
 
-    def search(self, filepattern, return_on_first_hit=False, force=False):
+    def search(self, filepattern, return_on_first_hit=False, force=False, extract: bool = True):
         if filepattern in self.searched and not force:
             pathlist = self.searched[filepattern]
             return self.searched[filepattern][0] if return_on_first_hit and pathlist else pathlist
@@ -525,25 +525,33 @@ class FileSeekerZip(FileSeekerBase):
             if member.startswith("__MACOSX"):
                 continue
             if pat( root + normcase(member) ) is not None:
-                if member not in self.copied or force:
-                    try:
-                        extracted_path = self.zip_file.extract(member, path=self.data_folder) # already replaces illegal chars with _ when exporting
-                        f = self.zip_file.getinfo(member)
-                        creation_date, modification_date = self.decode_extended_timestamp(f.extra)
-                        file_info = FileInfo(member, creation_date, modification_date)
-                        self.file_infos[extracted_path] = file_info
-                        date_time = f.date_time
-                        date_time = timex.mktime(date_time + (0, 0, -1))
-                        os.utime(extracted_path, (date_time, date_time))
-                        self.copied[member] = extracted_path
-                    except Exception as ex:
-                        logfunc(f'Could not write file to filesystem, path was {member} ' + str(ex))
+                if member.endswith('/'): # Skip directories
+                    continue
+
+                if extract:
+                    # This block remains for when extraction is needed, but will be skipped.
+                    if member not in self.copied or force:
+                        try:
+                            extracted_path = self.zip_file.extract(member, path=self.data_folder)
+                            f = self.zip_file.getinfo(member)
+                            creation_date, modification_date = self.decode_extended_timestamp(f.extra)
+                            file_info = FileInfo(member, creation_date, modification_date)
+                            self.file_infos[extracted_path] = file_info
+                            date_time = f.date_time
+                            date_time = timex.mktime(date_time + (0, 0, -1))
+                            os.utime(extracted_path, (date_time, date_time))
+                            self.copied[member] = extracted_path
+                        except Exception as ex:
+                            logfunc(f'Could not write file to filesystem, path was {member} ' + str(ex))
+                    pathlist.append(self.copied.get(member))
                 else:
-                    extracted_path = self.copied[member]
-                pathlist.append(extracted_path)
+                    # Not extracting, just append the sanitized relative path.
+                    pathlist.append(member.lstrip('/'))
+
                 if return_on_first_hit:
                     self.searched[filepattern] = pathlist
-                    return extracted_path
+                    # Return the last added path, which is the correct one.
+                    return pathlist[-1] if pathlist else None
         self.searched[filepattern] = pathlist
         return pathlist
 

@@ -237,7 +237,7 @@ class ArchiveIndex:
                 self.bucket_indices["photos"].append(idx)
             if "/mobile/Library/" in path:
                 self.bucket_indices["mobile_lib"].append(idx)
-            if "/mobile/Library/Biome/" in path:
+            if "/Biome/streams/" in path:
                 self.bucket_indices["biome"].append(idx)
 
             self.bucket_indices["global"].append(idx)
@@ -272,7 +272,7 @@ def suggest_bucket_for_pattern(pat: str) -> str:
         return "appgroup"
     if "/PhotoData/" in p or "Photos.sqlite" in p:
         return "photos"
-    if "/mobile/Library/Biome/" in p:
+    if "/Biome/streams/" in p or "/biome/streams/" in p:
         return "biome"
     if "/mobile/Library/" in p:
         return "mobile_lib"
@@ -475,10 +475,18 @@ def main():
     totals = 0
     rows: List[Tuple[str, int, float]] = []
     t0 = time.perf_counter()
+    
+    # Track bucket usage
+    bucket_usage_counts = {bucket_name: 0 for bucket_name in searcher.index.bucket_indices}
 
     try:
         for i, pat in enumerate(patterns, 1):
             p0 = time.perf_counter()
+            
+            # Determine which bucket is used and increment its counter
+            bucket_name = suggest_bucket_for_pattern(pat)
+            bucket_usage_counts[bucket_name] += 1
+            
             hits = searcher.search(pat)
             # extract
             for n in hits:
@@ -540,10 +548,27 @@ def main():
     print(f"Wrote summary CSV : {summary_csv_path}")
     print(f"Wrote detail CSV  : {detail_csv_path}")
 
-    print("\n--- Bucket stats ---")
-    for bucket_name, indices in searcher.index.bucket_indices.items():
-        print(f"- {bucket_name:<12}: {len(indices):>8} files")
+    print("\n--- Bucket Stats ---")
+    total_files = len(searcher.index.names)
+    print(f"Total files indexed: {total_files}")
+    bucket_items = sorted(searcher.index.bucket_indices.items())
+    for bucket_name, indices in bucket_items:
+        size = len(indices)
+        if total_files > 0:
+            percentage = (size / total_files) * 100
+            print(f"- {bucket_name:<12}: {size:>8} files ({percentage:.2f}%)")
+        else:
+            print(f"- {bucket_name:<12}: {size:>8} files")
 
+    print("\n--- Bucket Usage (by pattern) ---")
+    total_patterns = len(patterns)
+    usage_items = sorted(bucket_usage_counts.items())
+    for bucket_name, count in usage_items:
+        if total_patterns > 0:
+            percentage = (count / total_patterns) * 100
+            print(f"- {bucket_name:<12}: {count:>8} patterns ({percentage:.2f}%)")
+        else:
+            print(f"- {bucket_name:<12}: {count:>8} patterns")
 
 
 if __name__ == "__main__":

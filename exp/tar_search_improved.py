@@ -8,7 +8,7 @@ Improved search demo (bucketed candidates + SQLite family fast-path).
     * appgroup:     */Containers/Shared/AppGroup/<GROUP>/*
     * photos:       */PhotoData/*  (and common Photos.sqlite locations)
     * mobile_lib:   */mobile/Library/*
-    * biome:        */mobile/Library/Biome/*
+    * biome:        */Biome/streams/*
     * global:       everything
 - For each pattern:
     * Try exact-match fast-path (no wildcards).
@@ -47,14 +47,12 @@ def has_wildcards(s: str) -> bool:
     return any(c in s for c in WILDCARD_CHARS)
 
 def normcase_posix(s: str) -> str:
-    # Use POSIX-style matching (tar member names are posix).
-    # Keep case as-is except lowercasing on Windows-like if desired; we’ll just keep as-is.
-    # fnmatch's regex is case-sensitive unless os is Windows. We'll enforce case-sensitive.
-    return s
+    # Use POSIX-style matching but force lowercase for case-insensitivity.
+    return s.lower()
 
 def compile_glob(pattern: str) -> re.Pattern:
     # Match the behavior of FileSeekerTar: it matches against "root/" + path
-    # We'll compile a regex using fnmatch.translate on normcased pattern.
+    # We'll compile a regex using fnmatch.translate on a lowercased pattern.
     pat = normcase_posix(pattern)
     return re.compile(fnmatch.translate(pat))
 
@@ -213,31 +211,33 @@ class ArchiveIndex:
 
             idx = len(self.names) - 1
 
-            base = os.path.basename(name)
-            
-            if base.endswith("-shm"):
+            # Use lowercased names for all indexing and bucketing
+            name_lower = name.lower()
+            base_lower = os.path.basename(name_lower)
+
+            if base_lower.endswith("-shm"):
                 ext = "-shm"
-            elif base.endswith("-wal"):
+            elif base_lower.endswith("-wal"):
                 ext = "-wal"
             else:
-                _, ext = os.path.splitext(base)
-            d = os.path.dirname(name)
+                _, ext = os.path.splitext(base_lower)
+            d_lower = os.path.dirname(name_lower)
 
-            self.basename_map[base].append(idx)
+            self.basename_map[base_lower].append(idx)
             self.ext_map[ext].append(idx)
-            self.dir_map[d].append(idx)
+            self.dir_map[d_lower].append(idx)
 
-            # Bucketing heuristics
-            path = "/" + name  # leading slash to ease 'in' checks with anchored substrings
-            if "/Containers/Data/Application/" in path:
+            # Bucketing heuristics (case-insensitive)
+            path_lower = "/" + name_lower
+            if "/containers/data/application/" in path_lower:
                 self.bucket_indices["sandbox"].append(idx)
-            if "/Containers/Shared/AppGroup/" in path:
+            if "/containers/shared/appgroup/" in path_lower:
                 self.bucket_indices["appgroup"].append(idx)
-            if "/PhotoData/" in path or base == "Photos.sqlite" or base.startswith("Photos.sqlite"):
+            if "/photodata/" in path_lower or base_lower == "photos.sqlite" or base_lower.startswith("photos.sqlite"):
                 self.bucket_indices["photos"].append(idx)
-            if "/mobile/Library/" in path:
+            if "/mobile/library/" in path_lower:
                 self.bucket_indices["mobile_lib"].append(idx)
-            if "/Biome/streams/" in path:
+            if "/biome/streams/" in path_lower:
                 self.bucket_indices["biome"].append(idx)
 
             self.bucket_indices["global"].append(idx)
@@ -265,16 +265,16 @@ class ArchiveIndex:
 # -------- candidate selection --------
 
 def suggest_bucket_for_pattern(pat: str) -> str:
-    p = "/" + pat  # ease substring checks
-    if "/Containers/Data/Application/" in p:
+    p_lower = ("/" + pat).lower()  # ease substring checks, case-insensitive
+    if "/containers/data/application/" in p_lower:
         return "sandbox"
-    if "/Containers/Shared/AppGroup/" in p:
+    if "/containers/shared/appgroup/" in p_lower:
         return "appgroup"
-    if "/PhotoData/" in p or "Photos.sqlite" in p:
+    if "/photodata/" in p_lower or "photos.sqlite" in p_lower:
         return "photos"
-    if "/Biome/streams/" in p or "/biome/streams/" in p:
+    if "/biome/streams/" in p_lower:
         return "biome"
-    if "/mobile/Library/" in p:
+    if "/mobile/library/" in p_lower:
         return "mobile_lib"
     return "global"
 
@@ -440,7 +440,7 @@ class ImprovedSearcher:
 
         # 4) run fnmatch-derived regex only on candidates
         regex = compile_glob(normcase_posix("root/" + pattern))
-        matches = [n for n in candidates if regex.match("root/" + n)]
+        matches = [n for n in candidates if regex.match("root/" + n.lower())]
 
         self.memo[pattern] = ordered_dedupe(matches)
         return self.memo[pattern]

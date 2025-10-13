@@ -294,8 +294,14 @@ def db_family_from_basename(base: str) -> Optional[Tuple[str, List[str]]]:
     if lb.endswith(".db*"):
         stem = base[:-1]  # keep ".db"
         return stem, [stem, f"{stem}-wal", f"{stem}-shm"]
-    if lb.endswith(".sqlite*"):
-        stem = base[:-1]  # keep ".sqlite"
+    if lb.endswith((".sqlite*", ".sqlite3*", ".sqlitedb*")):
+        # Find the base name without the wildcard
+        if lb.endswith(".sqlite*"):
+            stem = base[:-1]
+        elif lb.endswith(".sqlite3*"):
+            stem = base[:-1]
+        else: # .sqlitedb*
+            stem = base[:-1]
         return stem, [stem, f"{stem}-wal", f"{stem}-shm"]
     return None
 
@@ -357,8 +363,15 @@ class ImprovedSearcher:
         lb = base.lower()
         if lb.endswith(".db*"):
             return [".db", "-wal", "-shm"]
-        if lb.endswith(".sqlite*"):
-            return [".sqlite", "-wal", "-shm"]
+        if lb.endswith((".sqlite*", ".sqlite3*", ".sqlitedb*")):
+            # Find the base name without the wildcard
+            if lb.endswith(".sqlite*"):
+                stem = base[:-1]
+            elif lb.endswith(".sqlite3*"):
+                stem = base[:-1]
+            else: # .sqlitedb*
+                stem = base[:-1]
+            return [stem, f"{stem}-wal", f"{stem}-shm"]
         if lb.endswith(".plist"):
             return [".plist"]
         if lb.endswith(".sqlite"):

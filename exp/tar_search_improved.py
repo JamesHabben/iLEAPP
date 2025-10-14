@@ -250,7 +250,7 @@ class ArchiveIndex:
         return [self.names[i] for i in idxs]
 
     def basename_candidates(self, base: str, scope: Optional[Iterable[int]] = None) -> List[int]:
-        idxs = self.basename_map.get(base, [])
+        idxs = self.basename_map.get(base.lower(), [])
         if scope is None:
             return idxs
         scope_set = set(scope)

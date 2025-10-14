@@ -142,12 +142,35 @@ def main() -> None:
         for pat_id, path in sorted(detail_rows):
             w.writerow([pat_id, path])
 
-    print("\n=== Baseline summary ===")
-    print(f"Patterns searched : {len(patterns)}")
-    print(f"Total matches     : {total_matches}")
-    print(f"Total time        : {elapsed:.3f}s")
+    # Generate stats, write to file, and print to console
+    stats_content = generate_stats_text(archive_path, patterns, total_matches, elapsed)
+    stats_path = out_root / "baseline_stats.txt"
+    with stats_path.open("w", encoding="utf-8") as f:
+        f.write(stats_content)
+
+    print(stats_content)
+    
+    # Final summary of files written
+    print("\n--- Output Files ---")
     print(f"Wrote summary CSV : {summary_csv_path}")
     print(f"Wrote detail CSV  : {detail_csv_path}")
+    print(f"Wrote stats file  : {stats_path}")
+
+
+def generate_stats_text(archive_path, patterns, total_matches, elapsed):
+    """Generates a formatted string of summary stats."""
+    import io
+    
+    s = io.StringIO()
+
+    s.write("\n=== Baseline Summary ===\n")
+    s.write(f"Input file        : {archive_path}\n")
+    s.write(f"Patterns searched : {len(patterns)}\n")
+    s.write(f"Total matches     : {total_matches}\n")
+    s.write(f"Total time        : {elapsed:.3f}s\n")
+    
+    return s.getvalue()
+
 
 if __name__ == "__main__":
     main()

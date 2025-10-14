@@ -29,6 +29,7 @@ Run:
 import csv
 import fnmatch
 import os
+import io
 import re
 import sys
 import tarfile
@@ -38,6 +39,8 @@ from abc import ABC, abstractmethod
 from collections import defaultdict, OrderedDict
 from pathlib import Path, PurePosixPath
 from typing import Iterable, List, Dict, Tuple, Optional
+
+repo_root = Path(__file__).resolve().parents[1]
 
 # -------- utilities --------
 
@@ -160,7 +163,7 @@ class ZipArchive(Archive):
         try:
             with self._zip.open(member.original_obj) as fsrc:
                 with open(target_path, "wb") as fdst:
-                     while True:
+                    while True:
                         chunk = fsrc.read(1024 * 1024)
                         if not chunk: break
                         fdst.write(chunk)
@@ -338,7 +341,7 @@ class ImprovedSearcher:
         index_start = time.perf_counter()
         self.index = ArchiveIndex(self.archive)
         self.index_build_time = time.perf_counter() - index_start
-        
+
         # Cache pattern -> list[str] paths (like self.searched in framework)
         self.memo: Dict[str, List[str]] = {}
 
@@ -411,7 +414,7 @@ class ImprovedSearcher:
                 # Directory has wildcards; try narrowing by basename in-scope
                 hits = []
                 scope_set = set(scope)  # limit lookups to bucket
-                
+
                 # Original logic for fixed stem (will fail on wildcard stem and fall through, which is correct)
                 for cb in concrete_bases:
                     idxs = self.index.basename_candidates(cb, scope_set)
@@ -422,7 +425,7 @@ class ImprovedSearcher:
                     if dir_part and not dir_part.startswith("*"):
                         names = filter_by_fixed_dir(names, dir_part.replace("\\", "/"))
                     hits.extend(names)
-                
+
                 if hits:
                     # Still need to ensure they actually match the whole glob (in case user’s pattern has more)
                     regex = compile_glob(normcase_posix("root/" + pattern))
@@ -446,6 +449,14 @@ class ImprovedSearcher:
             if ext_candidates:
                 idxs = self.index.ext_candidates(ext_candidates, scope)
                 candidates = self.index.indices_to_names(idxs)
+                
+                # Fallback: Also check basename candidates for patterns with wildcards in basename
+                # This helps with edge cases like "*.plist" matching files named ".plist"
+                if has_wildcards(base):
+                    basename_idxs = self.index.basename_candidates(base.lower(), scope)
+                    basename_names = self.index.indices_to_names(basename_idxs)
+                    candidates.extend(basename_names)
+                    candidates = list(set(candidates))  # Dedupe to avoid duplicates
 
         # 3c) fixed directory?
         if dir_part and not has_wildcards(dir_part):
@@ -472,7 +483,9 @@ def main():
 
     patterns_path = Path(__file__).with_name("path_list.txt")
     if not patterns_path.exists():
-        print(f"Missing {patterns_path} (expected next to this script).")
+        patterns_path = Path(repo_root) / "path_list.txt"
+    if not patterns_path.exists():
+        print(f"Missing {patterns_path}. Run 'python ileapp.py -p' to generate it.")
         sys.exit(1)
 
     patterns = read_patterns(patterns_path)
@@ -488,18 +501,18 @@ def main():
     totals = 0
     rows: List[Tuple[str, int, float]] = []
     t0 = time.perf_counter()
-    
+
     # Track bucket usage
     bucket_usage_counts = {bucket_name: 0 for bucket_name in searcher.index.bucket_indices}
 
     try:
         for i, pat in enumerate(patterns, 1):
             p0 = time.perf_counter()
-            
+
             # Determine which bucket is used and increment its counter
             bucket_name = suggest_bucket_for_pattern(pat)
             bucket_usage_counts[bucket_name] += 1
-            
+
             hits = searcher.search(pat)
             # extract
             for n in hits:
@@ -531,11 +544,11 @@ def main():
     for pat in patterns:
         hits = searcher.memo.get(pat, [])  # Actual searched hits
         pat_id = pattern_to_id[pat]
-        
+
         # Add actual hits
         for hit in hits:
             detail_rows.append((pat_id, hit))
-        
+
     # Write improved_match_summary.csv (with ID)
     summary_csv_path = out_root / "improved_match_summary.csv"
     with summary_csv_path.open("w", newline="", encoding="utf-8") as f:
@@ -553,35 +566,50 @@ def main():
         for pat_id, path in sorted(detail_rows):
             w.writerow([pat_id, path])
 
-    print("\n=== Improved summary ===")
-    print(f"Patterns searched : {len(patterns)}")
-    print(f"Total matches     : {totals}")
-    print(f"Total time        : {elapsed:.3f}s")
-    print(f"Index build time  : {searcher.index_build_time:.3f}s")
+    # Generate stats, write to file, and print to console
+    stats_content = generate_stats_text(archive_path, patterns, totals, elapsed, searcher, bucket_usage_counts)
+    stats_path = out_root / "improved_stats.txt"
+    with stats_path.open("w", encoding="utf-8") as f:
+        f.write(stats_content)
+
+    print(stats_content)
+
+    # Final summary of files written
+    print("\n--- Output Files ---")
     print(f"Wrote summary CSV : {summary_csv_path}")
     print(f"Wrote detail CSV  : {detail_csv_path}")
+    print(f"Wrote stats file  : {stats_path}")
 
-    print("\n--- Bucket Stats ---")
+def generate_stats_text(archive_path, patterns, totals, elapsed, searcher, bucket_usage_counts):
+    """Generates a formatted string of summary stats."""
+
+    # Use an in-memory string buffer to build the text
+    s = io.StringIO()
+
+    s.write("=== Improved Summary ===\n")
+    s.write(f"Input file        : {archive_path}\n")
+    s.write(f"Patterns searched : {len(patterns)}\n")
+    s.write(f"Total matches     : {totals}\n")
+    s.write(f"Total time        : {elapsed:.3f}s\n")
+    s.write(f"Index build time  : {searcher.index_build_time:.3f}s\n")
+
+    s.write("\n--- Bucket Stats ---\n")
     total_files = len(searcher.index.names)
-    print(f"Total files indexed: {total_files}")
+    s.write(f"Total files indexed: {total_files}\n")
     bucket_items = sorted(searcher.index.bucket_indices.items())
     for bucket_name, indices in bucket_items:
         size = len(indices)
-        if total_files > 0:
-            percentage = (size / total_files) * 100
-            print(f"- {bucket_name:<12}: {size:>8} files ({percentage:.2f}%)")
-        else:
-            print(f"- {bucket_name:<12}: {size:>8} files")
+        percentage = (size / total_files) * 100 if total_files > 0 else 0
+        s.write(f"- {bucket_name:<12}: {size:>8} files ({percentage:.2f}%)\n")
 
-    print("\n--- Bucket Usage (by pattern) ---")
+    s.write("\n--- Bucket Usage (by pattern) ---\n")
     total_patterns = len(patterns)
     usage_items = sorted(bucket_usage_counts.items())
     for bucket_name, count in usage_items:
-        if total_patterns > 0:
-            percentage = (count / total_patterns) * 100
-            print(f"- {bucket_name:<12}: {count:>8} patterns ({percentage:.2f}%)")
-        else:
-            print(f"- {bucket_name:<12}: {count:>8} patterns")
+        percentage = (count / total_patterns) * 100 if total_patterns > 0 else 0
+        s.write(f"- {bucket_name:<12}: {count:>8} patterns ({percentage:.2f}%)\n")
+
+    return s.getvalue()
 
 
 if __name__ == "__main__":

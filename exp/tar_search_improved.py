@@ -45,6 +45,20 @@ repo_root = Path(__file__).resolve().parents[1]
 # -------- utilities --------
 
 WILDCARD_CHARS = set("*?[]")
+DB_EXTENSIONS = [".db", ".sqlite", ".sqlite3", ".sqlitedb"]
+DB_SIDECAR_SUFFIXES = ["-wal", "-shm", "-lock"]
+
+# Definitions for bucketing files and patterns to speed up search.
+# Each tuple defines a bucket: (name, list_of_path_substrings, list_of_basename_startswith_checks)
+BUCKET_RULES = [
+    ("sandbox", ["/containers/data/application/"], []),
+    ("appgroup", ["/containers/shared/appgroup/"], []),
+    ("photos", ["/photodata/"], ["photos.sqlite"]),
+    ("mobile_lib", ["/mobile/library/"], []),
+    ("biome", ["/biome/streams/"], []),
+]
+BUCKET_NAMES = [name for name, _, _ in BUCKET_RULES] + ["global"]
+
 
 def has_wildcards(s: str) -> bool:
     return any(c in s for c in WILDCARD_CHARS)
@@ -192,12 +206,7 @@ class ArchiveIndex:
 
         # buckets (store indices)
         self.bucket_indices: Dict[str, List[int]] = {
-            "sandbox": [],
-            "appgroup": [],
-            "photos": [],
-            "mobile_lib": [],
-            "biome": [],
-            "global": [],  # all
+            name: [] for name in BUCKET_NAMES
         }
 
         self._build()
@@ -218,11 +227,13 @@ class ArchiveIndex:
             name_lower = name.lower()
             base_lower = os.path.basename(name_lower)
 
-            if base_lower.endswith("-shm"):
-                ext = "-shm"
-            elif base_lower.endswith("-wal"):
-                ext = "-wal"
-            else:
+            # Determine the extension, giving precedence to sidecar suffixes
+            ext = None
+            for suffix in DB_SIDECAR_SUFFIXES:
+                if base_lower.endswith(suffix):
+                    ext = suffix
+                    break
+            if ext is None:
                 _, ext = os.path.splitext(base_lower)
             d_lower = os.path.dirname(name_lower)
 
@@ -232,16 +243,10 @@ class ArchiveIndex:
 
             # Bucketing heuristics (case-insensitive)
             path_lower = "/" + name_lower
-            if "/containers/data/application/" in path_lower:
-                self.bucket_indices["sandbox"].append(idx)
-            if "/containers/shared/appgroup/" in path_lower:
-                self.bucket_indices["appgroup"].append(idx)
-            if "/photodata/" in path_lower or base_lower == "photos.sqlite" or base_lower.startswith("photos.sqlite"):
-                self.bucket_indices["photos"].append(idx)
-            if "/mobile/library/" in path_lower:
-                self.bucket_indices["mobile_lib"].append(idx)
-            if "/biome/streams/" in path_lower:
-                self.bucket_indices["biome"].append(idx)
+            for name, paths, basenames in BUCKET_RULES:
+                if any(p in path_lower for p in paths) or \
+                   any(base_lower.startswith(b) for b in basenames):
+                    self.bucket_indices[name].append(idx)
 
             self.bucket_indices["global"].append(idx)
 
@@ -269,17 +274,15 @@ class ArchiveIndex:
 
 def suggest_bucket_for_pattern(pat: str) -> str:
     p_lower = ("/" + pat).lower()  # ease substring checks, case-insensitive
-    if "/containers/data/application/" in p_lower:
-        return "sandbox"
-    if "/containers/shared/appgroup/" in p_lower:
-        return "appgroup"
-    if "/photodata/" in p_lower or "photos.sqlite" in p_lower:
-        return "photos"
-    if "/biome/streams/" in p_lower:
-        return "biome"
-    if "/mobile/library/" in p_lower:
-        return "mobile_lib"
+    base_lower = os.path.basename(p_lower)
+
+    for name, paths, basenames in BUCKET_RULES:
+        if any(p in p_lower for p in paths) or \
+           any(b in base_lower for b in basenames):
+            return name
+
     return "global"
+
 
 def split_dir_base(pattern: str) -> Tuple[str, str]:
     # Split without normalizing wildcards
@@ -288,25 +291,30 @@ def split_dir_base(pattern: str) -> Tuple[str, str]:
 
 def db_family_from_basename(base: str) -> Optional[Tuple[str, List[str]]]:
     """
-    If basename endswith `.db*` or `.sqlite*`, return (stem, [concrete_basenames])
-    e.g., "foo.db*" -> ("foo.db", ["foo.db", "foo.db-wal", "foo.db-shm"])
-           "bar.sqlite*" -> ("bar.sqlite", ["bar.sqlite", "bar.sqlite-wal", "bar.sqlite-shm"])
-    Otherwise, None.
+    If basename matches a known DB extension pattern (e.g., .db, .db*)
+    and the stem of the name has no wildcards, return the base name and a
+    list of concrete names including sidecar files (-wal, -shm).
+
+    e.g., "foo.db" or "foo.db*" -> ("foo.db", ["foo.db", "foo.db-wal", "foo.db-shm"])
+
+    Returns None if the stem contains wildcards or the pattern doesn't match.
     """
     lb = base.lower()
-    if lb.endswith(".db*"):
-        stem = base[:-1]  # keep ".db"
-        return stem, [stem, f"{stem}-wal", f"{stem}-shm"]
-    if lb.endswith((".sqlite*", ".sqlite3*", ".sqlitedb*")):
-        # Find the base name without the wildcard
-        if lb.endswith(".sqlite*"):
-            stem = base[:-1]
-        elif lb.endswith(".sqlite3*"):
-            stem = base[:-1]
-        else: # .sqlitedb*
-            stem = base[:-1]
-        return stem, [stem, f"{stem}-wal", f"{stem}-shm"]
+
+    for ext in DB_EXTENSIONS:
+        stem_part = None
+        if lb.endswith(ext + '*'):
+            stem_part = base[:-len(ext) - 1]
+        elif lb.endswith(ext):
+            stem_part = base[:-len(ext)]
+
+        if stem_part is not None and not has_wildcards(stem_part):
+            stem = stem_part + ext
+            sidecars = [f"{stem}{suffix}" for suffix in DB_SIDECAR_SUFFIXES]
+            return stem, [stem] + sidecars
+
     return None
+
 
 def startswith_dir(name: str, fixed_dir: str) -> bool:
     # Match names that are under fixed_dir (posix)
@@ -364,22 +372,17 @@ class ImprovedSearcher:
 
     def _ext_hints(self, base: str) -> List[str]:
         lb = base.lower()
-        if lb.endswith(".db*"):
-            return [".db", "-wal", "-shm"]
-        if lb.endswith((".sqlite*", ".sqlite3*", ".sqlitedb*")):
-            # Find the base name without the wildcard
-            if lb.endswith(".sqlite*"):
-                stem = base[:-1]
-            elif lb.endswith(".sqlite3*"):
-                stem = base[:-1]
-            else: # .sqlitedb*
-                stem = base[:-1]
-            return [stem, f"{stem}-wal", f"{stem}-shm"]
+        hints = []
+
+        for ext in DB_EXTENSIONS:
+            if lb.endswith(ext) or lb.endswith(ext + '*'):
+                hints.extend([ext] + DB_SIDECAR_SUFFIXES)
+
+        # Other extensions
         if lb.endswith(".plist"):
-            return [".plist"]
-        if lb.endswith(".sqlite"):
-            return [".sqlite"]
-        return []
+            hints.append(".plist")
+
+        return ordered_dedupe(hints) if hints else []
 
     def search(self, pattern: str) -> List[str]:
         if pattern in self.memo:
@@ -428,8 +431,8 @@ class ImprovedSearcher:
 
                 if hits:
                     # Still need to ensure they actually match the whole glob (in case user’s pattern has more)
-                    regex = compile_glob(normcase_posix("root/" + pattern))
-                    matched = [n for n in ordered_dedupe(hits) if regex.match("root/" + n)]
+                    regex = compile_glob(normcase_posix(pattern))
+                    matched = [n for n in ordered_dedupe(hits) if regex.match("root/" + n.lstrip('/').lower())]
                     if matched:
                         self.memo[pattern] = matched
                         return matched
@@ -463,8 +466,8 @@ class ImprovedSearcher:
             candidates = filter_by_fixed_dir(candidates, dir_part.replace("\\", "/"))
 
         # 4) run fnmatch-derived regex only on candidates
-        regex = compile_glob(normcase_posix("root/" + pattern))
-        matches = [n for n in candidates if regex.match("root/" + n.lower())]
+        regex = compile_glob(normcase_posix(pattern))
+        matches = [n for n in candidates if regex.match("root/" + n.lstrip('/').lower())]
 
         self.memo[pattern] = ordered_dedupe(matches)
         return self.memo[pattern]
@@ -544,11 +547,12 @@ def main():
     for pat in patterns:
         hits = searcher.memo.get(pat, [])  # Actual searched hits
         pat_id = pattern_to_id[pat]
-
-        # Add actual hits
+        
+        # Add actual hits, normalized to relative paths (strip leading '/')
         for hit in hits:
-            detail_rows.append((pat_id, hit))
-
+            normalized_hit = hit.lstrip('/')
+            detail_rows.append((pat_id, normalized_hit))
+        
     # Write improved_match_summary.csv (with ID)
     summary_csv_path = out_root / "improved_match_summary.csv"
     with summary_csv_path.open("w", newline="", encoding="utf-8") as f:

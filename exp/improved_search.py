@@ -589,17 +589,17 @@ def generate_stats_text(archive_path, patterns, totals, elapsed, searcher, bucke
 
     # Use an in-memory string buffer to build the text
     s = io.StringIO()
+    total_files = len(searcher.index.names)
 
     s.write("=== Improved Summary ===\n")
     s.write(f"Input file        : {archive_path}\n")
     s.write(f"Patterns searched : {len(patterns)}\n")
+    s.write(f"Total files       : {total_files}\n")
     s.write(f"Total matches     : {totals}\n")
     s.write(f"Total time        : {elapsed:.3f}s\n")
     s.write(f"Index build time  : {searcher.index_build_time:.3f}s\n")
 
     s.write("\n--- Bucket Stats ---\n")
-    total_files = len(searcher.index.names)
-    s.write(f"Total files indexed: {total_files}\n")
     bucket_items = sorted(searcher.index.bucket_indices.items())
     for bucket_name, indices in bucket_items:
         size = len(indices)

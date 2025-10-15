@@ -34,7 +34,7 @@ Execute either script by passing the path to a TAR or ZIP archive as an argument
 
 **For the baseline test:**
 ```bash
-python exp/baseline_search.py /path/to/your/archive.tar
+python exp/baseline_search.py /path/to/your/archive.zip
 ```
 
 **For the improved test:**

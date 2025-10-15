@@ -90,6 +90,12 @@ def main() -> None:
         print(f"Unsupported archive type: {archive_path.suffix}")
         sys.exit(1)
 
+    # Get total file count for stats
+    total_files = 0
+    if isinstance(seeker, FileSeekerTar):
+        total_files = len(seeker.tar_file.getmembers())
+    elif isinstance(seeker, FileSeekerZip):
+        total_files = len(seeker.name_list)
 
     total_matches = 0
     per_pattern_counts: list[tuple[str,int,float]] = []
@@ -142,7 +148,7 @@ def main() -> None:
             w.writerow([pat_id, path])
 
     # Generate stats, write to file, and print to console
-    stats_content = generate_stats_text(archive_path, patterns, total_matches, elapsed)
+    stats_content = generate_stats_text(archive_path, patterns, total_matches, elapsed, total_files)
     stats_path = out_root / "baseline_stats.txt"
     with stats_path.open("w", encoding="utf-8") as f:
         f.write(stats_content)
@@ -156,7 +162,7 @@ def main() -> None:
     print(f"Wrote stats file  : {stats_path}")
 
 
-def generate_stats_text(archive_path, patterns, total_matches, elapsed):
+def generate_stats_text(archive_path, patterns, total_matches, elapsed, total_files):
     """Generates a formatted string of summary stats."""
     import io
     
@@ -165,6 +171,7 @@ def generate_stats_text(archive_path, patterns, total_matches, elapsed):
     s.write("\n=== Baseline Summary ===\n")
     s.write(f"Input file        : {archive_path}\n")
     s.write(f"Patterns searched : {len(patterns)}\n")
+    s.write(f"Total files       : {total_files}\n")
     s.write(f"Total matches     : {total_matches}\n")
     s.write(f"Total time        : {elapsed:.3f}s\n")
     

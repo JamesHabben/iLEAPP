@@ -1,22 +1,24 @@
 #!/usr/bin/env python3
 """
-Baseline: replicate the current LEAPP search behavior over a TAR.
+Baseline: replicate the current LEAPP search behavior over a TAR or ZIP.
 
-- Reads glob-like patterns from a sibling file_path.txt (one per line).
+- Reads glob-like patterns from file_path.txt (one per line).
 - Dedupe patterns in input order (like the framework’s “don’t search the same twice” goal).
-- Uses FileSeekerTar from scripts/search_files.py, which:
+- Uses FileSeekerTar or FileSeekerZip from scripts/search_files.py, which:
   * compiles patterns with fnmatch._compile_pattern(normcase(...))
   * matches against "root/" + normcase(member.name)
   * iterates members and extracts matching files to an output folder
   * memoizes results per pattern in self.searched
 
 Usage:
-    python exp/baseline_tar_search.py /path/to/image.tar[.gz] or .zip
+    python exp/baseline_search.py /path/to/image.tar or .zip
 
 Outputs:
     - Extraction under exp/_out_baseline/<run_stamp>/
-    - A CSV summary of matches: exp/_out_baseline/<run_stamp>/matches.csv
-    - Timings printed to stdout
+    - A CSV summary of matches: exp/_out_baseline/<run_stamp>/baseline_match_summary.csv
+    - A CSV detail of matches: exp/_out_baseline/<run_stamp>/baseline_match_detail.csv
+    - A stats file: exp/_out_baseline/<run_stamp>/baseline_stats.txt
+    - Stats printed to stdout
 """
 
 import sys
@@ -25,9 +27,6 @@ from pathlib import Path
 from collections import OrderedDict
 import csv
 
-# Adjust these imports to your repo layout:
-# Assumes this file lives at repo_root/exp/baseline_tar_search.py
-# and search_files.py is at repo_root/scripts/search_files.py
 repo_root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(repo_root))
 
@@ -54,7 +53,7 @@ def read_patterns(pattern_file: Path) -> list[str]:
 
 def main() -> None:
     if len(sys.argv) < 2:
-        print("Usage: python exp/baseline_tar_search.py /path/to/image.tar[.gz] or .zip")
+        print("Usage: python exp/baseline_search.py /path/to/image.tar or .zip")
         sys.exit(2)
 
     archive_path = Path(sys.argv[1])

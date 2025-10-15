@@ -3,27 +3,28 @@
 Improved search demo (bucketed candidates + SQLite family fast-path).
 
 - Reads patterns from a sibling file_path.txt (one per line), ordered de-dup.
-- Builds per-bucket indexes from a single pass over the TAR:
-    * sandbox:      */Containers/Data/Application/<GUID>/*
-    * appgroup:     */Containers/Shared/AppGroup/<GROUP>/*
-    * photos:       */PhotoData/*  (and common Photos.sqlite locations)
-    * mobile_lib:   */mobile/Library/*
-    * biome:        */Biome/streams/*
-    * global:       everything
-- For each pattern:
-    * Try exact-match fast-path (no wildcards).
-    * Route to a bucket based on the pattern text (heuristics).
-    * If basename fixed → start from basename bucket.
-    * If extension obvious → start from ext bucket(s).
-    * If dir part has no wildcards → prefilter by directory prefix.
-    * If basename endswith .db* or .sqlite* → expand to .db/.db-wal/.db-shm
-      and attempt quick hits before falling back to glob.
-    * Run fnmatch-based regex only on the reduced candidate list.
+- Builds one-pass indexes over the archive members, including:
+    - Per-bucket indexes for common locations (sandbox, appgroup, photos, etc.)
+    - Basename, extension, and directory maps for candidate pruning.
+- A single, centralized `BUCKET_RULES` list defines the bucketing logic for
+  both file indexing and pattern routing, ensuring consistency.
+- Database files (.db, .sqlite) and their sidecars (-wal, -shm) are handled
+  by a centralized `DB_EXTENSIONS` list, enabling special optimizations.
+- For each pattern, it uses a multi-level strategy to find matches quickly:
+    1. Exact Match: A direct hash lookup for patterns without wildcards.
+    2. DB Family Fast-Path: For patterns with a non-wildcard database stem
+       (e.g., `**/My.db*`), it searches for the main file and its sidecars
+       directly, avoiding a full glob search.
+    3. Candidate Pruning: For general wildcard searches, it first reduces the
+       search space by selecting a bucket, then filtering by any fixed
+       directory parts, basenames, or extension hints.
+    4. Regex Match: A final `fnmatch`-based regex is run only on the
+       narrowed-down list of candidate files.
 - Extracts matching members to exp/_out_improved/<timestamp>/ preserving path.
-- Writes per-pattern timings to matches.csv
+- Writes per-pattern timings and match details to CSV files.
 
 Run:
-    python exp/improved_tar_search.py /path/to/image.tar[.gz]
+    python exp/improved_search.py /path/to/image.[tar|zip]
 """
 
 import csv
@@ -68,7 +69,7 @@ def normcase_posix(s: str) -> str:
     return s.lower()
 
 def compile_glob(pattern: str) -> re.Pattern:
-    # Match the behavior of FileSeekerTar: it matches against "root/" + path
+    # Match the behavior of FileSeeker: it matches against "root/" + path
     # We'll compile a regex using fnmatch.translate on a lowercased pattern.
     pat = normcase_posix(pattern)
     return re.compile(fnmatch.translate(pat))
@@ -291,13 +292,12 @@ def split_dir_base(pattern: str) -> Tuple[str, str]:
 
 def db_family_from_basename(base: str) -> Optional[Tuple[str, List[str]]]:
     """
-    If basename matches a known DB extension pattern (e.g., .db, .db*)
-    and the stem of the name has no wildcards, return the base name and a
-    list of concrete names including sidecar files (-wal, -shm).
+    If basename matches a known DB extension pattern (e.g., .db, .db*), return the 
+    base name and a list of concrete names including sidecar files (-wal, -shm).
 
-    e.g., "foo.db" or "foo.db*" -> ("foo.db", ["foo.db", "foo.db-wal", "foo.db-shm"])
+    e.g., "foo.db" -> ("foo.db", ["foo.db", "foo.db-wal", "foo.db-shm"])
 
-    Returns None if the stem contains wildcards or the pattern doesn't match.
+    Returns None if the pattern doesn't match.
     """
     lb = base.lower()
 
@@ -476,7 +476,7 @@ class ImprovedSearcher:
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python exp/improved_tar_search.py /path/to/image.[tar.gz|zip]")
+        print("Usage: python exp/improved_search.py /path/to/image.zip")
         sys.exit(2)
 
     archive_path = Path(sys.argv[1])

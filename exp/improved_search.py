@@ -499,6 +499,15 @@ def main():
     out_root.mkdir(parents=True, exist_ok=True)
     print(f"Extraction dir: {out_root}")
 
+    # prepare csv files for continuous writing
+    summary_csv_path = out_root / "improved_match_summary.csv"
+    detail_csv_path  = out_root / "improved_match_detail.csv"
+
+    summary_f = summary_csv_path.open("w", newline="", encoding="utf-8")
+    detail_f  = detail_csv_path.open("w", newline="", encoding="utf-8")
+    summary_w = csv.writer(summary_f); summary_w.writerow(["pattern_id","pattern","match_count","seconds"])
+    detail_w  = csv.writer(detail_f);  detail_w.writerow(["pattern_id","file_path"])
+    
     searcher = ImprovedSearcher(archive_path, out_root)
 
     totals = 0
@@ -517,25 +526,22 @@ def main():
             bucket_usage_counts[bucket_name] += 1
 
             hits = searcher.search(pat)
-            # extract
-            for n in hits:
-                # find member index quickly via name -> index (linear fallback if rare)
-                # Build a quick map on first use
-                # (For simplicity, a dict comp over name->idx is fine here; overhead is tiny vs search time)
-                pass
             p1 = time.perf_counter()
-            # Do extraction after measuring search timing, to isolate matching cost
-            for n in hits:
-                idx = searcher.index.names.index(n)  # O(N) but hits list is usually tiny
-                member = searcher.index.members[idx]
-                # searcher.archive.extract_member(member, out_root)
             dt = p1 - p0
             cnt = len(hits)
             totals += cnt
             rows.append((pat, cnt, dt))
             print(f"[{i:>4}/{len(patterns)}] {pat} -> {cnt} hits in {dt:.3f}s")
+
+            # write summary row immediately
+            summary_w.writerow([i, pat, cnt, f"{dt:.6f}"])
+            # write detail rows immediately
+            for n in hits:
+                detail_w.writerow([i, n])
     finally:
         searcher.close()
+        summary_f.close()
+        detail_f.close()
 
     elapsed = time.perf_counter() - t0
 
